@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
-import { api } from '../lib/api.ts'
+import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { withNext } from '../lib/nav.ts'
 import type { Session } from '../lib/types.ts'
@@ -17,6 +17,7 @@ export default function AcceptInvite() {
   const [invite, setInvite] = useState<Lookup | 'invalid' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [confirmDiscard, setConfirmDiscard] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -29,14 +30,17 @@ export default function AcceptInvite() {
     }
   }, [token])
 
-  async function accept() {
+  async function accept(discardOwnWedding = false) {
     setBusy(true)
     setError(null)
     try {
-      await refresh(await api.post<Session>(`/invites/${encodeURIComponent(token)}/accept`))
+      const body = discardOwnWedding ? { discardOwnWedding } : undefined
+      await refresh(await api.post<Session>(`/invites/${encodeURIComponent(token)}/accept`, body))
       navigate('/app', { replace: true })
     } catch (err) {
-      setError(errorMessage(err))
+      // They started their own setup before joining: confirm before throwing that draft away.
+      if (err instanceof ApiError && err.code === 'own_wedding_draft') setConfirmDiscard(true)
+      else setError(errorMessage(err))
       setBusy(false)
     }
   }
@@ -63,7 +67,24 @@ export default function AcceptInvite() {
             {state.status === 'signedIn' ? (
               <>
                 <p>Joining as <strong>{state.user.name}</strong> ({state.user.email}).</p>
-                <button className="btn btn--block" onClick={accept} disabled={busy}>{busy ? 'Joining…' : 'Accept invite'}</button>
+                {confirmDiscard ? (
+                  <>
+                    <p role="alert" className="alert">
+                      You’ve already started setting up your own wedding. Joining your partner’s space will discard
+                      those answers.
+                    </p>
+                    <div className="actions">
+                      <button className="btn" onClick={() => accept(true)} disabled={busy}>
+                        {busy ? 'Joining…' : 'Discard my draft and join'}
+                      </button>
+                      <Link to="/app" className="btn btn--secondary">Keep my draft</Link>
+                    </div>
+                  </>
+                ) : (
+                  <button className="btn btn--block" onClick={() => accept()} disabled={busy}>
+                    {busy ? 'Joining…' : 'Accept invite'}
+                  </button>
+                )}
               </>
             ) : (
               <div className="actions">

@@ -1,12 +1,14 @@
 export class ApiError extends Error {
   readonly status: number
   readonly code: string
+  readonly details: unknown
 
-  constructor(status: number, code: string, message: string) {
+  constructor(status: number, code: string, message: string, details?: unknown) {
     super(message)
     this.name = 'ApiError'
     this.status = status
     this.code = code
+    this.details = details
   }
 }
 
@@ -23,8 +25,8 @@ async function request<T>(path: string, { body, headers, ...init }: RequestOptio
   const data: unknown = await res.json().catch(() => null)
 
   if (!res.ok) {
-    const error = (data as { error?: { code?: string; message?: string } } | null)?.error
-    throw new ApiError(res.status, error?.code ?? 'error', error?.message ?? res.statusText)
+    const error = (data as { error?: { code?: string; message?: string; details?: unknown } } | null)?.error
+    throw new ApiError(res.status, error?.code ?? 'error', error?.message ?? res.statusText, error?.details)
   }
 
   return data as T

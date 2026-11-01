@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard.tsx'
 import Home from './pages/Home.tsx'
 import InvitePartner from './pages/InvitePartner.tsx'
 import NotFound from './pages/NotFound.tsx'
+import Setup from './pages/Setup.tsx'
 import SignIn from './pages/SignIn.tsx'
 import SignUp from './pages/SignUp.tsx'
 
@@ -22,6 +23,7 @@ export default function App() {
           <Route element={<RequireAuth />}>
             <Route path="/partner" element={<InvitePartner />} />
             <Route path="/app" element={<Dashboard />} />
+            <Route path="/app/setup/:step?" element={<Setup />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
