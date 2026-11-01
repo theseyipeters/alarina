@@ -50,6 +50,8 @@
   --space-6: 1.5rem;
   --space-8: 2rem;
   --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
 
   /* Shape */
   --radius: 8px;
@@ -151,6 +153,15 @@ h1 {
 h2 {
   font-size: var(--text-xl);
   font-weight: var(--weight-regular);
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-regular);
+  line-height: 1.25;
   letter-spacing: -0.01em;
 }
 
@@ -305,6 +316,7 @@ a {
 input[type='text'],
 input[type='email'],
 input[type='password'],
+input[type='tel'],
 input[type='date'],
 input[type='time'],
 textarea {
@@ -327,6 +339,13 @@ textarea {
 input::placeholder,
 textarea::placeholder {
   color: var(--text-muted);
+}
+
+/* Read-only values are shown, not edited: no field background, muted text. */
+input[readonly] {
+  color: var(--text-muted);
+  background: transparent;
+  border-style: dashed;
 }
 
 [aria-invalid='true'] {

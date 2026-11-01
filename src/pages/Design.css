@@ -1,0 +1,120 @@
+/* Couple's design page: choices on the left, a live preview on the right. */
+
+.page--design {
+  max-width: 72rem;
+}
+
+.design-layout {
+  display: grid;
+  gap: var(--space-8);
+}
+
+@media (min-width: 60rem) {
+  .design-layout {
+    grid-template-columns: 22rem minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.options {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-6);
+  padding: 0;
+  border: 0;
+}
+
+.options legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.option:has(input:checked) {
+  border-color: var(--text);
+}
+
+.option input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0.125rem 0 0;
+  accent-color: var(--primary);
+}
+
+.option .hint {
+  display: block;
+}
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+  gap: var(--space-2);
+}
+
+.swatch {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  font-size: var(--text-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.swatch:has(input:checked) {
+  border-color: var(--text);
+}
+
+.swatch:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* The chip carries data-palette, so these tokens are the palette's own colours. */
+.swatch-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+}
+
+.swatch-chip span {
+  width: 1rem;
+  height: 1rem;
+  background: var(--primary);
+  border-radius: 999px;
+}
+
+.preview-toggle {
+  margin-bottom: var(--space-4);
+}
+
+.preview-frame {
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.preview-frame--phone {
+  width: min(100%, 24rem);
+  border-radius: 1.5rem;
+}
+
+.preview-frame--desktop {
+  width: 100%;
+}

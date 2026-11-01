@@ -1,0 +1,346 @@
+/*
+ * Hero illustration: an emerald envelope opens, the invitation rises out, replies arrive.
+ * Everything is sized in container units (cqi), so the scene scales as one piece.
+ * Base styles describe the finished scene; animations play *from* the sealed envelope, so
+ * reduced motion simply shows the end result. The loop runs only while the scene is on
+ * screen (.is-playing, set by HeroInvitation.tsx).
+ *
+ * The envelope settles in once (0.6s). After that every part shares one --loop-length
+ * timeline that plays forwards, then backwards (alternate), forever, so all the parts stay
+ * in step. Forwards: sealed hold (0–8%) → flap opens (8–20%) → card rises (18–35%) →
+ * replies arrive (38–58%) → hold the finished scene (58–100%). Easing sits on the
+ * keyframes, and runs in reverse on the way back.
+ */
+
+.hero-art {
+  --env-back: #0b3226;
+  --env-fold: #0f3f30;
+  --env-front: #134636;
+  --env-flap: #16503d;
+  --gold: #c9a45c;
+  --gold-ink: #9b7a3c;
+  --paper: #fbf8f1;
+  --ink: #1e1b18;
+  --ink-muted: #5e574f;
+
+  --loop-length: 6.5s;
+  --loop: var(--loop-length) 0.6s linear infinite alternate both;
+
+  container-type: inline-size;
+  position: relative;
+  width: min(100%, 28rem);
+  aspect-ratio: 100 / 112;
+}
+
+.envelope {
+  position: absolute;
+  inset: 0;
+  perspective: 220cqi;
+  animation: env-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.envelope-back {
+  position: absolute;
+  inset: auto 0 0;
+  height: 56cqi;
+  background: var(--env-back);
+  border-radius: 2cqi;
+}
+
+/* Flap: hinged at the top edge, open in the final scene. */
+.envelope-flap {
+  position: absolute;
+  top: 56cqi;
+  left: 0;
+  width: 100cqi;
+  height: 30cqi;
+  z-index: 1;
+  transform-origin: top center;
+  transform: rotateX(180deg);
+  transform-style: preserve-3d;
+  animation: flap-loop var(--loop);
+}
+
+.envelope-flap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--env-flap);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.envelope-seal {
+  position: absolute;
+  top: 21cqi;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 12cqi;
+  height: 12cqi;
+  font-family: var(--font-invite);
+  font-size: 4.6cqi;
+  color: var(--env-back);
+  background: var(--gold);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  backface-visibility: hidden;
+}
+
+/* The invitation card, risen out of the envelope. */
+.letter {
+  position: absolute;
+  top: 58cqi;
+  left: 6cqi;
+  width: 88cqi;
+  height: 52cqi;
+  z-index: 2;
+  transform: translateY(-46cqi);
+  animation: letter-loop var(--loop);
+}
+
+.letter-card {
+  position: relative;
+  height: 100%;
+  padding: 6cqi 6cqi 0;
+  text-align: center;
+  color: var(--ink);
+  background: var(--paper);
+  border-radius: 1.2cqi;
+  animation: letter-float 6s 2.6s ease-in-out infinite;
+}
+
+/* Thin gold border inset from the edge, like foil on card stock. */
+.letter-card::after {
+  content: '';
+  position: absolute;
+  inset: 2.2cqi;
+  border: 1px solid var(--gold);
+  border-radius: 0.6cqi;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.letter-eyebrow {
+  margin: 0 0 3.4cqi;
+  font-size: 2.5cqi;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.letter-names {
+  margin: 0 0 3.4cqi;
+  font-family: var(--font-invite);
+  font-size: 8.4cqi;
+  line-height: 1.05;
+}
+
+.letter-amp {
+  font-style: italic;
+  color: var(--gold-ink);
+}
+
+.letter-rule {
+  display: block;
+  width: 9cqi;
+  height: 1px;
+  margin: 0 auto 3.4cqi;
+  background: var(--gold-ink);
+}
+
+.letter-details {
+  margin: 0;
+  font-size: 3cqi;
+  line-height: 1.6;
+  color: var(--ink-muted);
+}
+
+/* Front of the envelope: three flat folds that leave a V-shaped opening at the top. */
+.envelope-pocket {
+  position: absolute;
+  inset: auto 0 0;
+  height: 56cqi;
+  z-index: 3;
+  overflow: hidden;
+  border-radius: 2cqi;
+}
+
+.fold {
+  position: absolute;
+  inset: 0;
+}
+
+.fold--left {
+  background: var(--env-fold);
+  clip-path: polygon(0 0, 52% 54%, 0 100%);
+}
+
+.fold--right {
+  background: var(--env-fold);
+  clip-path: polygon(100% 0, 48% 54%, 100% 100%);
+}
+
+.fold--bottom {
+  background: var(--env-front);
+  clip-path: polygon(0 100%, 50% 46%, 100% 100%);
+}
+
+/* Guest replies arriving. These use the page's own tokens, so they suit light and dark. */
+.replies {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+
+.reply {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 2cqi;
+  padding: 2cqi 3.6cqi;
+  font-size: 3.3cqi;
+  white-space: nowrap;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.reply:nth-child(1) {
+  top: 66cqi;
+  left: 0;
+  animation: reply-1 var(--loop);
+}
+
+.reply:nth-child(2) {
+  top: 80cqi;
+  right: 0;
+  animation: reply-2 var(--loop);
+}
+
+.reply:nth-child(3) {
+  top: 94cqi;
+  left: 9cqi;
+  animation: reply-3 var(--loop);
+}
+
+.reply-icon {
+  flex: none;
+  width: 3.8cqi;
+  height: 3.8cqi;
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.reply--yes .reply-icon {
+  stroke: var(--success);
+}
+
+@keyframes env-in {
+  from {
+    opacity: 0;
+    transform: translateY(4cqi);
+  }
+}
+
+/* The flap passes behind the card once it's past upright (and back in front on the way down). */
+@keyframes flap-loop {
+  0%,
+  8% {
+    z-index: 4;
+    transform: rotateX(0deg);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.3, 1);
+  }
+  14% {
+    z-index: 4;
+  }
+  14.1% {
+    z-index: 1;
+  }
+  20%,
+  100% {
+    z-index: 1;
+    transform: rotateX(180deg);
+  }
+}
+
+@keyframes letter-loop {
+  0%,
+  18% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  35%,
+  100% {
+    transform: translateY(-46cqi);
+  }
+}
+
+@keyframes letter-float {
+  50% {
+    transform: translateY(-1cqi);
+  }
+}
+
+@keyframes reply-1 {
+  0%,
+  38% {
+    opacity: 0;
+    transform: translateY(2cqi) scale(0.96);
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  46%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes reply-2 {
+  0%,
+  44% {
+    opacity: 0;
+    transform: translateY(2cqi) scale(0.96);
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  52%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes reply-3 {
+  0%,
+  50% {
+    opacity: 0;
+    transform: translateY(2cqi) scale(0.96);
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  58%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Paused while the scene is off screen. */
+.hero-art:not(.is-playing) .envelope,
+.hero-art:not(.is-playing) .envelope *,
+.hero-art:not(.is-playing) .reply {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-art,
+  .hero-art * {
+    animation: none !important;
+  }
+}

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
+import CopyLink from '../components/CopyLink.tsx'
 import { api } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { useTitle } from '../lib/useTitle.ts'
@@ -12,7 +13,6 @@ export default function InvitePartner() {
   const { state, refresh } = useAuth()
   const [created, setCreated] = useState<Created | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
   const [busy, setBusy] = useState(false)
 
   if (state.status !== 'signedIn') return null
@@ -23,7 +23,6 @@ export default function InvitePartner() {
     const email = String(new FormData(e.currentTarget).get('email')).trim()
     setBusy(true)
     setError(null)
-    setCopied(false)
     try {
       setCreated(await api.post<Created>('/couple/invites', email ? { email } : {}))
       await refresh()
@@ -31,15 +30,6 @@ export default function InvitePartner() {
       setError(errorMessage(err))
     } finally {
       setBusy(false)
-    }
-  }
-
-  async function copy(link: string) {
-    try {
-      await navigator.clipboard.writeText(link)
-      setCopied(true)
-    } catch {
-      setError('Could not copy automatically. Select the link and copy it manually.')
     }
   }
 
@@ -74,12 +64,7 @@ export default function InvitePartner() {
                 <p role="status" className="alert alert--success">
                   {created.emailSent ? 'Invite emailed. You can also share the link below.' : 'Invite link ready. Share it with your partner.'}
                 </p>
-                <div className="link-box">
-                  <input type="text" readOnly value={created.link} aria-label="Invite link" onFocus={(e) => e.currentTarget.select()} />
-                  <button type="button" className="btn btn--secondary" onClick={() => copy(created.link)}>
-                    {copied ? 'Copied' : 'Copy'}
-                  </button>
-                </div>
+                <CopyLink link={created.link} label="Invite link" />
               </div>
             )}
             {!created && pendingInvite && (

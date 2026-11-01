@@ -1,3 +1,5 @@
+import type { Palette, Template } from '../invite/design.ts'
+
 export type User = { id: string; name: string; email: string }
 
 export type Couple = {
@@ -33,7 +35,20 @@ export type WeddingFields = {
   events: WeddingEvent[]
 }
 
-export type Wedding = WeddingFields & {
+export type InvitationDesign = { template: Template; palette: Palette }
+
+/** What guests see: the answers plus the chosen design. */
+export type InvitationContent = WeddingFields & InvitationDesign
+
+export type PublicInvitation = InvitationContent & {
+  slug: string
+  rsvpOpen: boolean
+  rsvpClosedReason: 'deadline' | 'past' | null
+}
+
+export type Rsvp = { name: string; email: string; phone: string; attending: boolean; updatedAt: string }
+
+export type Wedding = InvitationContent & {
   id: string
   slug: string | null
   status: 'draft' | 'published'

@@ -1,0 +1,203 @@
+/* Landing page. Wide layout, generous space, product shown through a real invitation. */
+
+.landing {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+
+@media (min-width: 40rem) {
+  .landing {
+    padding: 0 var(--space-8);
+  }
+}
+
+/* Header */
+
+.landing-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-6) 0;
+}
+
+.landing-header .brand {
+  margin: 0;
+}
+
+.landing-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.landing-signin {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.landing-signin:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 39.99rem) {
+  .hide-sm {
+    display: none;
+  }
+}
+
+/* Hero */
+
+.hero {
+  display: grid;
+  gap: var(--space-12);
+  align-items: center;
+  padding: var(--space-12) 0 var(--space-16);
+}
+
+@media (min-width: 56rem) {
+  .hero {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    padding: var(--space-16) 0 var(--space-24);
+  }
+}
+
+.hero h1 {
+  max-width: 14ch;
+  margin-bottom: var(--space-6);
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+}
+
+.hero-lead {
+  max-width: 34rem;
+  margin-bottom: var(--space-8);
+  font-size: var(--text-lg);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.hero-note {
+  margin: var(--space-4) 0 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.hero-figure {
+  display: flex;
+  justify-content: center;
+}
+
+/* Sections */
+
+.landing-section {
+  padding: var(--space-16) 0;
+  border-top: 1px solid var(--border);
+  scroll-margin-top: var(--space-6);
+}
+
+.section-head {
+  max-width: 36rem;
+  margin-bottom: var(--space-12);
+}
+
+.section-head h2,
+.cta-band h2 {
+  margin-bottom: var(--space-3);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  letter-spacing: -0.025em;
+}
+
+.section-head p,
+.cta-band p {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.steps,
+.features {
+  display: grid;
+  gap: var(--space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 48rem) {
+  .steps {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .features {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 64rem) {
+  .features {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.steps li,
+.features li {
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border);
+}
+
+.steps p,
+.features p {
+  margin: 0;
+}
+
+.step-number {
+  display: block;
+  margin-bottom: var(--space-6);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  color: var(--text-muted);
+}
+
+/* Closing call to action */
+
+.cta-band {
+  display: grid;
+  gap: var(--space-6);
+  justify-items: start;
+  margin: var(--space-8) 0 var(--space-16);
+  padding: var(--space-12) var(--space-8);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+@media (min-width: 48rem) {
+  .cta-band {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    padding: var(--space-12);
+  }
+}
+
+/* Footer */
+
+.landing-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-8) 0 var(--space-12);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+}
+
+.landing-footer .brand {
+  margin: 0;
+}

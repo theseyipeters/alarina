@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
+import CopyLink from '../components/CopyLink.tsx'
 import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { coupleNames, formatDate, formatTime } from '../lib/format.ts'
@@ -78,7 +79,6 @@ function WeddingCard({ wedding, onChange }: { wedding: Wedding; onChange: (w: We
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notReady, setNotReady] = useState(false)
-  const [copied, setCopied] = useState(false)
   const published = wedding.status === 'published'
   const link = wedding.slug ? `${window.location.origin}/invite/${wedding.slug}` : null
 
@@ -94,16 +94,6 @@ function WeddingCard({ wedding, onChange }: { wedding: Wedding; onChange: (w: We
       else setError(errorMessage(err))
     } finally {
       setBusy(false)
-    }
-  }
-
-  async function copy() {
-    if (!link) return
-    try {
-      await navigator.clipboard.writeText(link)
-      setCopied(true)
-    } catch {
-      setError('Couldn’t copy automatically. Select the link and copy it.')
     }
   }
 
@@ -130,10 +120,7 @@ function WeddingCard({ wedding, onChange }: { wedding: Wedding; onChange: (w: We
       {published && link && (
         <>
           <p>Share this link with your guests:</p>
-          <div className="link-box">
-            <input type="text" readOnly value={link} aria-label="Invitation link" onFocus={(e) => e.currentTarget.select()} />
-            <button type="button" className="btn btn--secondary" onClick={copy}>{copied ? 'Copied' : 'Copy'}</button>
-          </div>
+          <CopyLink link={link} label="Invitation link" />
         </>
       )}
 
@@ -141,6 +128,12 @@ function WeddingCard({ wedding, onChange }: { wedding: Wedding; onChange: (w: We
         <button className={published ? 'btn btn--secondary' : 'btn'} onClick={toggle} disabled={busy}>
           {busy ? 'Saving…' : published ? 'Unpublish' : 'Publish invitation'}
         </button>
+        <Link to="/app/design" className="btn btn--secondary">Design invitation</Link>
+        {published && link && (
+          <a href={link} target="_blank" rel="noopener" className="btn btn--secondary">
+            View invitation<span className="visually-hidden"> (opens in a new tab)</span>
+          </a>
+        )}
       </div>
       {published && (
         <p className="form-footer hint">
