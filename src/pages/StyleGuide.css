@@ -1,0 +1,51 @@
+/* Layout for the development-only style guide page. Not part of the product styles. */
+
+.sg-section {
+  padding: var(--space-8) 0;
+  border-top: 1px solid var(--border);
+}
+
+.sg-section > h2 {
+  margin-bottom: var(--space-6);
+}
+
+.sg-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: var(--space-4);
+}
+
+.sg-swatch {
+  height: 3.5rem;
+  margin-bottom: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.sg-type > * + * {
+  margin-top: var(--space-4);
+}
+
+.sg-type code,
+.sg-swatches code {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.sg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--space-6);
+}
+
+.sg-invite {
+  margin: 0;
+  font-family: var(--font-invite);
+  font-size: 2.25rem;
+  line-height: 1.1;
+}
+
+.sg-type .brand {
+  margin-bottom: 0;
+}

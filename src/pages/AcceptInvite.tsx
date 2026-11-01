@@ -66,7 +66,7 @@ export default function AcceptInvite() {
             {error && <p role="alert" className="alert">{error}</p>}
             {state.status === 'signedIn' ? (
               <>
-                <p>Joining as <strong>{state.user.name}</strong> ({state.user.email}).</p>
+                <p>Joining as {state.user.name} ({state.user.email}).</p>
                 {confirmDiscard ? (
                   <>
                     <p role="alert" className="alert">

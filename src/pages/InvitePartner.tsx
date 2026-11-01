@@ -70,7 +70,7 @@ export default function InvitePartner() {
               </button>
             </form>
             {created && (
-              <div style={{ marginTop: '1.5rem' }}>
+              <div className="section">
                 <p role="status" className="alert alert--success">
                   {created.emailSent ? 'Invite emailed. You can also share the link below.' : 'Invite link ready. Share it with your partner.'}
                 </p>
@@ -83,13 +83,13 @@ export default function InvitePartner() {
               </div>
             )}
             {!created && pendingInvite && (
-              <p className="muted" style={{ marginTop: '1rem' }}>
+              <p className="form-footer">
                 An invite is pending until {new Date(pendingInvite.expiresAt).toLocaleDateString()}. Links can’t be shown again, so generate a new one if you need to re-share.
               </p>
             )}
           </>
         )}
-        <div className="actions" style={{ marginTop: '1.5rem' }}>
+        <div className="actions section">
           {canContinue ? (
             <Link to="/app" className="btn">Continue</Link>
           ) : (

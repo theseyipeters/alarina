@@ -22,7 +22,7 @@ export default function Dashboard() {
   return (
     <main id="main" className="page page--wide">
       <div className="row">
-        <Link to="/app" className="brand" style={{ margin: 0 }}>Alárinà</Link>
+        <Link to="/app" className="brand">Alárinà</Link>
         <button
           className="btn btn--secondary"
           onClick={async () => {
@@ -60,12 +60,12 @@ export default function Dashboard() {
           </div>
         ))}
 
-      <div className="card" style={{ marginTop: 'var(--space-6)' }}>
+      <div className="card section">
         <h2>Your partner</h2>
         {couple.partner ? (
-          <p style={{ marginBottom: 0 }}>You’re planning together with {couple.partner.name}.</p>
+          <p>You’re planning together with {couple.partner.name}.</p>
         ) : (
-          <p style={{ marginBottom: 0 }}>
+          <p>
             Your partner hasn’t joined yet. <Link to="/partner">Invite them</Link>
           </p>
         )}
@@ -109,7 +109,7 @@ function WeddingCard({ wedding, onChange }: { wedding: Wedding; onChange: (w: We
 
   return (
     <div className="card">
-      <div className="row" style={{ marginBottom: 'var(--space-2)' }}>
+      <div className="row row--tight">
         <span className={`badge ${published ? 'badge--live' : ''}`}>{published ? 'Published' : 'Private draft'}</span>
         <Link to="/app/setup/names" className="btn btn--secondary">Edit details</Link>
       </div>
@@ -129,7 +129,7 @@ function WeddingCard({ wedding, onChange }: { wedding: Wedding; onChange: (w: We
 
       {published && link && (
         <>
-          <p style={{ marginBottom: 'var(--space-2)' }}>Share this link with your guests:</p>
+          <p>Share this link with your guests:</p>
           <div className="link-box">
             <input type="text" readOnly value={link} aria-label="Invitation link" onFocus={(e) => e.currentTarget.select()} />
             <button type="button" className="btn btn--secondary" onClick={copy}>{copied ? 'Copied' : 'Copy'}</button>
@@ -143,7 +143,7 @@ function WeddingCard({ wedding, onChange }: { wedding: Wedding; onChange: (w: We
         </button>
       </div>
       {published && (
-        <p className="hint muted" style={{ marginTop: 'var(--space-3)', marginBottom: 0 }}>
+        <p className="form-footer hint">
           Unpublishing hides the invitation from guests. The link stays the same if you publish again.
         </p>
       )}

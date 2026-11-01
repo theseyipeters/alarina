@@ -57,7 +57,7 @@ export default function SignUp() {
           </div>
           <button className="btn btn--block" disabled={busy}>{busy ? 'Creating account…' : 'Create account'}</button>
         </form>
-        <p className="muted" style={{ marginTop: '1rem', marginBottom: 0 }}>
+        <p className="form-footer">
           Already have an account? <Link to={withNext('/signin', next)}>Sign in</Link>
         </p>
       </div>

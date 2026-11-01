@@ -188,7 +188,7 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
   return (
     <main id="main" className="page">
       <div className="row">
-        <Link to="/app" className="brand" style={{ margin: 0 }}>Alárinà</Link>
+        <Link to="/app" className="brand">Alárinà</Link>
         <SaveIndicator status={status} retry={() => flush().catch(() => {})} />
       </div>
 
@@ -201,7 +201,7 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
         ) : (
           <form onSubmit={next}>
             {body}
-            <div className="actions step-actions">
+            <div className="actions actions--end">
               {index > 0 && (
                 <button type="button" className="btn btn--secondary" onClick={() => go(STEPS[index - 1]!.id)}>Back</button>
               )}
@@ -320,7 +320,7 @@ function Review({ values, flush, onEdit }: ReviewProps) {
 
       {missing.length > 0 && (
         <div className="alert alert--info">
-          <p style={{ margin: 0 }}>To publish, you still need:</p>
+          <p>To publish, you still need:</p>
           <ul>
             {missing.map((m) => (
               <li key={m.field}>
@@ -333,7 +333,7 @@ function Review({ values, flush, onEdit }: ReviewProps) {
 
       {problemList.length > 0 && (
         <div role="alert" className="alert">
-          <p style={{ margin: 0 }}>Fix these before publishing:</p>
+          <p>Fix these before publishing:</p>
           <ul>
             {problemList.map(([field, message]) => (
               <li key={field}>
@@ -364,7 +364,7 @@ function Review({ values, flush, onEdit }: ReviewProps) {
         ))}
       </dl>
 
-      <div className="actions step-actions">
+      <div className="actions actions--end">
         <button type="button" className="btn btn--secondary" onClick={() => onEdit('events')}>Back</button>
         <button type="button" className="btn btn--secondary" onClick={() => finish(false)} disabled={busy !== null}>
           {busy === 'draft' ? 'Saving…' : 'Save as private draft'}
