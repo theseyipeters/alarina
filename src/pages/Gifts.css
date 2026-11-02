@@ -1,4 +1,5 @@
-/* Couple's Gifts tab: a big total, the payout account as a bank card, a switch and the list. */
+/* Couple's Gifts tab: a sub-nav for the three kinds, then for cash a big total, the payout account
+   as a bank card, a switch and the list. */
 
 .gifts {
   display: grid;

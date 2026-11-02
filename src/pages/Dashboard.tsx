@@ -102,8 +102,8 @@ const tourSteps = (partner: string | null): TourStep[] => [
   },
   {
     target: '[data-tour="tab-gifts"]',
-    title: 'Cash gifts, if you want them',
-    text: 'Add your bank account and guests can send a gift after they reply. It stays off until you turn it on.',
+    title: 'Gifts, if you want them',
+    text: 'Receive cash, sell aso-ebi or share a wishlist. Cash gifts stay off until you add your bank account and turn them on.',
   },
   {
     target: '[data-tour="partner"]',

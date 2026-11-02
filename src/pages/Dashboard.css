@@ -35,6 +35,11 @@
   border-bottom-color: var(--text);
 }
 
+/* A second row of tabs inside a dashboard tab, such as the kinds of gift. */
+.tabs--sub {
+  margin-bottom: var(--space-6);
+}
+
 /* Overview: a wedding "home" — countdown hero, replies board, share and partner cards. */
 
 .page--dashboard {

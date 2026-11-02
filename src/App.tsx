@@ -19,6 +19,9 @@ const Design = lazy(() => import('./pages/Design.tsx'))
 const Responses = lazy(() => import('./pages/Responses.tsx'))
 const Share = lazy(() => import('./pages/Share.tsx'))
 const Gifts = lazy(() => import('./pages/Gifts.tsx'))
+const CashGifts = lazy(() => import('./pages/CashGifts.tsx'))
+const AsoEbi = lazy(() => import('./pages/AsoEbi.tsx'))
+const Wishlist = lazy(() => import('./pages/Wishlist.tsx'))
 const GiftResult = lazy(() => import('./pages/GiftResult.tsx'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword.tsx'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword.tsx'))
@@ -48,7 +51,11 @@ export default function App() {
                 <Route index element={<Dashboard />} />
                 <Route path="responses" element={<Responses />} />
                 <Route path="share" element={<Share />} />
-                <Route path="gifts" element={<Gifts />} />
+                <Route path="gifts" element={<Gifts />}>
+                  <Route index element={<CashGifts />} />
+                  <Route path="aso-ebi" element={<AsoEbi />} />
+                  <Route path="wishlist" element={<Wishlist />} />
+                </Route>
               </Route>
               <Route path="/app/setup/:step?" element={<Setup />} />
               <Route path="/app/design" element={<Design />} />
