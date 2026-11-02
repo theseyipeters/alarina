@@ -63,15 +63,11 @@ function dateParts(date: string | null) {
   }
 }
 
-/** "09:30" → "half past nine in the morning"; other times → "6:15 in the evening". */
+/** "09:30" → "9:30 in the morning", "13:00" → "1:00 in the afternoon". Always in figures, never words. */
 function timePhrase(time: string | null) {
   if (!time) return null
-  const [h, min] = time.split(':').map(Number) as [number, number]
+  const h = Number(time.split(':')[0])
   const period = h < 12 ? 'in the morning' : h < 17 ? 'in the afternoon' : 'in the evening'
-  const words = ['twelve', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven']
-  const hour = words[h % 12]!
-  if (min === 0) return `${hour} o’clock ${period}`
-  if (min === 30) return `half past ${hour} ${period}`
   return `${formatTime(time).replace(/\s?(am|pm)$/, '')} ${period}`
 }
 
