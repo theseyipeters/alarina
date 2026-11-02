@@ -1,4 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import DatePicker from '../components/DatePicker.tsx'
+import TimeSelect from '../components/TimeSelect.tsx'
 import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
 import Field from '../components/Field.tsx'
@@ -134,14 +136,14 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
     case 'date':
       body = (
         <Field label="Wedding date" error={values.date && values.date < today ? 'This date has already passed.' : null}>
-          {(p) => <input {...p} type="date" min={today} value={text('date')} onChange={(e) => set('date', e.target.value || null)} />}
+          {(p) => <DatePicker {...p} min={today} value={text('date')} onChange={(date) => set('date', date || null)} />}
         </Field>
       )
       break
     case 'time':
       body = (
         <Field label="Start time" hint="Nigerian time (WAT).">
-          {(p) => <input {...p} type="time" value={text('startTime')} onChange={(e) => set('startTime', e.target.value || null)} />}
+          {(p) => <TimeSelect {...p} value={text('startTime')} onChange={(time) => set('startTime', time || null)} />}
         </Field>
       )
       break
@@ -179,7 +181,7 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
           hint="Guests can’t send new RSVPs after this date. Leave it empty to accept RSVPs until the day."
           error={values.rsvpDeadline && values.date && values.rsvpDeadline > values.date ? 'Choose a date on or before the wedding.' : null}
         >
-          {(p) => <input {...p} type="date" min={today} max={values.date ?? undefined} value={text('rsvpDeadline')} onChange={(e) => set('rsvpDeadline', e.target.value || null)} />}
+          {(p) => <DatePicker {...p} clearable min={today} max={values.date ?? undefined} value={text('rsvpDeadline')} onChange={(date) => set('rsvpDeadline', date || null)} />}
         </Field>
       )
       break

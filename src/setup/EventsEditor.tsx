@@ -1,4 +1,6 @@
 import type { WeddingEvent } from '../lib/types.ts'
+import DatePicker from '../components/DatePicker.tsx'
+import TimeSelect from '../components/TimeSelect.tsx'
 import Field from '../components/Field.tsx'
 
 const MAX_EVENTS = 10
@@ -35,12 +37,12 @@ export default function EventsEditor({ events, onChange }: Props) {
           <div className="field-row">
             <Field label="Date" optional>
               {(p) => (
-                <input {...p} type="date" value={event.date ?? ''} onChange={(e) => update(event.id, { date: e.target.value || null })} />
+                <DatePicker {...p} clearable value={event.date ?? ''} onChange={(date) => update(event.id, { date: date || null })} />
               )}
             </Field>
             <Field label="Start time" optional>
               {(p) => (
-                <input {...p} type="time" value={event.startTime ?? ''} onChange={(e) => update(event.id, { startTime: e.target.value || null })} />
+                <TimeSelect {...p} optional value={event.startTime ?? ''} onChange={(time) => update(event.id, { startTime: time || null })} />
               )}
             </Field>
           </div>

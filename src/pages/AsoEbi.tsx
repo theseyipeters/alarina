@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import Field from '../components/Field.tsx'
 import ImageField from '../components/ImageField.tsx'
+import Select from '../components/Select.tsx'
 import { api, ApiError, imageSrc } from '../lib/api.ts'
 import { MAX_PRICE_NAIRA, MIN_PRICE_NAIRA, quantityLabel, UNITS, type AsoEbiUnit } from '../lib/asoEbi.ts'
 import { errorMessage } from '../lib/errors.ts'
@@ -231,11 +232,12 @@ function ItemForm({ initial, itemId, onDone, onCancel }: FormProps) {
       </Field>
       <Field label="Sold by">
         {(p) => (
-          <select {...p} value={draft.unit} onChange={(e) => set('unit', e.target.value as AsoEbiUnit)}>
-            {UNITS.map((u) => (
-              <option key={u} value={u}>{u}</option>
-            ))}
-          </select>
+          <Select
+            {...p}
+            value={draft.unit}
+            onChange={(unit) => set('unit', unit as AsoEbiUnit)}
+            options={UNITS.map((u) => ({ value: u, label: u }))}
+          />
         )}
       </Field>
       <Field label={`Price per ${draft.unit} in naira`} hint={`From ${formatNaira(MIN_PRICE_NAIRA * 100)}. Guests pay Paystack’s fee on top.`}>

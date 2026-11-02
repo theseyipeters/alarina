@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import Field from '../components/Field.tsx'
+import Select from '../components/Select.tsx'
 import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { formatNaira } from '../lib/money.ts'
@@ -165,12 +166,15 @@ function PayoutAccount({ payout, onSaved }: { payout: GiftsOverview['payout']; o
             <form onSubmit={check}>
               <Field label="Bank">
                 {(p) => (
-                  <select {...p} required value={bankCode} onChange={(e) => setBankCode(e.target.value)} disabled={!banks}>
-                    <option value="" disabled>{banks ? 'Choose your bank' : 'Loading banks…'}</option>
-                    {banks?.map((b) => (
-                      <option key={b.code} value={b.code}>{b.name}</option>
-                    ))}
-                  </select>
+                  <Select
+                    {...p}
+                    required
+                    value={bankCode}
+                    onChange={setBankCode}
+                    disabled={!banks}
+                    placeholder={banks ? 'Choose your bank' : 'Loading banks…'}
+                    options={(banks ?? []).map((b) => ({ value: b.code, label: b.name }))}
+                  />
                 )}
               </Field>
               <Field label="Account number" hint="10 digits (NUBAN).">
