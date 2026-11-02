@@ -1,0 +1,146 @@
+/*
+ * Guided tour (Tour.tsx). The dialog covers the viewport but is itself transparent: the dimming
+ * comes from the spotlight's huge shadow, so the highlighted element shows through a rounded
+ * hole. Between stops the spotlight glides to the next element.
+ */
+
+.tour {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+}
+
+.tour::backdrop {
+  background: transparent;
+}
+
+.tour-spot,
+.tour-dim {
+  position: fixed;
+  pointer-events: none;
+}
+
+.tour-spot {
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 0 0 200vmax rgb(9 9 11 / 0.62);
+  transition:
+    top 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+    left 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+    width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+    height 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.tour-dim {
+  inset: 0;
+  background: rgb(9 9 11 / 0.62);
+  animation: tour-fade 0.3s ease both;
+}
+
+.tour-card {
+  position: fixed;
+  width: min(22rem, calc(100vw - 2rem));
+  padding: var(--space-6);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1.5rem 3rem rgb(0 0 0 / 0.25);
+  animation: tour-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.tour-card[data-placement='float'] {
+  transition:
+    top 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+    left 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.tour-card[data-placement='center'] {
+  top: 50%;
+  left: 50%;
+  width: min(26rem, calc(100vw - 2rem));
+  translate: -50% -50%;
+}
+
+/* Phones: a sheet along the bottom, clear of the element being shown. */
+.tour-card[data-placement='dock'] {
+  right: var(--space-4);
+  bottom: var(--space-4);
+  left: var(--space-4);
+  width: auto;
+}
+
+/* ...and room below the page, so elements at the very bottom can scroll up above the sheet. */
+@media (max-width: 40rem) {
+  body:has(.tour[open]) {
+    padding-bottom: 60vh;
+  }
+}
+
+.tour-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xl);
+}
+
+/* The intro reads as a welcome, in the display face. */
+.tour-card[data-placement='center'] .tour-title {
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.tour-text {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.tour-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.tour-skip {
+  min-height: var(--control-height);
+  margin-right: auto;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+@keyframes tour-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes tour-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-spot,
+  .tour-card,
+  .tour-card[data-placement='float'] {
+    transition: none;
+  }
+
+  .tour-dim,
+  .tour-card {
+    animation: none;
+  }
+}

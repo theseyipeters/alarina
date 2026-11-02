@@ -1,6 +1,6 @@
 import type { Palette, Template } from '../invite/design.ts'
 
-export type User = { id: string; name: string; email: string }
+export type User = { id: string; name: string; email: string; tourCompletedAt: string | null }
 
 export type Couple = {
   id: string

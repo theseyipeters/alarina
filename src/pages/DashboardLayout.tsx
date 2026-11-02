@@ -32,7 +32,7 @@ export default function DashboardLayout() {
       </header>
       <nav className="tabs" aria-label="Dashboard">
         {TABS.map((t) => (
-          <NavLink key={t.to} to={t.to} end={t.end} className="tab">
+          <NavLink key={t.to} to={t.to} end={t.end} className="tab" data-tour={`tab-${t.label.toLowerCase()}`}>
             {t.label}
           </NavLink>
         ))}
