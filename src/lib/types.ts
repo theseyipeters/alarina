@@ -48,9 +48,27 @@ export type PublicInvitation = InvitationContent & {
   giftsEnabled: boolean
   /** Items guests can buy; empty when the couple isn't offering aso-ebi. */
   asoEbi: AsoEbiItem[]
+  /** The couple's wishlist; empty when they aren't sharing one. `funded` is kobo paid so far. */
+  wishlist: WishlistItem[]
 }
 
-export type AsoEbiItem = { id: string; name: string; description: string; unit: AsoEbiUnit; price: number }
+export type WishlistItem = {
+  id: string
+  name: string
+  description: string
+  imageId: string | null
+  price: number
+  funded: number
+}
+
+export type AsoEbiItem = {
+  id: string
+  name: string
+  description: string
+  imageId: string | null
+  unit: AsoEbiUnit
+  price: number
+}
 
 export type Rsvp = { name: string; email: string; phone: string; attending: boolean; updatedAt: string }
 
@@ -124,6 +142,25 @@ export type AsoEbiOverview = {
     itemName: string
     unit: string
     quantity: number
+    amount: number
+    status: GiftStatus
+    createdAt: string
+    paidAt: string | null
+  }[]
+}
+
+export type WishlistOverview = {
+  configured: boolean
+  feesConfirmed: boolean
+  enabled: boolean
+  hasPayout: boolean
+  items: WishlistItem[]
+  totals: { received: number; count: number }
+  gifts: {
+    id: string
+    guestName: string
+    guestEmail: string
+    itemName: string
     amount: number
     status: GiftStatus
     createdAt: string

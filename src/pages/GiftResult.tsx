@@ -15,7 +15,7 @@ type Result = {
     status: GiftStatus
     amount: number
     guestName: string
-    lines: { kind: 'cash' | 'aso_ebi'; amount: number; itemName: string | null; unit: string | null; quantity: number | null }[]
+    lines: { kind: 'cash' | 'aso_ebi' | 'wishlist'; amount: number; itemName: string | null; unit: string | null; quantity: number | null }[]
   }
   invitation: PublicInvitation | null
 }
@@ -64,7 +64,7 @@ export default function GiftResult() {
   }
 
   const { gift, invitation } = state.result
-  const retry = invitation && (invitation.giftsEnabled || invitation.asoEbi.length > 0)
+  const retry = invitation && (invitation.giftsEnabled || invitation.asoEbi.length > 0 || invitation.wishlist.length > 0)
   const names = invitation ? coupleNames(invitation.partnerOneName, invitation.partnerTwoName) : 'the couple'
   const firstName = gift.guestName.trim().split(/\s+/)[0]
   const back = `/invite/${slug}`
@@ -86,7 +86,11 @@ export default function GiftResult() {
               <ul className="gift-result-lines">
                 {gift.lines.map((l, i) => (
                   <li key={i}>
-                    {l.kind === 'cash' ? 'Cash gift' : `${quantityLabel(l.quantity ?? 0, l.unit ?? '')} of ${l.itemName}`}
+                    {l.kind === 'cash'
+                      ? 'Cash gift'
+                      : l.kind === 'wishlist'
+                        ? `Towards ${l.itemName}`
+                        : `${quantityLabel(l.quantity ?? 0, l.unit ?? '')} of ${l.itemName}`}
                     <span>{formatNaira(l.amount)}</span>
                   </li>
                 ))}

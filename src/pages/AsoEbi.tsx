@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import Field from '../components/Field.tsx'
-import { api, ApiError } from '../lib/api.ts'
+import ImageField from '../components/ImageField.tsx'
+import { api, ApiError, imageSrc } from '../lib/api.ts'
 import { MAX_PRICE_NAIRA, MIN_PRICE_NAIRA, quantityLabel, UNITS, type AsoEbiUnit } from '../lib/asoEbi.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { formatNaira } from '../lib/money.ts'
@@ -67,8 +68,8 @@ export default function AsoEbi() {
   )
 }
 
-type Draft = { name: string; description: string; unit: AsoEbiUnit; price: string }
-const EMPTY: Draft = { name: '', description: '', unit: 'set', price: '' }
+type Draft = { name: string; description: string; imageId: string | null; unit: AsoEbiUnit; price: string }
+const EMPTY: Draft = { name: '', description: '', imageId: null, unit: 'set', price: '' }
 
 function Items({ items, onChange }: { items: Item[]; onChange: () => void }) {
   // `null` is closed, 'new' is the add form, otherwise the id of the item being edited.
@@ -108,7 +109,7 @@ function Items({ items, onChange }: { items: Item[]; onChange: () => void }) {
             editing === item.id ? (
               <li key={item.id}>
                 <ItemForm
-                  initial={{ name: item.name, description: item.description, unit: item.unit, price: String(item.price / 100) }}
+                  initial={{ name: item.name, description: item.description, imageId: item.imageId, unit: item.unit, price: String(item.price / 100) }}
                   itemId={item.id}
                   onDone={() => {
                     setEditing(null)
@@ -119,6 +120,8 @@ function Items({ items, onChange }: { items: Item[]; onChange: () => void }) {
               </li>
             ) : (
               <li key={item.id}>
+                <span className="item-main">
+                  {item.imageId && <img className="thumb" src={imageSrc(item.imageId)} alt="" loading="lazy" />}
                 <span className="gift-name">
                   {item.name}
                   <span className="hint">
@@ -126,6 +129,7 @@ function Items({ items, onChange }: { items: Item[]; onChange: () => void }) {
                     {item.sold > 0 && ` · ${quantityLabel(item.sold, item.unit)} sold`}
                   </span>
                   {item.description && <span className="hint">{item.description}</span>}
+                </span>
                 </span>
                 <span className="item-actions">
                   <button type="button" className="link-button" onClick={() => setEditing(item.id)}>
@@ -207,7 +211,7 @@ function ItemForm({ initial, itemId, onDone, onCancel }: FormProps) {
     }
     setBusy(true)
     setError(null)
-    const body = { name: draft.name, description: draft.description, unit: draft.unit, price }
+    const body = { name: draft.name, description: draft.description, imageId: draft.imageId, unit: draft.unit, price }
     try {
       if (itemId) await api.put(`/wedding/gifts/aso-ebi/items/${itemId}`, body)
       else await api.post('/wedding/gifts/aso-ebi/items', body)
@@ -250,6 +254,7 @@ function ItemForm({ initial, itemId, onDone, onCancel }: FormProps) {
       <Field label="Details" optional hint="Colour, how many yards in a set, anything guests should know.">
         {(p) => <textarea {...p} rows={3} maxLength={300} value={draft.description} onChange={(e) => set('description', e.target.value)} />}
       </Field>
+      <ImageField value={draft.imageId} onChange={(imageId) => set('imageId', imageId)} />
       {error && <p role="alert" className="alert">{error}</p>}
       <div className="actions">
         <button className="btn" disabled={busy}>{busy ? 'Saving…' : itemId ? 'Save changes' : 'Add item'}</button>
