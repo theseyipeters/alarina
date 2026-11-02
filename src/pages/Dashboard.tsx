@@ -2,11 +2,12 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
 import CopyLink from '../components/CopyLink.tsx'
+import Tour, { type TourStep } from '../components/Tour.tsx'
 import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { coupleNames, daysUntil, formatDate, formatTime } from '../lib/format.ts'
 import { sideLabel } from '../lib/sides.ts'
-import type { Responses, Wedding } from '../lib/types.ts'
+import type { Responses, Session, Wedding } from '../lib/types.ts'
 import { useResponses } from '../lib/useResponses.ts'
 import { useTitle } from '../lib/useTitle.ts'
 import { useWedding } from '../lib/useWedding.ts'
@@ -15,7 +16,9 @@ import { STEPS } from '../setup/steps.ts'
 /** Dashboard overview: a countdown to the day, replies at a glance, and quick ways to share. */
 export default function Dashboard() {
   useTitle('Your wedding')
-  const { state } = useAuth()
+  const { state, refresh } = useAuth()
+  // null: decide automatically; true/false: opened from "Show me around", or just closed.
+  const [tour, setTour] = useState<boolean | null>(null)
   const [wedding, setWedding] = useWedding()
   const [responses] = useResponses()
   const navigate = useNavigate()
@@ -39,10 +42,22 @@ export default function Dashboard() {
 
   const link = w.slug ? `${window.location.origin}/invite/${w.slug}` : null
   const data = responses.status === 'ready' ? responses.data : null
+  const partner = state.couple.partner?.name ?? null
+  const tourSeen = Boolean(state.user.tourCompletedAt)
+  // First visit after setup: the tour starts by itself (once replies have loaded, so it can show them).
+  const tourOpen = tour ?? (!tourSeen && responses.status !== 'loading')
+
+  function endTour() {
+    setTour(false)
+    if (tourSeen) return
+    // Best effort: if this fails, the tour simply offers itself again next visit.
+    api.post<Session>('/auth/tour').then(refresh, () => {})
+  }
 
   return (
     <div className="home">
-      <Hero wedding={w} onChange={setWedding} />
+      {tourOpen && <Tour steps={tourSteps(partner)} onClose={endTour} />}
+      <Hero wedding={w} onChange={setWedding} onTour={() => setTour(true)} />
 
       {justFinished === 'published' && link && <Celebration link={link} />}
       {justFinished === 'draft' && (
@@ -53,12 +68,51 @@ export default function Dashboard() {
         {data && <ReplyBoard data={data} />}
         <div className="home-side">
           {w.status === 'published' && link && <ShareCard link={link} />}
-          <PartnerCard you={state.user.name} partner={state.couple.partner?.name ?? null} />
+          <PartnerCard you={state.user.name} partner={partner} />
         </div>
       </div>
     </div>
   )
 }
+
+const tourSteps = (partner: string | null): TourStep[] => [
+  {
+    title: 'Welcome to your wedding space',
+    text: 'A quick look around before you start. It takes about half a minute.',
+  },
+  {
+    target: '[data-tour="status"]',
+    title: 'Private until you publish',
+    text: 'Guests can’t see your invitation until you publish it, and you can unpublish any time.',
+  },
+  {
+    target: '[data-tour="design"]',
+    title: 'Make it yours',
+    text: 'Change the layout and palette whenever you like. Guests always see the latest version.',
+  },
+  {
+    target: '[data-tour="replies"]',
+    title: 'Replies arrive here',
+    text: 'See who’s coming at a glance, coloured by whose side they’re from. Responses has the full list.',
+  },
+  {
+    target: '[data-tour="tab-share"]',
+    title: 'Share your links',
+    text: 'Send one link to everyone, or use your personal links so each reply is counted on your side.',
+  },
+  {
+    target: '[data-tour="tab-gifts"]',
+    title: 'Cash gifts, if you want them',
+    text: 'Add your bank account and guests can send a gift after they reply. It stays off until you turn it on.',
+  },
+  {
+    target: '[data-tour="partner"]',
+    title: 'Plan together',
+    text: partner
+      ? `You and ${partner} share this space, each with your own sign-in.`
+      : 'Invite your partner so you can plan together, each with your own sign-in.',
+  },
+]
 
 function SetupPrompt({ wedding }: { wedding: Wedding | null }) {
   const step = wedding ? Math.min(wedding.checkpoint, STEPS.length - 1) + 1 : 0
@@ -97,7 +151,7 @@ function Countdown({ date }: { date: string | null }) {
   )
 }
 
-function Hero({ wedding, onChange }: { wedding: Wedding; onChange: (w: Wedding) => void }) {
+function Hero({ wedding, onChange, onTour }: { wedding: Wedding; onChange: (w: Wedding) => void; onTour: () => void }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notReady, setNotReady] = useState(false)
@@ -122,8 +176,9 @@ function Hero({ wedding, onChange }: { wedding: Wedding; onChange: (w: Wedding) 
     <section className="home-hero" aria-labelledby="couple-names">
       <div className="home-hero-main">
         <div className="home-hero-top">
-          <span className={published ? 'badge badge--live' : 'badge'}>{published ? 'Live' : 'Private draft'}</span>
+          <span className={published ? 'badge badge--live' : 'badge'} data-tour="status">{published ? 'Live' : 'Private draft'}</span>
           <Link to="/app/setup/names" className="home-edit">Edit details</Link>
+          <button type="button" className="link-button home-edit" onClick={onTour}>Show me around</button>
         </div>
         <h1 id="couple-names">{coupleNames(wedding.partnerOneName, wedding.partnerTwoName) || 'Your wedding'}</h1>
         <p className="home-meta">
@@ -141,7 +196,7 @@ function Hero({ wedding, onChange }: { wedding: Wedding; onChange: (w: Wedding) 
           <button className={published ? 'btn btn--secondary' : 'btn'} onClick={toggle} disabled={busy}>
             {busy ? 'Saving…' : published ? 'Unpublish' : 'Publish invitation'}
           </button>
-          <Link to="/app/design" className="btn btn--secondary">Design invitation</Link>
+          <Link to="/app/design" className="btn btn--secondary" data-tour="design">Design invitation</Link>
           {published && link && (
             <a href={link} target="_blank" rel="noopener" className="btn btn--secondary">
               View invitation<span className="visually-hidden"> (opens in a new tab)</span>
@@ -236,7 +291,7 @@ function ReplyBoard({ data }: { data: Responses }) {
   }
 
   return (
-    <section className="card board" aria-labelledby="replies-title">
+    <section className="card board" aria-labelledby="replies-title" data-tour="replies">
       <div className="row row--tight">
         <h2 id="replies-title">Replies</h2>
         <Link to="/app/responses">See all {summary.total > 0 ? summary.total : ''}</Link>
@@ -305,7 +360,7 @@ function ShareCard({ link }: { link: string }) {
 
 function PartnerCard({ you, partner }: { you: string; partner: string | null }) {
   return (
-    <section className="card" aria-labelledby="partner-title">
+    <section className="card" aria-labelledby="partner-title" data-tour="partner">
       <h2 id="partner-title">Planning together</h2>
       <div className="pair" aria-hidden="true">
         <span className="avatar side-a">{initials(you)}</span>
