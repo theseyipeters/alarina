@@ -7,6 +7,7 @@ import { withNext } from '../lib/nav.ts'
 import type { Session } from '../lib/types.ts'
 import { useTitle } from '../lib/useTitle.ts'
 import AuthLayout from '../components/AuthLayout.tsx'
+import Logo from '../components/Logo.tsx'
 
 type Lookup = { inviterName: string | null; expiresAt: string }
 
@@ -50,7 +51,7 @@ export default function AcceptInvite() {
 
   return (
     <AuthLayout>
-      <Link to="/" className="brand">Alárinà</Link>
+      <Link to="/" className="brand"><Logo /></Link>
       <div className="card">
         {invite === null || state.status === 'loading' ? (
           <p className="muted">Checking your invite…</p>

@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
 import './Dashboard.css'
+import Logo from '../components/Logo.tsx'
 
 const TABS = [
   { to: '/app', label: 'Overview', end: true },
@@ -18,7 +19,7 @@ export default function DashboardLayout() {
   return (
     <div className="page page--dashboard">
       <header className="row">
-        <Link to="/app" className="brand">Alárinà</Link>
+        <Link to="/app" className="brand"><Logo /></Link>
         <button
           className="btn btn--secondary"
           onClick={async () => {

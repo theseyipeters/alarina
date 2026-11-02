@@ -5,6 +5,7 @@ import { errorMessage } from '../lib/errors.ts'
 import { safeNext, withNext } from '../lib/nav.ts'
 import { useTitle } from '../lib/useTitle.ts'
 import AuthLayout from '../components/AuthLayout.tsx'
+import Logo from '../components/Logo.tsx'
 
 export default function SignUp() {
   useTitle('Create your account')
@@ -37,7 +38,7 @@ export default function SignUp() {
 
   return (
     <AuthLayout>
-      <Link to="/" className="brand">Alárinà</Link>
+      <Link to="/" className="brand"><Logo /></Link>
       <div className="card">
         <h1>Create your account</h1>
         <p className="muted">You and your partner will share one wedding space.</p>

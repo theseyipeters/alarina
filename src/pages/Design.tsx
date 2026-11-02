@@ -10,6 +10,7 @@ import type { Wedding } from '../lib/types.ts'
 import { useTitle } from '../lib/useTitle.ts'
 import { useWedding } from '../lib/useWedding.ts'
 import './Design.css'
+import Logo from '../components/Logo.tsx'
 
 type Device = 'phone' | 'desktop'
 
@@ -54,7 +55,7 @@ export default function Design() {
   return (
     <main id="main" className="page page--design">
       <div className="row">
-        <Link to="/app" className="brand">Alárinà</Link>
+        <Link to="/app" className="brand"><Logo /></Link>
         <p className="save-status" aria-live="polite">
           {saving === 'saving' && 'Saving…'}
           {saving === 'saved' && (wedding.status === 'published' ? 'Saved and live' : 'Saved')}

@@ -3,6 +3,7 @@ import Field from '../components/Field.tsx'
 import { useTitle } from '../lib/useTitle.ts'
 import '@fontsource/instrument-serif'
 import './StyleGuide.css'
+import Logo from '../components/Logo.tsx'
 
 const COLOURS = [
   ['--bg', 'Page background'],
@@ -36,7 +37,7 @@ export default function StyleGuide() {
   return (
     <main id="main" className="page page--wide">
       <div className="row">
-        <span className="brand">Alárinà</span>
+        <span className="brand"><Logo /></span>
         <div className="actions" role="group" aria-label="Theme">
           {(['auto', 'light', 'dark'] as const).map((t) => (
             <button
@@ -63,8 +64,8 @@ export default function StyleGuide() {
             <code>h1 · Bricolage Grotesque · 32px · 600 (semibold: main headings only)</code>
           </div>
           <div>
-            <span className="brand">Alárinà</span>
-            <code>Wordmark · Bricolage Grotesque · 20px · 600</code>
+            <span className="brand"><Logo /></span>
+            <code>Logo · DM Serif Display, outlined (components/Logo.tsx)</code>
           </div>
           <div>
             <h2>Your partner</h2>

@@ -5,6 +5,7 @@ import { errorMessage } from '../lib/errors.ts'
 import { safeNext, withNext } from '../lib/nav.ts'
 import { useTitle } from '../lib/useTitle.ts'
 import AuthLayout from '../components/AuthLayout.tsx'
+import Logo from '../components/Logo.tsx'
 
 export default function SignIn() {
   useTitle('Sign in')
@@ -32,7 +33,7 @@ export default function SignIn() {
 
   return (
     <AuthLayout>
-      <Link to="/" className="brand">Alárinà</Link>
+      <Link to="/" className="brand"><Logo /></Link>
       <div className="card">
         <h1>Sign in</h1>
         {error && <p role="alert" className="alert">{error}</p>}

@@ -5,6 +5,7 @@ import CopyLink from '../components/CopyLink.tsx'
 import { api } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { useTitle } from '../lib/useTitle.ts'
+import Logo from '../components/Logo.tsx'
 
 type Created = { link: string; expiresAt: string; emailSent: boolean }
 
@@ -37,7 +38,7 @@ export default function InvitePartner() {
 
   return (
     <main id="main" className="page">
-      <Link to="/" className="brand">Alárinà</Link>
+      <Link to="/" className="brand"><Logo /></Link>
       <div className="card">
         <h1>Invite your partner</h1>
         {partner ? (

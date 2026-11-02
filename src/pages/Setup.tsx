@@ -12,6 +12,7 @@ import { useWedding } from '../lib/useWedding.ts'
 import EventsEditor from '../setup/EventsEditor.tsx'
 import { FIELD_STEP, REQUIRED, STEP_FIELDS, STEPS, stepIndex, type StepId } from '../setup/steps.ts'
 import { useAutosave, type SaveStatus } from '../setup/useAutosave.ts'
+import Logo from '../components/Logo.tsx'
 
 // The live preview pulls in the invitation fonts and styles, so it loads only on wide screens.
 const LivePreview = lazy(() => import('../setup/LivePreview.tsx'))
@@ -193,7 +194,7 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
   return (
     <main id="main" className="page page--setup">
       <div className="row">
-        <Link to="/app" className="brand">Alárinà</Link>
+        <Link to="/app" className="brand"><Logo /></Link>
         <SaveIndicator status={status} retry={() => flush().catch(() => {})} />
       </div>
 

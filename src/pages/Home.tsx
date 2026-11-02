@@ -3,6 +3,7 @@ import { useAuth } from '../auth/useAuth.ts'
 import HeroInvitation from '../components/HeroInvitation.tsx'
 import { useTitle } from '../lib/useTitle.ts'
 import './Home.css'
+import Logo from '../components/Logo.tsx'
 
 const STEPS = [
   {
@@ -60,7 +61,7 @@ export default function Home() {
   return (
     <div className="landing">
       <header className="landing-header">
-        <Link to="/" className="brand">Alárinà</Link>
+        <Link to="/" className="brand"><Logo /></Link>
         <nav className="landing-nav" aria-label="Account">
           {signedIn ? (
             <Link to="/app" className="btn btn--secondary">Your wedding</Link>
@@ -135,7 +136,7 @@ export default function Home() {
       </main>
 
       <footer className="landing-footer">
-        <span className="brand">Alárinà</span>
+        <span className="brand"><Logo /></span>
         <span>© {new Date().getFullYear()} Alárinà</span>
       </footer>
     </div>
