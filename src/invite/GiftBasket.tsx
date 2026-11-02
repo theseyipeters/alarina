@@ -3,7 +3,7 @@ import Field from '../components/Field.tsx'
 import { api, imageSrc } from '../lib/api.ts'
 import { MAX_QUANTITY, quantityLabel } from '../lib/asoEbi.ts'
 import { errorMessage } from '../lib/errors.ts'
-import { formatNaira, grossUp, MAX_GIFT_NAIRA, MIN_GIFT_NAIRA } from '../lib/money.ts'
+import { formatNaira, MAX_GIFT_NAIRA, MIN_GIFT_NAIRA } from '../lib/money.ts'
 import type { PublicInvitation, WishlistItem } from '../lib/types.ts'
 import { MIN_CONTRIBUTION } from '../lib/wishlist.ts'
 
@@ -31,7 +31,8 @@ type Props = {
 /**
  * Everything a guest can give, on one page: a cash gift and/or aso-ebi, in any mix. The running
  * total sticks to the bottom, and the whole basket is paid in one Paystack checkout so the guest
- * pays the fee once and the couple receive exactly the sum of what was chosen.
+ * pays the fee once and the couple receive exactly the sum of what was chosen. The fee isn't shown
+ * here: Paystack's checkout shows the full amount, fee included.
  */
 export default function GiftBasket({ invitation, names, guest, rsvpToken }: Props) {
   const items = invitation.asoEbi
@@ -66,7 +67,6 @@ export default function GiftBasket({ invitation, names, guest, rsvpToken }: Prop
     ...wishLines,
   ]
   const total = lines.reduce((sum, l) => sum + l.amount, 0)
-  const quote = total > 0 ? grossUp(total) : null
 
   const setQuantity = (id: string, quantity: number) =>
     setQuantities((q) => ({ ...q, [id]: Math.min(MAX_QUANTITY, Math.max(0, quantity)) }))
@@ -288,7 +288,7 @@ export default function GiftBasket({ invitation, names, guest, rsvpToken }: Prop
         )}
 
         <div aria-live="polite">
-          {quote ? (
+          {total > 0 ? (
             <dl className="gift-breakdown">
               {lines.map((l) => (
                 <div key={l.key}>
@@ -296,13 +296,9 @@ export default function GiftBasket({ invitation, names, guest, rsvpToken }: Prop
                   <dd>{formatNaira(l.amount)}</dd>
                 </div>
               ))}
-              <div>
-                <dt>Paystack fee</dt>
-                <dd>{formatNaira(quote.fee)}</dd>
-              </div>
               <div className="gift-breakdown-total">
-                <dt>You pay</dt>
-                <dd>{formatNaira(quote.charge)}</dd>
+                <dt>Total</dt>
+                <dd>{formatNaira(total)}</dd>
               </div>
             </dl>
           ) : (
@@ -314,10 +310,10 @@ export default function GiftBasket({ invitation, names, guest, rsvpToken }: Prop
         <div className="basket-bar">
           {error && <p role="alert" className="alert">{error}</p>}
           <button className="btn btn--block" disabled={busy}>
-            {busy ? 'Opening Paystack…' : quote ? `Pay ${formatNaira(quote.charge)}` : 'Continue to payment'}
+            {busy ? 'Opening Paystack…' : 'Continue to payment'}
           </button>
         </div>
-        <p className="hint gift-note">Secure payment by Paystack. Your RSVP is already saved, whatever you decide.</p>
+        <p className="hint gift-note">Secure payment by Paystack, who add their fee at checkout. Your RSVP is already saved, whatever you decide.</p>
       </form>
     </section>
   )
