@@ -10,8 +10,8 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="auth">
       <div className="auth-art" aria-hidden="true">
-        <p className="auth-art-title">Every invitation, every reply, in one place.</p>
         <div className="auth-art-scene">
+          <p className="auth-art-title">Every invitation, every reply, in one place.</p>
           <HeroInvitation />
         </div>
         <p className="auth-art-note">Made for Nigerian weddings, planned by two.</p>
