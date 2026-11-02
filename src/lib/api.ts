@@ -22,8 +22,12 @@ async function request<T>(path: string, { body, headers, ...init }: RequestOptio
     // The API is on another origin, so the session cookie has to be sent explicitly.
     credentials: 'include',
     ...init,
-    headers: { ...(body !== undefined && { 'Content-Type': 'application/json' }), ...headers },
-    ...(body !== undefined && { body: JSON.stringify(body) }),
+    // A Blob (a photo) goes up as it is; anything else is JSON.
+    headers: {
+      ...(body !== undefined && { 'Content-Type': body instanceof Blob ? body.type : 'application/json' }),
+      ...headers,
+    },
+    ...(body !== undefined && { body: body instanceof Blob ? body : JSON.stringify(body) }),
   })
 
   const data: unknown = await res.json().catch(() => null)
@@ -35,6 +39,9 @@ async function request<T>(path: string, { body, headers, ...init }: RequestOptio
 
   return data as T
 }
+
+/** Where an uploaded item photo is served from. */
+export const imageSrc = (imageId: string) => `${API_BASE}/public/images/${imageId}`
 
 export const api = {
   get: <T>(path: string) => request<T>(path),

@@ -1,4 +1,5 @@
-/* Couple's Gifts tab: a big total, the payout account as a bank card, a switch and the list. */
+/* Couple's Gifts tab: a sub-nav for the three kinds, then for cash a big total, the payout account
+   as a bank card, a switch and the list. */
 
 .gifts {
   display: grid;
@@ -158,6 +159,38 @@
   border-top: 1px solid var(--border);
 }
 
+.item-list {
+  display: grid;
+  margin: var(--space-4) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border);
+}
+
+.item-list li > .item-form {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.item-actions {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.item-form {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-4) 0;
+}
+
 .gift-name .hint {
   display: block;
 }
@@ -192,4 +225,45 @@
   .switch-thumb {
     transition: none;
   }
+}
+
+/* Locked: the real page shows faded behind an Unlock Gifts card that stays in view while scrolling. */
+.gifts-locked {
+  position: relative;
+}
+
+.gifts-locked-preview {
+  max-height: 36rem;
+  overflow: hidden;
+  opacity: 0.35;
+  filter: blur(2px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.unlock {
+  position: absolute;
+  top: var(--space-8);
+  left: 50%;
+  display: grid;
+  gap: var(--space-3);
+  justify-items: center;
+  width: min(100% - 2 * var(--space-4), 26rem);
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+.unlock h2,
+.unlock p {
+  margin: 0;
+}
+
+.unlock-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }

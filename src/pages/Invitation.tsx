@@ -3,7 +3,8 @@ import { Link, useParams, useSearchParams } from 'react-router'
 import CopyLink from '../components/CopyLink.tsx'
 import { downloadIcs, googleCalendarUrl } from '../invite/calendar.ts'
 import EnvelopeIntro, { OPEN_MS } from '../invite/EnvelopeIntro.tsx'
-import GiftOffer from '../invite/GiftOffer.tsx'
+import GiftBasket from '../invite/GiftBasket.tsx'
+import { inviteAttrs } from '../invite/design.ts'
 import InvitationCard from '../invite/InvitationCard.tsx'
 import { mapLink } from '../invite/maps.ts'
 import RsvpForm from '../invite/RsvpForm.tsx'
@@ -116,7 +117,7 @@ function InvitationView({ invitation, names, from }: { invitation: PublicInvitat
     .join('')
 
   return (
-    <div className="inv inv--page" data-palette={invitation.palette} data-template={invitation.template}>
+    <div className="inv inv--page" {...inviteAttrs(invitation)}>
       {stage !== 'open' ? (
         <main id="main">
           <EnvelopeIntro invitation={invitation} opening={stage === 'opening'} onOpen={open} />
@@ -251,14 +252,12 @@ function RsvpPanel({ invitation, names, from, sectionRef }: RsvpPanelProps) {
             <CalendarButtons invitation={invitation} />
           </div>
         )}
-        {invitation.giftsEnabled && (
-          <GiftOffer
-            slug={invitation.slug}
-            names={names}
-            guest={{ name: rsvp.name, email: rsvp.email }}
-            rsvpToken={new URL(editLink).pathname.split('/').pop()}
-          />
-        )}
+        <GiftBasket
+          invitation={invitation}
+          names={names}
+          guest={{ name: rsvp.name, email: rsvp.email, phone: rsvp.phone }}
+          rsvpToken={new URL(editLink).pathname.split('/').pop()}
+        />
         <div className="rsvp-done-link">
           <p className="muted">
             Your private link to change your reply. Keep it to yourself: anyone with it can change your reply.

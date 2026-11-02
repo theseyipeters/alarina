@@ -1,9 +1,9 @@
 import { coupleNames, formatDate } from '../lib/format.ts'
-import type { PublicInvitation } from '../lib/types.ts'
+import type { InvitationContent } from '../lib/types.ts'
 
 export const OPEN_MS = 2400
 
-type Props = { invitation: PublicInvitation; opening: boolean; onOpen: () => void }
+type Props = { invitation: Pick<InvitationContent, 'partnerOneName' | 'partnerTwoName' | 'date'>; opening: boolean; onOpen: () => void }
 
 /**
  * The first thing a guest sees: a sealed envelope in the invitation's own colours, sealed with

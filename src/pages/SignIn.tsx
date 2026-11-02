@@ -14,6 +14,8 @@ export default function SignIn() {
   const next = safeNext(useSearchParams()[0].get('next'))
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  // Kept so "Forgot password?" can carry it over.
+  const [email, setEmail] = useState('')
 
   if (state.status === 'signedIn' && !busy) return <Navigate to={next ?? '/app'} replace />
 
@@ -23,7 +25,7 @@ export default function SignIn() {
     setBusy(true)
     setError(null)
     try {
-      await signIn({ email: String(form.get('email')), password: String(form.get('password')) })
+      await signIn({ email, password: String(form.get('password')) })
       navigate(next ?? '/app', { replace: true })
     } catch (err) {
       setError(errorMessage(err))
@@ -40,10 +42,13 @@ export default function SignIn() {
         <form onSubmit={onSubmit}>
           <div className="field">
             <label htmlFor="email">Email</label>
-            <input id="email" name="email" type="email" autoComplete="email" required placeholder="you@example.com" />
+            <input id="email" name="email" type="email" autoComplete="email" required placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="field">
-            <label htmlFor="password">Password</label>
+            <div className="label-row">
+              <label htmlFor="password">Password</label>
+              <Link to="/forgot-password" state={{ email }}>Forgot password?</Link>
+            </div>
             <input id="password" name="password" type="password" autoComplete="current-password" required placeholder="Your password" />
           </div>
           <button className="btn btn--block" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>

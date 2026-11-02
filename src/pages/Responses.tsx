@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { Link } from 'react-router'
+import Select from '../components/Select.tsx'
 import { api } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { sideLabel } from '../lib/sides.ts'
@@ -134,13 +135,16 @@ export default function Responses() {
               ))}
             </div>
             <label className="visually-hidden" htmlFor="side-filter">Filter by side</label>
-            <select id="side-filter" value={side} onChange={(e) => setSide(e.target.value)}>
-              <option value="all">All sides</option>
-              {data.partners.map((p) => (
-                <option key={p.userId} value={p.userId}>{sideLabel(data.partners, p.userId)}</option>
-              ))}
-              <option value={NO_SIDE}>Side not set</option>
-            </select>
+            <Select
+              id="side-filter"
+              value={side}
+              onChange={setSide}
+              options={[
+                { value: 'all', label: 'All sides' },
+                ...data.partners.map((p) => ({ value: p.userId, label: sideLabel(data.partners, p.userId) })),
+                { value: NO_SIDE, label: 'Side not set' },
+              ]}
+            />
             <label className="visually-hidden" htmlFor="search">Search replies</label>
             <input
               id="search"
@@ -184,16 +188,15 @@ export default function Responses() {
                       </span>
                     </td>
                     <td data-label="Side">
-                      <select
+                      <Select
                         aria-label={`Side for ${r.name}`}
                         value={r.sideUserId ?? NO_SIDE}
-                        onChange={(e) => changeSide(r, e.target.value)}
-                      >
-                        {data.partners.map((p) => (
-                          <option key={p.userId} value={p.userId}>{sideLabel(data.partners, p.userId)}</option>
-                        ))}
-                        <option value={NO_SIDE}>Not set</option>
-                      </select>
+                        onChange={(value) => changeSide(r, value)}
+                        options={[
+                          ...data.partners.map((p) => ({ value: p.userId, label: sideLabel(data.partners, p.userId) })),
+                          { value: NO_SIDE, label: 'Not set' },
+                        ]}
+                      />
                       {r.sideSource === 'link' && <span className="hint">From their link</span>}
                     </td>
                     <td data-label="Replied">{repliedOn(r.createdAt)}</td>

@@ -16,10 +16,16 @@ import SignUp from './pages/SignUp.tsx'
 const Invitation = lazy(() => import('./pages/Invitation.tsx'))
 const EditRsvp = lazy(() => import('./pages/EditRsvp.tsx'))
 const Design = lazy(() => import('./pages/Design.tsx'))
+const Studio = lazy(() => import('./pages/Studio.tsx'))
 const Responses = lazy(() => import('./pages/Responses.tsx'))
 const Share = lazy(() => import('./pages/Share.tsx'))
 const Gifts = lazy(() => import('./pages/Gifts.tsx'))
+const CashGifts = lazy(() => import('./pages/CashGifts.tsx'))
+const AsoEbi = lazy(() => import('./pages/AsoEbi.tsx'))
+const Wishlist = lazy(() => import('./pages/Wishlist.tsx'))
 const GiftResult = lazy(() => import('./pages/GiftResult.tsx'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword.tsx'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword.tsx'))
 
 // Development-only reference page; the condition is compiled away so production builds don't include it.
 const StyleGuide = import.meta.env.DEV ? lazy(() => import('./pages/StyleGuide.tsx')) : null
@@ -34,6 +40,8 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/partner/accept/:token" element={<AcceptInvite />} />
             <Route path="/invite/:slug" element={<Invitation />} />
             <Route path="/invite/:slug/gift" element={<GiftResult />} />
@@ -44,10 +52,15 @@ export default function App() {
                 <Route index element={<Dashboard />} />
                 <Route path="responses" element={<Responses />} />
                 <Route path="share" element={<Share />} />
-                <Route path="gifts" element={<Gifts />} />
+                <Route path="gifts" element={<Gifts />}>
+                  <Route index element={<CashGifts />} />
+                  <Route path="aso-ebi" element={<AsoEbi />} />
+                  <Route path="wishlist" element={<Wishlist />} />
+                </Route>
               </Route>
               <Route path="/app/setup/:step?" element={<Setup />} />
               <Route path="/app/design" element={<Design />} />
+              <Route path="/app/studio" element={<Studio />} />
             </Route>
             {StyleGuide && <Route path="/styleguide" element={<StyleGuide />} />}
             <Route path="*" element={<NotFound />} />

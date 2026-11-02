@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router'
 import InvitationCard, { type InvitationPart } from '../invite/InvitationCard.tsx'
-import type { Palette, Template } from '../invite/design.ts'
+import { EMPTY_LOOK, inviteAttrs } from '../invite/design.ts'
 import '../invite/styles.ts'
-import type { WeddingFields } from '../lib/types.ts'
+import type { InvitationDesign, WeddingFields } from '../lib/types.ts'
+import { designPath, STUDIO_QUERY } from '../lib/studio.ts'
+import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import type { StepId } from './steps.ts'
 
 const STEP_PART: Partial<Record<StepId, InvitationPart>> = {
@@ -18,14 +20,15 @@ const STEP_PART: Partial<Record<StepId, InvitationPart>> = {
   events: 'events',
 }
 
-type Props = { values: WeddingFields; template: Template; palette: Palette; step: StepId }
+type Props = { values: WeddingFields; design: Omit<InvitationDesign, 'look'> & { look?: InvitationDesign['look'] }; step: StepId }
 
 /**
  * The invitation, building itself beside the wizard. Empty answers show a gentle stand-in for
  * the question being asked, and that part of the card is highlighted. Decorative: the review
  * step lists every answer for screen-reader users.
  */
-export default function LivePreview({ values, template, palette, step }: Props) {
+export default function LivePreview({ values, design, step }: Props) {
+  const studio = useMediaQuery(STUDIO_QUERY)
   const scrollRef = useRef<HTMLDivElement>(null)
   const highlight = STEP_PART[step] ?? null
 
@@ -41,8 +44,8 @@ export default function LivePreview({ values, template, palette, step }: Props) 
 
   const invitation = {
     ...values,
-    template,
-    palette,
+    ...design,
+    look: design.look ?? EMPTY_LOOK,
     partnerOneName: values.partnerOneName?.trim() || 'Your name',
     partnerTwoName: values.partnerTwoName?.trim() || 'Your partner',
     partnerOneFamily: filled(values.partnerOneFamily, 'Your family', 'families'),
@@ -61,10 +64,10 @@ export default function LivePreview({ values, template, palette, step }: Props) 
       <div className="live-preview-head">
         <span className="live-dot" aria-hidden="true" />
         <span>Live preview</span>
-        <Link to="/app/design">Change design</Link>
+        <Link to={designPath(studio)}>Change design</Link>
       </div>
       <div className="live-preview-frame" ref={scrollRef}>
-        <div className="inv inv--preview inv--live" data-palette={palette} data-template={template} inert>
+        <div className="inv inv--preview inv--live" {...inviteAttrs(invitation)} inert>
           <InvitationCard invitation={invitation} highlight={highlight} />
         </div>
       </div>

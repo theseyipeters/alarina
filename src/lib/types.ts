@@ -1,4 +1,5 @@
-import type { Palette, Template } from '../invite/design.ts'
+import type { InvitationLook, Palette, Template } from '../invite/design.ts'
+import type { AsoEbiUnit } from './asoEbi.ts'
 
 export type User = { id: string; name: string; email: string; tourCompletedAt: string | null }
 
@@ -35,7 +36,7 @@ export type WeddingFields = {
   events: WeddingEvent[]
 }
 
-export type InvitationDesign = { template: Template; palette: Palette }
+export type InvitationDesign = { template: Template; palette: Palette; look: InvitationLook }
 
 /** What guests see: the answers plus the chosen design. */
 export type InvitationContent = WeddingFields & InvitationDesign
@@ -45,6 +46,28 @@ export type PublicInvitation = InvitationContent & {
   rsvpOpen: boolean
   rsvpClosedReason: 'deadline' | 'past' | null
   giftsEnabled: boolean
+  /** Items guests can buy; empty when the couple isn't offering aso-ebi. */
+  asoEbi: AsoEbiItem[]
+  /** The couple's wishlist; empty when they aren't sharing one. `funded` is kobo paid so far. */
+  wishlist: WishlistItem[]
+}
+
+export type WishlistItem = {
+  id: string
+  name: string
+  description: string
+  imageId: string | null
+  price: number
+  funded: number
+}
+
+export type AsoEbiItem = {
+  id: string
+  name: string
+  description: string
+  imageId: string | null
+  unit: AsoEbiUnit
+  price: number
 }
 
 export type Rsvp = { name: string; email: string; phone: string; attending: boolean; updatedAt: string }
@@ -97,6 +120,47 @@ export type GiftsOverview = {
     id: string
     guestName: string
     guestEmail: string
+    amount: number
+    status: GiftStatus
+    createdAt: string
+    paidAt: string | null
+  }[]
+}
+
+export type AsoEbiOverview = {
+  configured: boolean
+  feesConfirmed: boolean
+  enabled: boolean
+  hasPayout: boolean
+  items: (AsoEbiItem & { sold: number })[]
+  totals: { received: number; count: number }
+  orders: {
+    id: string
+    guestName: string
+    guestEmail: string
+    phone: string
+    itemName: string
+    unit: string
+    quantity: number
+    amount: number
+    status: GiftStatus
+    createdAt: string
+    paidAt: string | null
+  }[]
+}
+
+export type WishlistOverview = {
+  configured: boolean
+  feesConfirmed: boolean
+  enabled: boolean
+  hasPayout: boolean
+  items: WishlistItem[]
+  totals: { received: number; count: number }
+  gifts: {
+    id: string
+    guestName: string
+    guestEmail: string
+    itemName: string
     amount: number
     status: GiftStatus
     createdAt: string

@@ -1,5 +1,5 @@
 /*
- * Invitation styles. Loaded only by invitation pages (public invite, edit RSVP, design preview).
+ * Invitation styles. Loaded only by invitation pages (public invite, edit RSVP, design preview, Studio).
  *
  * A palette re-maps the app's own tokens inside .inv, so buttons, fields and alerts take on
  * the invitation's colours with no extra component styles. Every text/background pair below
@@ -112,12 +112,222 @@
   color-scheme: dark;
 }
 
+[data-palette='terracotta'] {
+  --bg: #f6ece4;
+  --surface: #fdf6f0;
+  --text: #2f1d15;
+  --text-muted: #6b4d3f;
+  --border: #e8d5c7;
+  --field-border: #977a6b;
+  --primary: #a4472a;
+  --primary-hover: #86391f;
+  --on-primary: #ffffff;
+  --accent: #a4472a;
+  --focus: #a4472a;
+  --danger: #a3261a;
+  --danger-bg: #fbedeb;
+  --success: #1f6b3a;
+  --success-bg: #eaf5ee;
+  color-scheme: light;
+}
+
+[data-palette='champagne'] {
+  --bg: #f5efe2;
+  --surface: #fcf8ef;
+  --text: #2a241a;
+  --text-muted: #615641;
+  --border: #e6dcc6;
+  --field-border: #8c806a;
+  --primary: #7d5f22;
+  --primary-hover: #644b19;
+  --on-primary: #ffffff;
+  --accent: #7d5f22;
+  --focus: #7d5f22;
+  --danger: #a3261a;
+  --danger-bg: #fbedeb;
+  --success: #1f6b3a;
+  --success-bg: #eaf5ee;
+  color-scheme: light;
+}
+
+[data-palette='lavender'] {
+  --bg: #f0edf6;
+  --surface: #faf8fd;
+  --text: #231f33;
+  --text-muted: #585170;
+  --border: #ddd7ea;
+  --field-border: #857f98;
+  --primary: #5b4a8b;
+  --primary-hover: #48396f;
+  --on-primary: #ffffff;
+  --accent: #5b4a8b;
+  --focus: #5b4a8b;
+  --danger: #a3261a;
+  --danger-bg: #fbedeb;
+  --success: #1f6b3a;
+  --success-bg: #eaf5ee;
+  color-scheme: light;
+}
+
+[data-palette='ocean'] {
+  --bg: #eaf1f5;
+  --surface: #f7fbfd;
+  --text: #142430;
+  --text-muted: #475c6a;
+  --border: #d3e0e8;
+  --field-border: #74889a;
+  --primary: #1f4e6e;
+  --primary-hover: #173c55;
+  --on-primary: #ffffff;
+  --accent: #1f4e6e;
+  --focus: #1f4e6e;
+  --danger: #a3261a;
+  --danger-bg: #fbedeb;
+  --success: #1f6b3a;
+  --success-bg: #eaf5ee;
+  color-scheme: light;
+}
+
+[data-palette='noir'] {
+  --bg: #f2f2f0;
+  --surface: #ffffff;
+  --text: #0b0b0b;
+  --text-muted: #555555;
+  --border: #e2e2e0;
+  --field-border: #878787;
+  --primary: #0b0b0b;
+  --primary-hover: #333333;
+  --on-primary: #ffffff;
+  --accent: #0b0b0b;
+  --focus: #0b0b0b;
+  --danger: #a3261a;
+  --danger-bg: #fbedeb;
+  --success: #1f6b3a;
+  --success-bg: #eaf5ee;
+  color-scheme: light;
+}
+
+[data-palette='indigo'] {
+  --bg: #16204a;
+  --surface: #1c2858;
+  --text: #f3efe6;
+  --text-muted: #c3c6d8;
+  --border: #33407a;
+  --field-border: #8189b5;
+  --primary: #f3efe6;
+  --primary-hover: #ffffff;
+  --on-primary: #16204a;
+  --accent: #a9c3f2;
+  --focus: #a9c3f2;
+  --danger: #ffb4a8;
+  --danger-bg: #4a2420;
+  --success: #a8e2bc;
+  --success-bg: #1d4a35;
+  color-scheme: dark;
+}
+
+[data-palette='wine'] {
+  --bg: #3a1420;
+  --surface: #47192a;
+  --text: #f8ece6;
+  --text-muted: #dcc2c0;
+  --border: #63303f;
+  --field-border: #a57f86;
+  --primary: #e8b4a0;
+  --primary-hover: #f0c6b5;
+  --on-primary: #3a1420;
+  --accent: #e8b4a0;
+  --focus: #e8b4a0;
+  --danger: #ffb4a8;
+  --danger-bg: #4a2420;
+  --success: #a8e2bc;
+  --success-bg: #1d4a35;
+  color-scheme: dark;
+}
+
+/* The couple's own colours arrive as inline tokens (derivePalette); status colours follow the tone. */
+[data-palette='custom'] {
+  --danger: #a3261a;
+  --danger-bg: #fbedeb;
+  --success: #1f6b3a;
+  --success-bg: #eaf5ee;
+  color-scheme: light;
+}
+
+[data-palette='custom'][data-tone='dark'] {
+  --danger: #ffb4a8;
+  --danger-bg: #4a2420;
+  --success: #a8e2bc;
+  --success-bg: #1d4a35;
+  color-scheme: dark;
+}
+
+/* ── Fonts ──────────────────────────────────────────────────────────── */
+
+/* One stack per font, used by the three roles below and by font samples in the Studio. */
+:root {
+  --ff-instrument: var(--font-invite);
+  --ff-elorien: 'Elorien', var(--font-invite);
+  --ff-cormorant: 'Cormorant Garamond', var(--font-invite);
+  --ff-noto-display: 'Noto Serif Display', var(--font-invite);
+  --ff-great-vibes: 'Great Vibes', var(--font-invite);
+  --ff-ballet: 'Ballet', var(--font-invite);
+  --ff-unbounded: 'Unbounded', var(--font-sans);
+  --ff-eb-garamond: 'EB Garamond', Georgia, serif;
+  --ff-spectral: 'Spectral', Georgia, serif;
+  --ff-geist: var(--font-sans);
+  --ff-montserrat: 'Montserrat', var(--font-sans);
+  --ff-work-sans: 'Work Sans', var(--font-sans);
+  --ff-nunito-sans: 'Nunito Sans', var(--font-sans);
+}
+
+/* Three roles: names, headings (and numerals, quotes), and body text. The Studio picks each one;
+   inviteAttrs() always sets all three. Fonts are never synthesised in bold or italic. */
+.inv[data-heading-font='cormorant'] { --inv-display: var(--ff-cormorant); }
+.inv[data-heading-font='noto-display'] { --inv-display: var(--ff-noto-display); }
+.inv[data-heading-font='eb-garamond'] { --inv-display: var(--ff-eb-garamond); }
+.inv[data-heading-font='spectral'] { --inv-display: var(--ff-spectral); }
+.inv[data-heading-font='unbounded'] { --inv-display: var(--ff-unbounded); }
+
+.inv[data-names-font='instrument'] { --inv-names: var(--ff-instrument); }
+.inv[data-names-font='elorien'] { --inv-names: var(--ff-elorien); }
+.inv[data-names-font='cormorant'] { --inv-names: var(--ff-cormorant); }
+.inv[data-names-font='noto-display'] { --inv-names: var(--ff-noto-display); --font-fit: 0.9; }
+.inv[data-names-font='great-vibes'] { --inv-names: var(--ff-great-vibes); --font-boost: 1.15; }
+.inv[data-names-font='ballet'] { --inv-names: var(--ff-ballet); --font-boost: 1.05; --font-fit: 0.85; }
+.inv[data-names-font='unbounded'] { --inv-names: var(--ff-unbounded); --font-boost: 0.85; --font-fit: 0.66; }
+
+.inv[data-body-font='eb-garamond'] { --inv-body: var(--ff-eb-garamond); }
+.inv[data-body-font='spectral'] { --inv-body: var(--ff-spectral); }
+.inv[data-body-font='montserrat'] { --inv-body: var(--ff-montserrat); }
+.inv[data-body-font='work-sans'] { --inv-body: var(--ff-work-sans); }
+.inv[data-body-font='nunito-sans'] { --inv-body: var(--ff-nunito-sans); }
+
+/* A sample of one font, outside an invitation (Studio font pickers). */
+[data-font='instrument'] { font-family: var(--ff-instrument); }
+[data-font='elorien'] { font-family: var(--ff-elorien); }
+[data-font='cormorant'] { font-family: var(--ff-cormorant); }
+[data-font='noto-display'] { font-family: var(--ff-noto-display); }
+[data-font='great-vibes'] { font-family: var(--ff-great-vibes); }
+[data-font='ballet'] { font-family: var(--ff-ballet); }
+[data-font='unbounded'] { font-family: var(--ff-unbounded); }
+[data-font='eb-garamond'] { font-family: var(--ff-eb-garamond); }
+[data-font='spectral'] { font-family: var(--ff-spectral); }
+[data-font='geist'] { font-family: var(--ff-geist); }
+[data-font='montserrat'] { font-family: var(--ff-montserrat); }
+[data-font='work-sans'] { font-family: var(--ff-work-sans); }
+[data-font='nunito-sans'] { font-family: var(--ff-nunito-sans); }
+
 /* ── Page ───────────────────────────────────────────────────────────── */
 
 .inv {
   --inv-display: var(--font-invite);
+  --inv-names: var(--inv-display);
+  --inv-body: var(--font-sans);
   min-height: 100vh;
   padding: var(--space-8) var(--space-4) var(--space-12);
+  font-family: var(--inv-body);
+  font-synthesis: none;
   color: var(--text);
   background: var(--bg);
 }
@@ -182,25 +392,41 @@
 }
 
 .inv-names {
-  /* The layout's size, unless the longest name needs it smaller to fit on one line. */
+  /* The layout's size (--name-size, scaled in the Studio), unless the longest name needs it
+     smaller to fit on one line. Wide fonts and capitals fit fewer letters (--font-fit). */
+  --name-size: clamp(2.75rem, 15cqi, 5.5rem);
   --fit: 190cqi;
 
   display: grid;
   margin: 0;
-  font-size: min(clamp(2.75rem, 15cqi, 5.5rem), calc(var(--fit) / var(--chars, 8)));
+  font-size: min(
+    calc(var(--name-size) * var(--name-scale, 1) * var(--font-boost, 1)),
+    calc(var(--fit) * var(--font-fit, 1) * var(--case-fit, 1) / var(--chars, 8))
+  );
   line-height: 1;
   color: var(--text);
 }
 
+/* Beats `.inv h1`, which sets headings in the heading font. */
+.inv .inv-names,
+.inv .intro-names {
+  font-family: var(--inv-names);
+}
+
 .inv-amp {
+  font-family: var(--inv-display);
   font-size: 0.55em;
   font-style: italic;
   color: var(--accent);
 }
 
-/* A name Elorien can't fully draw stays in the fallback serif (both names switch together). */
-.inv-display--elorien {
-  font-family: 'Elorien', var(--font-invite);
+.inv[data-name-case='capitals'] .inv-names {
+  --case-fit: 0.72;
+}
+
+.inv[data-name-case='capitals'] .inv-names > :not(.inv-amp) {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .inv-venue {
@@ -438,10 +664,10 @@ a.inv-map {
 }
 
 [data-template='modern'] .inv-names {
+  --name-size: clamp(3rem, 19cqi, 7rem);
   --fit: 200cqi;
 
   justify-items: start;
-  font-size: min(clamp(3rem, 19cqi, 7rem), calc(var(--fit) / var(--chars, 8)));
   line-height: 0.92;
 }
 
@@ -561,11 +787,11 @@ a.inv-map {
 }
 
 [data-template='editorial'] .inv-names {
+  --name-size: clamp(3rem, 18cqi, 7rem);
   --fit: 200cqi;
 
   position: relative;
   justify-items: start;
-  font-size: min(clamp(3rem, 18cqi, 7rem), calc(var(--fit) / var(--chars, 8)));
   line-height: 0.88;
   letter-spacing: -0.02em;
 }
@@ -630,6 +856,540 @@ a.inv-map {
   font-size: 3.6em;
   line-height: 0.85;
   color: var(--accent);
+}
+
+/* ── Finish: texture, corners and frame (Studio) ────────────────────── */
+
+.inv[data-texture='paper'] .inv-card {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .4 0 0 0 0 .35 0 0 0 .14 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.inv[data-texture='linen'] .inv-card {
+  background-image:
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--text) 4%, transparent) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--text) 3%, transparent) 0 1px, transparent 1px 5px);
+}
+
+.inv[data-texture='dots'] .inv-card {
+  background-image: radial-gradient(color-mix(in srgb, var(--accent) 24%, transparent) 1px, transparent 1.6px);
+  background-size: 16px 16px;
+}
+
+.inv[data-texture='glow'] .inv-card {
+  background-image: radial-gradient(120% 55% at 50% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 72%);
+}
+
+.inv[data-corners='sharp'] .inv-card {
+  border-radius: 0;
+}
+
+.inv[data-corners='round'] .inv-card {
+  border-radius: 1.75rem;
+}
+
+.inv[data-frame='none'] .inv-card {
+  border-color: transparent;
+}
+
+.inv[data-frame='accent'] .inv-card {
+  border: 2px solid var(--accent);
+}
+
+/* A second, finer rule just inside the border. */
+.inv[data-frame='double'] .inv-card {
+  border-color: var(--accent);
+  box-shadow:
+    inset 0 0 0 5px var(--surface),
+    inset 0 0 0 6px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+/* ── Layout: Garden. A leafy wreath around the initials, script names. ── */
+
+.g-layout {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-6);
+  padding: 11cqi 9cqi 13cqi;
+  text-align: center;
+}
+
+.g-vine {
+  position: absolute;
+  width: 30cqi;
+  max-width: 9rem;
+  opacity: 0.85;
+}
+
+.g-vine--top {
+  top: 0;
+  left: 0;
+}
+
+.g-vine--bottom {
+  right: 0;
+  bottom: 0;
+  transform: rotate(180deg);
+}
+
+.g-wreath {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 32cqi;
+  max-width: 9.5rem;
+  aspect-ratio: 1;
+}
+
+.g-wreath svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.g-initials {
+  font-family: var(--inv-names);
+  font-size: min(9cqi, 2.75rem);
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--accent);
+}
+
+.g-families {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.g-invite,
+.d-invite,
+.a-invite {
+  max-width: 24ch;
+  margin: 0;
+  font-family: var(--inv-display);
+  font-size: var(--text-lg);
+  font-style: italic;
+  line-height: 1.3;
+  color: var(--text-muted);
+}
+
+[data-template='garden'] .inv-names {
+  --name-size: clamp(3rem, 16cqi, 6.25rem);
+
+  justify-items: center;
+  line-height: 1.1;
+}
+
+[data-template='garden'] .inv-amp {
+  margin: 0.05em 0;
+  font-size: 0.42em;
+}
+
+.g-leaves {
+  width: 44cqi;
+  max-width: 12rem;
+}
+
+.g-date,
+.g-block,
+.d-block {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.g-date-main {
+  font-family: var(--inv-display);
+  font-size: clamp(1.25rem, 6cqi, 1.75rem);
+  line-height: 1.25;
+}
+
+.g-block .inv-eyebrow,
+.d-block .inv-eyebrow {
+  margin: 0;
+}
+
+.g-rsvp,
+.d-rsvp {
+  margin: 0;
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ── Layout: Deco. Stepped corners, a sunburst and ruled date. ──────── */
+
+.d-frame {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-6);
+  margin: 2.5cqi;
+  padding: 11cqi 8cqi 10cqi;
+  text-align: center;
+  border: 1px solid var(--accent);
+}
+
+.d-frame::before {
+  content: '';
+  position: absolute;
+  inset: 1.6cqi;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  pointer-events: none;
+}
+
+.d-corner {
+  position: absolute;
+  width: 12cqi;
+  height: 12cqi;
+}
+
+.d-corner--tl {
+  top: -1px;
+  left: -1px;
+}
+
+.d-corner--tr {
+  top: -1px;
+  right: -1px;
+  transform: scaleX(-1);
+}
+
+.d-corner--bl {
+  bottom: -1px;
+  left: -1px;
+  transform: scaleY(-1);
+}
+
+.d-corner--br {
+  right: -1px;
+  bottom: -1px;
+  transform: scale(-1, -1);
+}
+
+.d-sun {
+  width: 38cqi;
+  max-width: 10rem;
+}
+
+.d-families {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+[data-template='deco'] .inv-names {
+  --name-size: clamp(2.75rem, 14cqi, 5.5rem);
+
+  justify-items: center;
+  letter-spacing: 0.02em;
+}
+
+/* & between two short rules. */
+[data-template='deco'] .inv-amp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  margin: 0.2em 0;
+  font-size: 0.4em;
+}
+
+[data-template='deco'] .inv-amp::before,
+[data-template='deco'] .inv-amp::after {
+  content: '';
+  width: 2.5em;
+  border-top: 1px solid currentColor;
+}
+
+.d-date {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  width: 100%;
+  max-width: 30rem;
+  border-block: 1px solid var(--accent);
+}
+
+.d-date > span {
+  padding: var(--space-3) var(--space-2);
+  font-size: var(--text-xs);
+  letter-spacing: 0.18em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.d-date > .d-date-main {
+  padding-inline: 4cqi;
+  font-family: var(--inv-display);
+  font-size: clamp(1.25rem, 5.5cqi, 1.75rem);
+  letter-spacing: 0.02em;
+  text-transform: none;
+  border-inline: 1px solid var(--accent);
+}
+
+.d-rsvp::before,
+.d-rsvp::after {
+  content: '◆';
+  margin-inline: 0.75em;
+  font-size: 0.7em;
+  color: var(--accent);
+}
+
+/* ── Layout: Adire. Indigo-cloth bands and a date stamp. ────────────── */
+
+.a-band {
+  display: block;
+  height: 14cqi;
+  background: var(--accent);
+  -webkit-mask: var(--adire-tile) 0 0 / 7cqi 7cqi repeat;
+  mask: var(--adire-tile) 0 0 / 7cqi 7cqi repeat;
+}
+
+.a-layout {
+  --adire-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='black' stroke-width='2.5'%3E%3Ccircle cx='24' cy='24' r='15'/%3E%3Ccircle cx='24' cy='24' r='8'/%3E%3Cpath d='M0 0l7 7M48 0l-7 7M0 48l7-7M48 48l-7-7'/%3E%3C/g%3E%3Cg fill='black'%3E%3Ccircle cx='24' cy='24' r='2.5'/%3E%3Ccircle cx='24' cy='3.5' r='1.8'/%3E%3Ccircle cx='24' cy='44.5' r='1.8'/%3E%3Ccircle cx='3.5' cy='24' r='1.8'/%3E%3Ccircle cx='44.5' cy='24' r='1.8'/%3E%3C/g%3E%3C/svg%3E");
+
+  display: grid;
+  margin: calc(var(--space-3) * -1);
+}
+
+.a-body {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-6);
+  padding: 9cqi 8cqi 10cqi;
+  text-align: center;
+  border-block: 1px solid var(--accent);
+}
+
+.a-families {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+[data-template='adire'] .inv-names {
+  --name-size: clamp(2.75rem, 15cqi, 6rem);
+
+  justify-items: center;
+}
+
+.a-stamp {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--space-1);
+  width: 40cqi;
+  max-width: 11.5rem;
+  aspect-ratio: 1;
+  border: 1px dashed var(--accent);
+  border-radius: 50%;
+  outline: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  outline-offset: 0.35rem;
+}
+
+.a-stamp-day {
+  font-family: var(--inv-display);
+  font-size: clamp(2.5rem, 13cqi, 4rem);
+  line-height: 1;
+  color: var(--accent);
+}
+
+.a-stamp-small {
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.a-details,
+.n-details,
+.p-grid {
+  display: grid;
+  width: 100%;
+  margin: 0;
+  text-align: left;
+}
+
+@container (min-width: 30rem) {
+  .a-details,
+  .p-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-8);
+  }
+}
+
+.a-details > div {
+  padding: var(--space-3) 0;
+  border-top: 1px dashed color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.a-details dt,
+.n-details dt,
+.p-grid dt {
+  margin-bottom: var(--space-1);
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.a-details dd,
+.n-details dd,
+.p-grid dd {
+  margin: 0;
+}
+
+.a-message,
+.n-message,
+.p-message {
+  margin: 0;
+  font-size: var(--text-lg);
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+[data-template='adire'] .inv-events-section {
+  width: 100%;
+  text-align: left;
+}
+
+/* ── Layout: Minimal. Quiet type, lots of room, two columns. ────────── */
+
+.n-layout {
+  display: grid;
+  gap: 11cqi;
+  padding: 10cqi 9cqi;
+}
+
+.n-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.n-kicker {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+[data-template='minimal'] .inv-names {
+  --name-size: clamp(2.25rem, 11cqi, 4.5rem);
+
+  justify-items: start;
+  line-height: 1.05;
+}
+
+[data-template='minimal'] .inv-amp {
+  margin: 0.15em 0;
+  font-size: 0.5em;
+  color: var(--text-muted);
+}
+
+.n-details {
+  gap: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--text);
+}
+
+@container (min-width: 30rem) {
+  .n-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-6) var(--space-8);
+  }
+}
+
+.n-message {
+  max-width: 34ch;
+  color: var(--text-muted);
+}
+
+/* ── Layout: Poster. A block of colour and the date in giant numerals. ── */
+
+.p-layout {
+  display: grid;
+  gap: var(--space-6);
+  padding-bottom: 5cqi;
+}
+
+.p-hero {
+  display: grid;
+  gap: var(--space-4);
+  padding: 9cqi 7cqi 10cqi;
+  color: var(--on-primary);
+  background: var(--primary);
+  border-radius: calc(var(--radius-lg) - var(--space-1));
+}
+
+.inv[data-corners='sharp'] .p-hero {
+  border-radius: 0;
+}
+
+.inv[data-corners='round'] .p-hero {
+  border-radius: 1.25rem;
+}
+
+.p-kicker {
+  margin: 0;
+  font-size: var(--text-xs);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+[data-template='poster'] .inv-names {
+  --name-size: clamp(3rem, 17cqi, 7rem);
+
+  justify-items: start;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  color: inherit;
+}
+
+[data-template='poster'] .inv-amp {
+  margin: 0.15em 0;
+  font-size: 0.4em;
+  font-style: normal;
+  color: inherit;
+}
+
+.p-date,
+.p-grid,
+.p-message,
+[data-template='poster'] .inv-events-section {
+  margin-inline: 4cqi;
+}
+
+.p-date {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 4cqi;
+  padding-top: var(--space-3);
+  border-top: 4px solid var(--text);
+}
+
+.p-big {
+  font-family: var(--inv-display);
+  font-size: clamp(2.5rem, 12cqi, 5.5rem);
+  line-height: 0.85;
+  letter-spacing: -0.02em;
+}
+
+.p-mid {
+  padding-bottom: 0.3em;
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  line-height: 1.6;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.p-grid > div {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--text);
 }
 
 /* ── RSVP ───────────────────────────────────────────────────────────── */
@@ -739,7 +1499,8 @@ a.inv-map {
 
 .intro-names {
   margin: var(--space-2) 0 var(--space-2);
-  font-size: clamp(2.75rem, 9vw, 5rem);
+  /* Wide fonts (Unbounded) fit fewer letters, so they come down by their --font-fit. */
+  font-size: calc(clamp(2.75rem, 9vw, 5rem) * var(--font-fit, 1));
   line-height: 1;
 }
 
@@ -787,7 +1548,7 @@ a.inv-map {
   width: 88cqi;
   height: 56cqi;
   padding-top: 9cqi;
-  font-family: var(--font-invite);
+  font-family: var(--inv-names);
   font-size: 7cqi;
   color: var(--text);
   background: var(--surface);
@@ -853,7 +1614,7 @@ a.inv-map {
   place-items: center;
   width: 15cqi;
   height: 15cqi;
-  font-family: var(--font-invite);
+  font-family: var(--inv-names);
   font-size: 5.5cqi;
   color: var(--accent);
   background: var(--surface);
@@ -872,7 +1633,7 @@ a.inv-map {
 
 .inv--page {
   position: relative;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .inv--page .inv-column {
@@ -884,7 +1645,7 @@ a.inv-map {
   position: absolute;
   top: var(--space-12);
   left: 50%;
-  font-family: var(--font-invite);
+  font-family: var(--inv-names);
   /* Wider than the card, so the initials frame it on both sides. */
   font-size: min(95vw, 60rem);
   line-height: 0.8;
@@ -926,7 +1687,7 @@ a.inv-map {
 }
 
 .plan-countdown {
-  font-family: var(--font-invite);
+  font-family: var(--inv-display);
   font-size: var(--text-xl);
 }
 
@@ -1055,6 +1816,9 @@ a.inv-map {
 
 .amount-chip {
   display: inline-flex;
+  font: inherit;
+  color: inherit;
+  background: transparent;
   align-items: center;
   min-height: var(--control-height);
   padding: 0 var(--space-4);
@@ -1070,15 +1834,122 @@ a.inv-map {
   pointer-events: none;
 }
 
-.amount-chip:has(input:checked) {
+.amount-chip:has(input:checked),
+.amount-chip[aria-pressed='true'] {
   color: var(--on-primary);
   background: var(--primary);
   border-color: var(--primary);
 }
 
-.amount-chip:has(input:focus-visible) {
+.amount-chip:has(input:focus-visible),
+.amount-chip:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+.basket-section {
+  margin: var(--space-4) 0;
+  padding: 0;
+  border: 0;
+}
+
+.basket-section legend {
+  padding: 0;
+  font-size: var(--text-base);
+}
+
+.basket-items {
+  display: grid;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.basket-items li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border);
+}
+
+.basket-item-name .hint {
+  display: block;
+}
+
+.basket-items .basket-wish {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.basket-wish-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.basket-wish-choices .field {
+  flex-basis: 100%;
+}
+
+.stepper {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.stepper output {
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.stepper-button {
+  width: var(--control-height);
+  height: var(--control-height);
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--field-border);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.stepper-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.stepper-button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* The Pay button, with the running total on it, stays in view while the guest scrolls. */
+.basket-bar {
+  position: sticky;
+  bottom: 0;
+  padding: var(--space-3) 0;
+  background: var(--surface);
+}
+
+.basket-empty {
+  margin: 0 0 var(--space-3);
+}
+
+.gift-result-lines {
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+}
+
+.gift-result-lines li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--border);
 }
 
 .gift-breakdown {

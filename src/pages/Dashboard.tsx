@@ -2,12 +2,15 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
 import CopyLink from '../components/CopyLink.tsx'
+import UnlockCallout from '../components/UnlockCallout.tsx'
 import Tour, { type TourStep } from '../components/Tour.tsx'
 import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { coupleNames, daysUntil, formatDate, formatTime } from '../lib/format.ts'
 import { sideLabel } from '../lib/sides.ts'
+import { designPath, STUDIO_QUERY } from '../lib/studio.ts'
 import type { Responses, Session, Wedding } from '../lib/types.ts'
+import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import { useResponses } from '../lib/useResponses.ts'
 import { useTitle } from '../lib/useTitle.ts'
 import { useWedding } from '../lib/useWedding.ts'
@@ -64,6 +67,8 @@ export default function Dashboard() {
         <p role="status" className="alert alert--success">Saved as a private draft. Publish whenever you’re ready.</p>
       )}
 
+      <UnlockCallout where="overview" />
+
       <div className="home-grid">
         {data && <ReplyBoard data={data} />}
         <div className="home-side">
@@ -102,8 +107,8 @@ const tourSteps = (partner: string | null): TourStep[] => [
   },
   {
     target: '[data-tour="tab-gifts"]',
-    title: 'Cash gifts, if you want them',
-    text: 'Add your bank account and guests can send a gift after they reply. It stays off until you turn it on.',
+    title: 'Gifts, if you want them',
+    text: 'Receive cash, sell aso-ebi or share a wishlist. Unlock Gifts once for ₦5,000, then add your bank account and switch on what you want.',
   },
   {
     target: '[data-tour="partner"]',
@@ -152,6 +157,7 @@ function Countdown({ date }: { date: string | null }) {
 }
 
 function Hero({ wedding, onChange, onTour }: { wedding: Wedding; onChange: (w: Wedding) => void; onTour: () => void }) {
+  const studio = useMediaQuery(STUDIO_QUERY)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notReady, setNotReady] = useState(false)
@@ -196,7 +202,7 @@ function Hero({ wedding, onChange, onTour }: { wedding: Wedding; onChange: (w: W
           <button className={published ? 'btn btn--secondary' : 'btn'} onClick={toggle} disabled={busy}>
             {busy ? 'Saving…' : published ? 'Unpublish' : 'Publish invitation'}
           </button>
-          <Link to="/app/design" className="btn btn--secondary" data-tour="design">Design invitation</Link>
+          <Link to={designPath(studio)} className="btn btn--secondary" data-tour="design">Design invitation</Link>
           {published && link && (
             <a href={link} target="_blank" rel="noopener" className="btn btn--secondary">
               View invitation<span className="visually-hidden"> (opens in a new tab)</span>

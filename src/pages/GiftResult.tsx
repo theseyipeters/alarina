@@ -1,15 +1,25 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
-import GiftOffer from '../invite/GiftOffer.tsx'
+import { inviteAttrs } from '../invite/design.ts'
+import GiftBasket from '../invite/GiftBasket.tsx'
 import '../invite/styles.ts'
 import { api } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { coupleNames } from '../lib/format.ts'
+import { quantityLabel } from '../lib/asoEbi.ts'
 import { formatNaira } from '../lib/money.ts'
 import type { GiftStatus, PublicInvitation } from '../lib/types.ts'
 import { useTitle } from '../lib/useTitle.ts'
 
-type Result = { gift: { status: GiftStatus; amount: number; guestName: string }; invitation: PublicInvitation | null }
+type Result = {
+  gift: {
+    status: GiftStatus
+    amount: number
+    guestName: string
+    lines: { kind: 'cash' | 'aso_ebi' | 'wishlist'; amount: number; itemName: string | null; unit: string | null; quantity: number | null }[]
+  }
+  invitation: PublicInvitation | null
+}
 type State = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; result: Result }
 
 /** Where Paystack sends the guest back. Confirms the payment, themed like the invitation. */
@@ -55,12 +65,13 @@ export default function GiftResult() {
   }
 
   const { gift, invitation } = state.result
+  const retry = invitation && (invitation.giftsEnabled || invitation.asoEbi.length > 0 || invitation.wishlist.length > 0)
   const names = invitation ? coupleNames(invitation.partnerOneName, invitation.partnerTwoName) : 'the couple'
   const firstName = gift.guestName.trim().split(/\s+/)[0]
   const back = `/invite/${slug}`
 
   return (
-    <div className="inv" data-palette={invitation?.palette ?? 'ivory'} data-template={invitation?.template ?? 'classic'}>
+    <div className="inv" {...(invitation ? inviteAttrs(invitation) : { 'data-palette': 'ivory', 'data-template': 'classic' })}>
       <main id="main" className="inv-column">
         <section className="inv-panel rsvp-done" aria-labelledby="gift-result-title">
           {gift.status === 'success' && (
@@ -71,8 +82,23 @@ export default function GiftResult() {
               </svg>
               <h1 id="gift-result-title" className="gift-result-title">Thank you, {firstName}</h1>
               <p>
-                Your gift of {formatNaira(gift.amount)} is on its way to {names}. Paystack has emailed you a receipt.
+                {formatNaira(gift.amount)} is on its way to {names}. Paystack has emailed you a receipt.
               </p>
+              <ul className="gift-result-lines">
+                {gift.lines.map((l, i) => (
+                  <li key={i}>
+                    {l.kind === 'cash'
+                      ? 'Cash gift'
+                      : l.kind === 'wishlist'
+                        ? `Towards ${l.itemName}`
+                        : `${quantityLabel(l.quantity ?? 0, l.unit ?? '')} of ${l.itemName}`}
+                    <span>{formatNaira(l.amount)}</span>
+                  </li>
+                ))}
+              </ul>
+              {gift.lines.some((l) => l.kind === 'aso_ebi') && (
+                <p className="muted">{names} will see your name and phone number so they can reach you about your aso-ebi.</p>
+              )}
             </>
           )}
           {gift.status === 'pending' && (
@@ -96,9 +122,9 @@ export default function GiftResult() {
           </p>
         </section>
 
-        {(gift.status === 'failed' || gift.status === 'abandoned') && invitation?.giftsEnabled && (
+        {(gift.status === 'failed' || gift.status === 'abandoned') && retry && (
           <section className="inv-panel">
-            <GiftOffer slug={slug} names={names} guest={{ name: gift.guestName }} />
+            <GiftBasket invitation={invitation} names={names} guest={{ name: gift.guestName }} />
           </section>
         )}
       </main>

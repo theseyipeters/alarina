@@ -222,10 +222,60 @@
   resolved "https://registry.yarnpkg.com/@fontsource-variable/geist/-/geist-5.3.0.tgz#59084c5e2ffa77c6e3c63bc06f3af62ba4dbbdc5"
   integrity sha512-j0m+vLQuG5XAYoHtGCVu0spvlGreR3EzpECUVzkFmI1mTVnAO38l/NEPDCFgZ177JxzYJCLSmTQibIiYPilGrA==
 
+"@fontsource/ballet@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/ballet/-/ballet-5.3.0.tgz#9c1dc25c69a404c3cd7e20bbf3e15db27fe630a7"
+  integrity sha512-JOPosy7HaBqeXWUe1ZSrQoSYS31iRWn2HVBswnOMMAuWUvuDVk/QTsQmBD/20+9fPhOf9SLiIh+LR+yD1A4/lA==
+
+"@fontsource/cormorant-garamond@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/cormorant-garamond/-/cormorant-garamond-5.3.0.tgz#4d6baee3e9257be403a9fc406f42a8a75356824e"
+  integrity sha512-weuGsCirGVWBWqpt6YUp0yLThTe4G8YO45noq8wxeJCRvEpq5lFrxNMFSTxcyOyV5k5otzJ8guDzYegdYlcLMQ==
+
+"@fontsource/eb-garamond@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/eb-garamond/-/eb-garamond-5.3.0.tgz#080e1e801ad30b2d59206549156993e076f25633"
+  integrity sha512-VplwHpB8FLuzl+4G5LDci1b3Z4SghiuXH8XEgaxjnOb5aue5mEt1njmDKeO6iyLeGa73LffU7PC7hzncLRx0ZA==
+
+"@fontsource/great-vibes@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/great-vibes/-/great-vibes-5.3.0.tgz#69fb0749c7ccc6a11c7364d1a9193aee7ba890f5"
+  integrity sha512-1w60cXzXnC9V4y943po8044O1mqRQBiTTK75h7OpZE+1VQtx+KlAAzoIyEE5KNzu05gUpxaCQg7cbL7ITSwegQ==
+
 "@fontsource/instrument-serif@^5.3.0":
   version "5.3.0"
   resolved "https://registry.yarnpkg.com/@fontsource/instrument-serif/-/instrument-serif-5.3.0.tgz#57d45e62debe978653a14b7152299c6d76762fe2"
   integrity sha512-mDiaIg0u67sYV59fie92Wz4sM8UiVlbL7fLxnFPCKkX15DMASEnQTREbaP5S5/3DCcsoAOcQ0sV9E4AeY4QqYQ==
+
+"@fontsource/montserrat@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/montserrat/-/montserrat-5.3.0.tgz#218a998a485d41f358d6bacf9edb70e282fadf7a"
+  integrity sha512-iQPDtZOnmM5ih4JBGaMSXisRap0ixb9bAUw2hDtY7EjVfaqiiNlKtVuJl9XclxUwtwMMHNcWXfQR6zI9x05+Tg==
+
+"@fontsource/noto-serif-display@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/noto-serif-display/-/noto-serif-display-5.3.0.tgz#44f5f9c69b6366917319423419f7c49e4b791947"
+  integrity sha512-iVZR/eTQSfko9H0wZ0f+ogY5JSSH464nsRc7DZcsN0Kx7Qe41yg1IrQWILhe1dScyREMXceO+h+ar2kK9Wer8A==
+
+"@fontsource/nunito-sans@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/nunito-sans/-/nunito-sans-5.3.0.tgz#b04281b3d78e69b11d7fc3ff46caab46722d73e9"
+  integrity sha512-CctNhebQ2YYJUwVMCAkHexQg7yedfz9s8JzaETALyc9QIQuDFRlNTWXux9H5PsNLgptPkrzRDomAdLJt1sDFpQ==
+
+"@fontsource/spectral@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/spectral/-/spectral-5.3.0.tgz#cf7c54f5313a261c011f5ba4397df02e73eecde1"
+  integrity sha512-2TL5WWGOZj4SIsBmPFEzKeA60tXXd1Qp1OqaaVEWkJL8IfSGLk6YmiusmC441iFkdJDIuFelu1r8lhCmQUU3mw==
+
+"@fontsource/unbounded@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/unbounded/-/unbounded-5.3.0.tgz#f1ceedb608255f3ea97e0e056a5b442c7beeb3f9"
+  integrity sha512-pPD6hsTnjoQRr6pCsqMHbHBfauB4LZygCNQEUJHu+CO2wzDFHqELEFSG7sTwo5Z5Gr4q3OK0fIILOXBJDv6lcw==
+
+"@fontsource/work-sans@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/work-sans/-/work-sans-5.3.0.tgz#489bbc8d6910fcd551a69b43fcf1d905c8a54f59"
+  integrity sha512-3cKV28+bEiLGdyOl0VgEGCFWE1XdZJu/K+nH4Jt76XC3T//XrRtm2EF7jA61GSMIy8sYp6ZFTE01nD3lLaBV9A==
 
 "@humanfs/core@^0.19.2":
   version "0.19.2"

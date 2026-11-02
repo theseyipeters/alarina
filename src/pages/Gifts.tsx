@@ -1,287 +1,140 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import Field from '../components/Field.tsx'
-import { api, ApiError } from '../lib/api.ts'
+import { Suspense, useEffect, useState } from 'react'
+import { NavLink, Outlet, useSearchParams } from 'react-router'
+import { api } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
+import { formatDate } from '../lib/format.ts'
 import { formatNaira } from '../lib/money.ts'
-import type { GiftsOverview } from '../lib/types.ts'
+import { refreshGiftsAccess, useGiftsAccess, type GiftsAccess } from '../lib/useGiftsAccess.ts'
 import { useTitle } from '../lib/useTitle.ts'
 import './Gifts.css'
 
-type State = { status: 'loading' } | { status: 'error' } | { status: 'none' } | { status: 'ready'; data: GiftsOverview }
+const KINDS = [
+  { to: '/app/gifts', label: 'Cash gifts', end: true },
+  { to: '/app/gifts/aso-ebi', label: 'Aso-ebi', end: false },
+  { to: '/app/gifts/wishlist', label: 'Wishlist', end: false },
+]
 
-/** Cash gifts: where the money goes, whether guests are offered it, and what has come in. */
+/**
+ * Gifts come in three kinds, each on its own URL: cash, aso-ebi and a wishlist. They need a
+ * one-time payment first; until then the page shows faded behind an Unlock Gifts prompt.
+ */
 export default function Gifts() {
   useTitle('Gifts')
-  const [state, setState] = useState<State>({ status: 'loading' })
+  const [params, setParams] = useSearchParams()
+  const reference = params.get('reference')
+  const { access, failed } = useGiftsAccess()
+  const [message, setMessage] = useState<string | null>(null)
 
-  const load = useCallback(
-    () =>
-      api.get<GiftsOverview>('/wedding/gifts').then(
-        (data) => setState({ status: 'ready', data }),
-        (err) => setState({ status: err instanceof ApiError && err.code === 'no_wedding' ? 'none' : 'error' }),
-      ),
-    [],
+  // Back from Paystack: confirm the payment with the server, then open Gifts or say what happened.
+  useEffect(() => {
+    if (!reference) return
+    let cancelled = false
+    api.post<{ status: string; unlocked: boolean }>('/wedding/gifts/unlock/verify', { reference }).then(
+      ({ status, unlocked }) => {
+        if (cancelled) return
+        if (!unlocked && status !== 'success') {
+          setMessage(
+            status === 'pending'
+              ? 'Paystack hasn’t confirmed your payment yet. This usually takes a few seconds, so try again shortly.'
+              : 'Your payment didn’t go through. You haven’t been charged.',
+          )
+        }
+        setParams({}, { replace: true })
+        refreshGiftsAccess().catch(() => {})
+      },
+      (err) => {
+        if (cancelled) return
+        setMessage(errorMessage(err))
+        setParams({}, { replace: true })
+        refreshGiftsAccess().catch(() => {})
+      },
+    )
+    return () => {
+      cancelled = true
+    }
+  }, [reference, setParams])
+
+  if (failed) return <p role="alert" className="alert">Gifts couldn’t be loaded. Refresh to try again.</p>
+  if (!access) return <p className="muted">{reference ? 'Confirming your payment…' : 'Loading gifts…'}</p>
+
+  const content = (
+    <div className="gifts-shell">
+      {access.closed && access.unlocked && (
+        <p role="status" className="alert alert--info">
+          Your wedding is over, so guests can no longer give. Everything you received stays here.
+        </p>
+      )}
+      <nav className="tabs tabs--sub" aria-label="Kinds of gift">
+        {KINDS.map((k) => (
+          <NavLink key={k.to} to={k.to} end={k.end} className="tab">
+            {k.label}
+          </NavLink>
+        ))}
+      </nav>
+      <Suspense fallback={<p className="muted">Loading…</p>}>
+        <Outlet />
+      </Suspense>
+    </div>
   )
 
-  useEffect(() => {
-    load()
-  }, [load])
-
-  if (state.status === 'loading') return <p className="muted">Loading gifts…</p>
-  if (state.status === 'error') return <p role="alert" className="alert">Gifts couldn’t be loaded. Refresh to try again.</p>
-  if (state.status === 'none') {
-    return (
-      <div className="card">
-        <h1>Gifts</h1>
-        <p className="muted">Set up your wedding first, then come back to receive cash gifts.</p>
-      </div>
-    )
-  }
-
-  const { data } = state
-  if (!data.configured) {
-    return (
-      <div className="card">
-        <h1>Gifts</h1>
-        <p className="muted">
-          Cash gifts aren’t available on this server yet. They need a Paystack account to be connected
-          (PAYSTACK_SECRET_KEY in the API’s settings).
-        </p>
-      </div>
-    )
-  }
+  if (access.unlocked) return content
 
   return (
-    <div className="gifts">
-      <header className="gifts-hero">
-        <div>
-          <p className="eyebrow">Received so far</p>
-          <p className="gifts-total">{formatNaira(data.totals.received)}</p>
-          <p className="muted">
-            {data.totals.count === 0
-              ? 'No gifts yet.'
-              : `From ${data.totals.count} ${data.totals.count === 1 ? 'guest' : 'guests'}.`}{' '}
-            Paid straight into your account by Paystack.
-          </p>
-        </div>
-        <span className={data.enabled ? 'badge badge--live' : 'badge'}>{data.enabled ? 'Open to guests' : 'Off'}</span>
-      </header>
-
-      <div className="gifts-grid">
-        <PayoutAccount payout={data.payout} onSaved={load} />
-        <GiftSwitch data={data} onChange={load} />
+    <div className="gifts-locked">
+      {/* The real page, faded and out of reach, so the couple can see what they're unlocking. */}
+      <div className="gifts-locked-preview" inert aria-hidden="true">
+        {content}
       </div>
-
-      <GiftList data={data} />
+      <UnlockPrompt access={access} message={message} />
     </div>
   )
 }
 
-type Bank = { name: string; code: string }
-type Resolved = { bankName: string; accountName: string }
-
-function PayoutAccount({ payout, onSaved }: { payout: GiftsOverview['payout']; onSaved: () => void }) {
-  const [editing, setEditing] = useState(!payout)
-  const [banks, setBanks] = useState<Bank[] | null>(null)
-  const [bankCode, setBankCode] = useState('')
-  const [accountNumber, setAccountNumber] = useState('')
-  const [resolved, setResolved] = useState<Resolved | null>(null)
+function UnlockPrompt({ access, message }: { access: GiftsAccess; message: string | null }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!editing || banks) return
-    api.get<{ banks: Bank[] }>('/wedding/gifts/banks').then(
-      ({ banks }) => setBanks([...banks].sort((a, b) => a.name.localeCompare(b.name))),
-      (err) => setError(errorMessage(err)),
-    )
-  }, [editing, banks])
-
-  async function check(e: FormEvent) {
-    e.preventDefault()
+  async function unlock() {
     setBusy(true)
     setError(null)
     try {
-      setResolved(await api.post<Resolved>('/wedding/gifts/account/resolve', { bankCode, accountNumber }))
+      const { checkoutUrl } = await api.post<{ checkoutUrl: string }>('/wedding/gifts/unlock')
+      window.location.assign(checkoutUrl)
     } catch (err) {
       setError(errorMessage(err))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function save() {
-    setBusy(true)
-    setError(null)
-    try {
-      await api.put('/wedding/gifts/account', { bankCode, accountNumber })
-      setEditing(false)
-      setResolved(null)
-      setAccountNumber('')
-      onSaved()
-    } catch (err) {
-      setError(errorMessage(err))
-    } finally {
       setBusy(false)
     }
   }
 
   return (
-    <section className="card" aria-labelledby="payout-title">
-      <h2 id="payout-title">Where gifts go</h2>
-
-      {payout && !editing && (
-        <>
-          {/* Shown like a bank card: only the name, bank and last four digits are ever stored. */}
-          <div className="bank-card" aria-label={`${payout.accountName}, ${payout.bankName}, account ending ${payout.accountLast4}`}>
-            <span className="bank-card-bank">{payout.bankName}</span>
-            <span className="bank-card-number" aria-hidden="true">•••• •••• {payout.accountLast4}</span>
-            <span className="bank-card-name">{payout.accountName}</span>
-          </div>
-          <button type="button" className="btn btn--secondary" onClick={() => setEditing(true)}>Change account</button>
-        </>
-      )}
-
-      {editing && (
-        <>
-          <p className="muted">Gifts are paid into a Nigerian bank account. We check the name on it before saving.</p>
-          {error && <p role="alert" className="alert">{error}</p>}
-          {resolved ? (
-            <div className="resolved">
-              <p className="resolved-name">{resolved.accountName}</p>
-              <p className="muted">
-                {resolved.bankName} · ending {accountNumber.slice(-4)}
-              </p>
-              <p>Is this the right account?</p>
-              <div className="actions">
-                <button type="button" className="btn" onClick={save} disabled={busy}>
-                  {busy ? 'Saving…' : 'Yes, save account'}
-                </button>
-                <button type="button" className="btn btn--secondary" onClick={() => setResolved(null)} disabled={busy}>
-                  Use a different account
-                </button>
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={check}>
-              <Field label="Bank">
-                {(p) => (
-                  <select {...p} required value={bankCode} onChange={(e) => setBankCode(e.target.value)} disabled={!banks}>
-                    <option value="" disabled>{banks ? 'Choose your bank' : 'Loading banks…'}</option>
-                    {banks?.map((b) => (
-                      <option key={b.code} value={b.code}>{b.name}</option>
-                    ))}
-                  </select>
-                )}
-              </Field>
-              <Field label="Account number" hint="10 digits (NUBAN).">
-                {(p) => (
-                  <input
-                    {...p}
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="off"
-                    required
-                    pattern="\d{10}"
-                    maxLength={10}
-                    placeholder="0123456789"
-                    value={accountNumber}
-                    onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
-                  />
-                )}
-              </Field>
-              <div className="actions">
-                <button className="btn" disabled={busy}>{busy ? 'Checking…' : 'Check account'}</button>
-                {payout && (
-                  <button type="button" className="btn btn--secondary" onClick={() => setEditing(false)}>Cancel</button>
-                )}
-              </div>
-            </form>
-          )}
-        </>
-      )}
-    </section>
-  )
-}
-
-const SWITCH_ERRORS: Record<string, string> = {
-  fees_not_confirmed:
-    'Gifts can’t be switched on yet: payment fees still need confirming on the server (PAYSTACK_FEES_CONFIRMED).',
-  no_payout_account: 'Add the account gifts should go to first.',
-}
-
-function GiftSwitch({ data, onChange }: { data: GiftsOverview; onChange: () => void }) {
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  async function toggle() {
-    setBusy(true)
-    setError(null)
-    try {
-      await api.patch('/wedding/gifts', { enabled: !data.enabled })
-      onChange()
-    } catch (err) {
-      setError(err instanceof ApiError ? (SWITCH_ERRORS[err.code] ?? err.message) : errorMessage(err))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <section className="card" aria-labelledby="switch-title">
-      <div className="switch-row">
-        <h2 id="switch-title">Offer gifts to guests</h2>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={data.enabled}
-          aria-labelledby="switch-title"
-          className="switch"
-          onClick={toggle}
-          disabled={busy}
-        >
-          <span className="switch-thumb" />
-        </button>
-      </div>
+    <section className="unlock card" aria-labelledby="unlock-title">
+      <svg className="unlock-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="5" y="11" width="14" height="9" rx="2" />
+        <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+      </svg>
+      <h2 id="unlock-title">{access.closed ? 'Gifts is closed' : 'Unlock Gifts'}</h2>
+      {access.closed ? (
+        <p className="muted">
+          Gifts closed after {access.closedAfter ? formatDate(access.closedAfter) : 'your wedding'}, so it can’t be
+          unlocked now. If your date has changed, update it in your wedding details.
+        </p>
+      ) : (
       <p className="muted">
-        After replying, guests can send a gift. They choose what you receive; Paystack’s fee is added on top for them, so
-        you get the full amount.
+        One payment of {formatNaira(access.price)}, once, for your whole wedding. Then guests can send you cash, order
+        aso-ebi and give from your wishlist, and everything they give goes straight to your account.
       </p>
+      )}
+      {message && <p role="status" className="alert alert--info">{message}</p>}
       {error && <p role="alert" className="alert">{error}</p>}
-      {!data.payout && <p className="hint">Add your account first.</p>}
-    </section>
-  )
-}
-
-const STATUS_LABEL = { success: 'Received', pending: 'Processing', failed: 'Didn’t go through', abandoned: 'Cancelled' } as const
-
-function GiftList({ data }: { data: GiftsOverview }) {
-  if (data.contributions.length === 0) return null
-  return (
-    <section className="card" aria-labelledby="gift-list-title">
-      <h2 id="gift-list-title">Gifts</h2>
-      <ul className="gift-list">
-        {data.contributions.map((c) => (
-          <li key={c.id}>
-            <span className="gift-name">
-              {c.guestName}
-              <span className="hint">
-                {new Intl.DateTimeFormat('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }).format(
-                  new Date(c.paidAt ?? c.createdAt),
-                )}
-              </span>
-            </span>
-            <span
-              className={
-                c.status === 'success' ? 'gift-amount' : `gift-amount gift-amount--muted${c.status === 'failed' ? ' gift-amount--failed' : ''}`
-              }
-            >
-              {formatNaira(c.amount)}
-            </span>
-            <span className={c.status === 'success' ? 'badge badge--live' : 'badge'}>{STATUS_LABEL[c.status]}</span>
-          </li>
-        ))}
-      </ul>
+      {!access.configured && <p className="hint">Payments aren’t set up on this server yet.</p>}
+      {!access.closed && (
+        <>
+          <button type="button" className="btn" onClick={unlock} disabled={busy}>
+            {busy ? 'Opening Paystack…' : `Unlock Gifts · ${formatNaira(access.price)}`}
+          </button>
+          <p className="hint">Secure payment by Paystack.</p>
+        </>
+      )}
     </section>
   )
 }

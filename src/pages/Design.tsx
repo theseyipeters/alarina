@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import InvitationCard from '../invite/InvitationCard.tsx'
 import RsvpForm from '../invite/RsvpForm.tsx'
-import { PALETTES, TEMPLATES, type Palette, type Template } from '../invite/design.ts'
+import { inviteAttrs, PALETTES, TEMPLATES, type Palette, type Template } from '../invite/design.ts'
 import '../invite/styles.ts'
 import { api } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
@@ -11,12 +11,15 @@ import { useTitle } from '../lib/useTitle.ts'
 import { useWedding } from '../lib/useWedding.ts'
 import './Design.css'
 import Logo from '../components/Logo.tsx'
+import { STUDIO_QUERY } from '../lib/studio.ts'
+import { useMediaQuery } from '../lib/useMediaQuery.ts'
 
 type Device = 'phone' | 'desktop'
 
 export default function Design() {
   useTitle('Design your invitation')
   const [state, setWedding] = useWedding()
+  const studio = useMediaQuery(STUDIO_QUERY)
   const [device, setDevice] = useState<Device>('phone')
   const [saving, setSaving] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -68,6 +71,11 @@ export default function Design() {
           <p className="muted">
             Pick a layout and colours. {wedding.status === 'published' ? 'Changes go live straight away.' : 'Guests see it once you publish.'}
           </p>
+          {studio && (
+            <p className="alert alert--info">
+              More layouts, fonts and your own colours are in <Link to="/app/studio">Studio</Link>.
+            </p>
+          )}
           {error && <p role="alert" className="alert">{error}</p>}
 
           <fieldset className="options">
@@ -134,7 +142,7 @@ export default function Design() {
             ))}
           </div>
           <div className={`preview-frame preview-frame--${device}`}>
-            <div className="inv inv--preview" data-palette={wedding.palette} data-template={wedding.template} inert>
+            <div className="inv inv--preview" {...inviteAttrs(wedding)} inert>
               <div className="inv-column">
                 <InvitationCard invitation={wedding} />
                 <section className="inv-panel" aria-label="RSVP preview">

@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
+import DatePicker from '../components/DatePicker.tsx'
 import Field from '../components/Field.tsx'
+import Select from '../components/Select.tsx'
+import TimeSelect from '../components/TimeSelect.tsx'
 import { useTitle } from '../lib/useTitle.ts'
 import '@fontsource/instrument-serif'
 import './StyleGuide.css'
@@ -24,6 +27,9 @@ type Theme = 'auto' | 'light' | 'dark'
 export default function StyleGuide() {
   useTitle('Style guide')
   const [theme, setTheme] = useState<Theme>('auto')
+  const [date, setDate] = useState('')
+  const [time, setTime] = useState('')
+  const [choice, setChoice] = useState('')
 
   useEffect(() => {
     const root = document.documentElement
@@ -137,18 +143,29 @@ export default function StyleGuide() {
               {(p) => <input {...p} type="text" />}
             </Field>
             <Field label="Wedding date" error="This date has already passed.">
-              {(p) => <input {...p} type="date" defaultValue="2020-01-01" />}
+              {(p) => <DatePicker {...p} value="2020-01-01" onChange={() => {}} />}
             </Field>
           </div>
           <div>
             <div className="field-row">
               <Field label="Date" optional>
-                {(p) => <input {...p} type="date" />}
+                {(p) => <DatePicker {...p} clearable value={date} onChange={setDate} />}
               </Field>
               <Field label="Start time" optional>
-                {(p) => <input {...p} type="time" />}
+                {(p) => <TimeSelect {...p} optional value={time} onChange={setTime} />}
               </Field>
             </div>
+            <Field label="Bank">
+              {(p) => (
+                <Select
+                  {...p}
+                  value={choice}
+                  onChange={setChoice}
+                  placeholder="Choose your bank"
+                  options={['Access Bank', 'GTBank', 'Kuda', 'Zenith Bank'].map((b) => ({ value: b, label: b }))}
+                />
+              )}
+            </Field>
             <Field label="Message to your guests" optional hint="0 of 1000 characters">
               {(p) => <textarea {...p} rows={3} />}
             </Field>

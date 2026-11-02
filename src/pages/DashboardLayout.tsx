@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
 import './Dashboard.css'
 import Logo from '../components/Logo.tsx'
+import { useGiftsAccess } from '../lib/useGiftsAccess.ts'
 
 const TABS = [
   { to: '/app', label: 'Overview', end: true },
@@ -15,6 +16,7 @@ const TABS = [
 export default function DashboardLayout() {
   const { signOut } = useAuth()
   const navigate = useNavigate()
+  const { access } = useGiftsAccess()
 
   return (
     <div className="page page--dashboard">
@@ -34,6 +36,7 @@ export default function DashboardLayout() {
         {TABS.map((t) => (
           <NavLink key={t.to} to={t.to} end={t.end} className="tab" data-tour={`tab-${t.label.toLowerCase()}`}>
             {t.label}
+            {t.to === '/app/gifts' && access && !access.unlocked && !access.closed && <span className="tab-flag">Locked</span>}
           </NavLink>
         ))}
       </nav>
