@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
-import GiftSection from '../invite/GiftSection.tsx'
+import GiftBasket from '../invite/GiftBasket.tsx'
 import '../invite/styles.ts'
 import { api } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
@@ -12,11 +12,10 @@ import { useTitle } from '../lib/useTitle.ts'
 
 type Result = {
   gift: {
-    kind: 'cash' | 'aso_ebi'
     status: GiftStatus
     amount: number
     guestName: string
-    item: { name: string; unit: string; quantity: number } | null
+    lines: { kind: 'cash' | 'aso_ebi'; amount: number; itemName: string | null; unit: string | null; quantity: number | null }[]
   }
   invitation: PublicInvitation | null
 }
@@ -81,16 +80,19 @@ export default function GiftResult() {
                 <path d="M15 27l7 7 15-16" />
               </svg>
               <h1 id="gift-result-title" className="gift-result-title">Thank you, {firstName}</h1>
-              {gift.item ? (
-                <p>
-                  Your order for {quantityLabel(gift.item.quantity, gift.item.unit)} of {gift.item.name} is confirmed, and{' '}
-                  {formatNaira(gift.amount)} is on its way to {names}. Paystack has emailed you a receipt. They’ll see your
-                  name and phone number so they can reach you.
-                </p>
-              ) : (
-                <p>
-                  Your gift of {formatNaira(gift.amount)} is on its way to {names}. Paystack has emailed you a receipt.
-                </p>
+              <p>
+                {formatNaira(gift.amount)} is on its way to {names}. Paystack has emailed you a receipt.
+              </p>
+              <ul className="gift-result-lines">
+                {gift.lines.map((l, i) => (
+                  <li key={i}>
+                    {l.kind === 'cash' ? 'Cash gift' : `${quantityLabel(l.quantity ?? 0, l.unit ?? '')} of ${l.itemName}`}
+                    <span>{formatNaira(l.amount)}</span>
+                  </li>
+                ))}
+              </ul>
+              {gift.lines.some((l) => l.kind === 'aso_ebi') && (
+                <p className="muted">{names} will see your name and phone number so they can reach you about your aso-ebi.</p>
               )}
             </>
           )}
@@ -117,7 +119,7 @@ export default function GiftResult() {
 
         {(gift.status === 'failed' || gift.status === 'abandoned') && retry && (
           <section className="inv-panel">
-            <GiftSection invitation={invitation} names={names} guest={{ name: gift.guestName }} initial={gift.kind} />
+            <GiftBasket invitation={invitation} names={names} guest={{ name: gift.guestName }} />
           </section>
         )}
       </main>

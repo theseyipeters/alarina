@@ -872,7 +872,7 @@ a.inv-map {
 
 .inv--page {
   position: relative;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .inv--page .inv-column {
@@ -1044,26 +1044,6 @@ a.inv-map {
   font-weight: var(--weight-regular);
 }
 
-/* The choice between kinds of gift sits above the offer it switches, so the offer drops its own rule. */
-.amount-chips.gift-kinds {
-  margin-bottom: var(--space-4);
-  padding-top: var(--space-6);
-  border-top: 1px solid var(--border);
-}
-
-.gift-kinds + .gift-offer {
-  padding-top: 0;
-  border-top: 0;
-}
-
-.aso-ebi-item {
-  margin: 0 0 var(--space-4);
-}
-
-.aso-ebi-item .hint {
-  display: block;
-}
-
 .amount-chips {
   display: flex;
   flex-wrap: wrap;
@@ -1075,6 +1055,9 @@ a.inv-map {
 
 .amount-chip {
   display: inline-flex;
+  font: inherit;
+  color: inherit;
+  background: transparent;
   align-items: center;
   min-height: var(--control-height);
   padding: 0 var(--space-4);
@@ -1090,15 +1073,107 @@ a.inv-map {
   pointer-events: none;
 }
 
-.amount-chip:has(input:checked) {
+.amount-chip:has(input:checked),
+.amount-chip[aria-pressed='true'] {
   color: var(--on-primary);
   background: var(--primary);
   border-color: var(--primary);
 }
 
-.amount-chip:has(input:focus-visible) {
+.amount-chip:has(input:focus-visible),
+.amount-chip:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+.basket-section {
+  margin: var(--space-4) 0;
+  padding: 0;
+  border: 0;
+}
+
+.basket-section legend {
+  padding: 0;
+  font-size: var(--text-base);
+}
+
+.basket-items {
+  display: grid;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.basket-items li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border);
+}
+
+.basket-item-name .hint {
+  display: block;
+}
+
+.stepper {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.stepper output {
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.stepper-button {
+  width: var(--control-height);
+  height: var(--control-height);
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--field-border);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.stepper-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.stepper-button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* The Pay button, with the running total on it, stays in view while the guest scrolls. */
+.basket-bar {
+  position: sticky;
+  bottom: 0;
+  padding: var(--space-3) 0;
+  background: var(--surface);
+}
+
+.basket-empty {
+  margin: 0 0 var(--space-3);
+}
+
+.gift-result-lines {
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+}
+
+.gift-result-lines li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--border);
 }
 
 .gift-breakdown {
