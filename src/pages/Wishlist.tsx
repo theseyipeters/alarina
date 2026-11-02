@@ -127,7 +127,7 @@ function Items({ items, onChange }: { items: WishlistItem[]; onChange: () => voi
                     {formatNaira(item.funded)} of {formatNaira(item.price)}
                     {item.funded >= item.price && ' · fully gifted'}
                   </span>
-                  <progress className="progress" value={item.funded} max={item.price} aria-label={`${item.name} funded`} />
+                  <progress className="meter" value={item.funded} max={item.price} aria-label={`${item.name} funded`} />
                   {item.description && <span className="hint">{item.description}</span>}
                 </span>
                 </span>

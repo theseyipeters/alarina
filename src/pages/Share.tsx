@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import CopyLink from '../components/CopyLink.tsx'
+import UnlockCallout from '../components/UnlockCallout.tsx'
 import { api, ApiError } from '../lib/api.ts'
 import type { ShareLinks } from '../lib/types.ts'
 import { useTitle } from '../lib/useTitle.ts'
@@ -52,6 +53,8 @@ export default function Share() {
           coming from each family. It works on trust: anyone with a link can use it.
         </p>
       </div>
+
+      <UnlockCallout where="share" />
 
       {ordered.map((l) => (
         <section key={l.userId} className="card" aria-labelledby={`link-${l.userId}`}>

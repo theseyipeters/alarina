@@ -30,6 +30,26 @@
   color: var(--text);
 }
 
+.tab-flag {
+  margin-left: var(--space-2);
+  padding: 0 var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.unlock-callout {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+}
+
+.unlock-callout h2,
+.unlock-callout p {
+  margin: 0;
+}
+
 .tab[aria-current='page'] {
   color: var(--text);
   border-bottom-color: var(--text);

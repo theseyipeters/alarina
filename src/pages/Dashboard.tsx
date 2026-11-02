@@ -2,6 +2,7 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
 import CopyLink from '../components/CopyLink.tsx'
+import UnlockCallout from '../components/UnlockCallout.tsx'
 import Tour, { type TourStep } from '../components/Tour.tsx'
 import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
@@ -64,6 +65,8 @@ export default function Dashboard() {
         <p role="status" className="alert alert--success">Saved as a private draft. Publish whenever you’re ready.</p>
       )}
 
+      <UnlockCallout where="overview" />
+
       <div className="home-grid">
         {data && <ReplyBoard data={data} />}
         <div className="home-side">
@@ -103,7 +106,7 @@ const tourSteps = (partner: string | null): TourStep[] => [
   {
     target: '[data-tour="tab-gifts"]',
     title: 'Gifts, if you want them',
-    text: 'Receive cash, sell aso-ebi or share a wishlist. Cash gifts stay off until you add your bank account and turn them on.',
+    text: 'Receive cash, sell aso-ebi or share a wishlist. Unlock Gifts once for ₦5,000, then add your bank account and switch on what you want.',
   },
   {
     target: '[data-tour="partner"]',

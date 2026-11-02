@@ -776,7 +776,7 @@ input[readonly] {
 }
 
 /* Progress towards a goal, such as how much of a wishlist item has been paid for. */
-.progress {
+.meter {
   display: block;
   width: 100%;
   height: 0.5rem;
@@ -788,16 +788,16 @@ input[readonly] {
   border-radius: 999px;
 }
 
-.progress::-webkit-progress-bar {
+.meter::-webkit-progress-bar {
   background: var(--border);
 }
 
-.progress::-webkit-progress-value {
+.meter::-webkit-progress-value {
   background: var(--success, var(--primary));
   border-radius: 999px;
 }
 
-.progress::-moz-progress-bar {
+.meter::-moz-progress-bar {
   background: var(--success, var(--primary));
   border-radius: 999px;
 }

@@ -223,7 +223,7 @@ export default function GiftBasket({ invitation, names, guest, rsvpToken }: Prop
                           ? `${formatNaira(w.price)} · fully gifted, thank you`
                           : `${formatNaira(w.funded)} of ${formatNaira(w.price)} given`}
                       </span>
-                      <progress className="progress" value={w.funded} max={w.price} aria-label={`${w.name} funded`} />
+                      <progress className="meter" value={w.funded} max={w.price} aria-label={`${w.name} funded`} />
                       {w.description && <span className="hint">{w.description}</span>}
                     </span>
                     </span>

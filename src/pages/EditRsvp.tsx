@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
+import GiftBasket from '../invite/GiftBasket.tsx'
 import RsvpForm from '../invite/RsvpForm.tsx'
 import '../invite/styles.ts'
 import { api, ApiError } from '../lib/api.ts'
@@ -75,6 +76,10 @@ export default function EditRsvp() {
           {saved && <p role="status" className="alert alert--success">Your reply has been updated.</p>}
           {error && <p role="alert" className="alert">{error}</p>}
           <RsvpForm initial={rsvp} emailLocked submitLabel="Save changes" busyLabel="Saving…" onSubmit={save} />
+        </section>
+        {/* Guests who replied before the couple unlocked Gifts can still give from here. */}
+        <section className="inv-panel">
+          <GiftBasket invitation={invitation} names={names} guest={{ name: rsvp.name, email: rsvp.email, phone: rsvp.phone }} rsvpToken={token} />
         </section>
         <p className="inv-footer">
           <Link to={`/invite/${invitation.slug}`}>View the invitation</Link>
