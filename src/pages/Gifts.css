@@ -1,0 +1,195 @@
+/* Couple's Gifts tab: a big total, the payout account as a bank card, a switch and the list. */
+
+.gifts {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.gifts-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-6) 0 var(--space-2);
+}
+
+.gifts-hero p {
+  margin: 0;
+}
+
+.gifts-hero .gifts-total {
+  margin: var(--space-2) 0;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 9vw, 5.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+
+.gifts-grid {
+  display: grid;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (min-width: 56rem) {
+  .gifts-grid {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  }
+}
+
+/* The saved account, drawn like a bank card in emerald and gold. */
+.bank-card {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 22rem;
+  aspect-ratio: 1.586;
+  margin: var(--space-4) 0 var(--space-6);
+  padding: var(--space-6);
+  color: #f6f0e1;
+  background: #0e3a2d;
+  border-radius: 1rem;
+  box-shadow: inset 0 0 0 1px #2a5b4a;
+}
+
+.bank-card-bank {
+  font-size: var(--text-sm);
+  color: #e2c27d;
+}
+
+.bank-card-number {
+  align-self: end;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  letter-spacing: 0.12em;
+}
+
+.bank-card-name {
+  font-size: var(--text-sm);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.resolved {
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.resolved p {
+  margin: 0 0 var(--space-2);
+}
+
+.resolved-name {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+}
+
+/* On/off switch: a real role="switch" button, 44px tall touch target. */
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+.switch-row h2 {
+  margin: 0;
+}
+
+.switch {
+  position: relative;
+  flex: none;
+  width: 3.25rem;
+  height: 2rem;
+  padding: 0;
+  background: var(--field-border);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.switch::after {
+  /* Enlarges the hit area to 44px without changing the look. */
+  content: '';
+  position: absolute;
+  inset: -0.375rem;
+}
+
+.switch[aria-checked='true'] {
+  background: var(--success);
+}
+
+.switch-thumb {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: var(--surface);
+  border-radius: 50%;
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.switch[aria-checked='true'] .switch-thumb {
+  transform: translateX(1.25rem);
+}
+
+.switch:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.gift-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gift-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border);
+}
+
+.gift-name .hint {
+  display: block;
+}
+
+.gift-amount {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+}
+
+.gift-amount--muted {
+  color: var(--text-muted);
+}
+
+/* A payment that didn't go through is struck out, so it isn't read as money received. */
+.gift-amount--failed {
+  text-decoration: line-through;
+}
+
+@media (max-width: 30rem) {
+  .gift-list li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .gift-list .badge {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switch,
+  .switch-thumb {
+    transition: none;
+  }
+}

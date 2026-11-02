@@ -44,6 +44,7 @@ export type PublicInvitation = InvitationContent & {
   slug: string
   rsvpOpen: boolean
   rsvpClosedReason: 'deadline' | 'past' | null
+  giftsEnabled: boolean
 }
 
 export type Rsvp = { name: string; email: string; phone: string; attending: boolean; updatedAt: string }
@@ -82,4 +83,23 @@ export type Responses = {
 export type ShareLinks = {
   generalLink: string | null
   links: { userId: string; name: string; isYou: boolean; link: string | null }[]
+}
+
+export type GiftStatus = 'pending' | 'success' | 'failed' | 'abandoned'
+
+export type GiftsOverview = {
+  configured: boolean
+  feesConfirmed: boolean
+  enabled: boolean
+  payout: { bankName: string; accountName: string; accountLast4: string } | null
+  totals: { received: number; count: number; pending: number }
+  contributions: {
+    id: string
+    guestName: string
+    guestEmail: string
+    amount: number
+    status: GiftStatus
+    createdAt: string
+    paidAt: string | null
+  }[]
 }

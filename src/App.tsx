@@ -18,6 +18,8 @@ const EditRsvp = lazy(() => import('./pages/EditRsvp.tsx'))
 const Design = lazy(() => import('./pages/Design.tsx'))
 const Responses = lazy(() => import('./pages/Responses.tsx'))
 const Share = lazy(() => import('./pages/Share.tsx'))
+const Gifts = lazy(() => import('./pages/Gifts.tsx'))
+const GiftResult = lazy(() => import('./pages/GiftResult.tsx'))
 
 // Development-only reference page; the condition is compiled away so production builds don't include it.
 const StyleGuide = import.meta.env.DEV ? lazy(() => import('./pages/StyleGuide.tsx')) : null
@@ -34,6 +36,7 @@ export default function App() {
             <Route path="/signup" element={<SignUp />} />
             <Route path="/partner/accept/:token" element={<AcceptInvite />} />
             <Route path="/invite/:slug" element={<Invitation />} />
+            <Route path="/invite/:slug/gift" element={<GiftResult />} />
             <Route path="/rsvp/:token" element={<EditRsvp />} />
             <Route element={<RequireAuth />}>
               <Route path="/partner" element={<InvitePartner />} />
@@ -41,6 +44,7 @@ export default function App() {
                 <Route index element={<Dashboard />} />
                 <Route path="responses" element={<Responses />} />
                 <Route path="share" element={<Share />} />
+                <Route path="gifts" element={<Gifts />} />
               </Route>
               <Route path="/app/setup/:step?" element={<Setup />} />
               <Route path="/app/design" element={<Design />} />

@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router'
 import CopyLink from '../components/CopyLink.tsx'
 import { downloadIcs, googleCalendarUrl } from '../invite/calendar.ts'
 import EnvelopeIntro, { OPEN_MS } from '../invite/EnvelopeIntro.tsx'
+import GiftOffer from '../invite/GiftOffer.tsx'
 import InvitationCard from '../invite/InvitationCard.tsx'
 import { mapLink } from '../invite/maps.ts'
 import RsvpForm from '../invite/RsvpForm.tsx'
@@ -249,6 +250,14 @@ function RsvpPanel({ invitation, names, from, sectionRef }: RsvpPanelProps) {
           <div className="actions rsvp-done-actions">
             <CalendarButtons invitation={invitation} />
           </div>
+        )}
+        {invitation.giftsEnabled && (
+          <GiftOffer
+            slug={invitation.slug}
+            names={names}
+            guest={{ name: rsvp.name, email: rsvp.email }}
+            rsvpToken={new URL(editLink).pathname.split('/').pop()}
+          />
         )}
         <div className="rsvp-done-link">
           <p className="muted">

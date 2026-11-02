@@ -7,6 +7,7 @@ const TABS = [
   { to: '/app', label: 'Overview', end: true },
   { to: '/app/responses', label: 'Responses', end: false },
   { to: '/app/share', label: 'Share', end: false },
+  { to: '/app/gifts', label: 'Gifts', end: false },
 ]
 
 /** Shell for the couple's dashboard. Each tab has its own URL, so it can be bookmarked and shared. */

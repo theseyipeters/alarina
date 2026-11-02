@@ -1027,3 +1027,100 @@ a.inv-map {
     animation: none;
   }
 }
+
+/* ── Cash gift offer (after replying) ───────────────────────────────── */
+
+.gift-offer {
+  margin-bottom: var(--space-6);
+  padding-top: var(--space-6);
+  text-align: left;
+  border-top: 1px solid var(--border);
+}
+
+.gift-offer-title {
+  margin: 0 0 var(--space-1);
+  font-family: var(--inv-display);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-regular);
+}
+
+.amount-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-4) 0;
+  padding: 0;
+  border: 0;
+}
+
+.amount-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--field-border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+/* The radio stays in the page for keyboards and screen readers; the chip shows the choice. */
+.amount-chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.amount-chip:has(input:checked) {
+  color: var(--on-primary);
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.amount-chip:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.gift-breakdown {
+  display: grid;
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  background: var(--bg);
+  border-radius: var(--radius);
+}
+
+.gift-breakdown > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-1) 0;
+}
+
+.gift-breakdown dt {
+  color: var(--text-muted);
+}
+
+.gift-breakdown dd {
+  margin: 0;
+}
+
+.gift-breakdown > .gift-breakdown-total {
+  margin-top: var(--space-1);
+  padding-top: var(--space-2);
+  font-size: var(--text-base);
+  border-top: 1px solid var(--border);
+}
+
+.gift-breakdown-total dt {
+  color: var(--text);
+}
+
+.gift-note {
+  margin: var(--space-3) 0 0;
+  text-align: center;
+}
+
+.gift-result-title {
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+}
