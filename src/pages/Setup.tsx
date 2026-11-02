@@ -224,8 +224,7 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
           <Suspense fallback={<div className="live-preview" />}>
             <LivePreview
               values={values}
-              template={wedding?.template ?? 'classic'}
-              palette={wedding?.palette ?? 'ivory'}
+              design={{ template: wedding?.template ?? 'classic', palette: wedding?.palette ?? 'ivory', look: wedding?.look }}
               step={current.id}
             />
           </Suspense>

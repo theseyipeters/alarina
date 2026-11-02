@@ -8,7 +8,9 @@ import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { coupleNames, daysUntil, formatDate, formatTime } from '../lib/format.ts'
 import { sideLabel } from '../lib/sides.ts'
+import { designPath, STUDIO_QUERY } from '../lib/studio.ts'
 import type { Responses, Session, Wedding } from '../lib/types.ts'
+import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import { useResponses } from '../lib/useResponses.ts'
 import { useTitle } from '../lib/useTitle.ts'
 import { useWedding } from '../lib/useWedding.ts'
@@ -155,6 +157,7 @@ function Countdown({ date }: { date: string | null }) {
 }
 
 function Hero({ wedding, onChange, onTour }: { wedding: Wedding; onChange: (w: Wedding) => void; onTour: () => void }) {
+  const studio = useMediaQuery(STUDIO_QUERY)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notReady, setNotReady] = useState(false)
@@ -199,7 +202,7 @@ function Hero({ wedding, onChange, onTour }: { wedding: Wedding; onChange: (w: W
           <button className={published ? 'btn btn--secondary' : 'btn'} onClick={toggle} disabled={busy}>
             {busy ? 'Saving…' : published ? 'Unpublish' : 'Publish invitation'}
           </button>
-          <Link to="/app/design" className="btn btn--secondary" data-tour="design">Design invitation</Link>
+          <Link to={designPath(studio)} className="btn btn--secondary" data-tour="design">Design invitation</Link>
           {published && link && (
             <a href={link} target="_blank" rel="noopener" className="btn btn--secondary">
               View invitation<span className="visually-hidden"> (opens in a new tab)</span>

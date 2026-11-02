@@ -12,7 +12,17 @@
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",
     "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource/ballet": "^5.3.0",
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@fontsource/eb-garamond": "^5.3.0",
+    "@fontsource/great-vibes": "^5.3.0",
     "@fontsource/instrument-serif": "^5.3.0",
+    "@fontsource/montserrat": "^5.3.0",
+    "@fontsource/noto-serif-display": "^5.3.0",
+    "@fontsource/nunito-sans": "^5.3.0",
+    "@fontsource/spectral": "^5.3.0",
+    "@fontsource/unbounded": "^5.3.0",
+    "@fontsource/work-sans": "^5.3.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router": "^8.5.1"

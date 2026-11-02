@@ -16,6 +16,7 @@ import SignUp from './pages/SignUp.tsx'
 const Invitation = lazy(() => import('./pages/Invitation.tsx'))
 const EditRsvp = lazy(() => import('./pages/EditRsvp.tsx'))
 const Design = lazy(() => import('./pages/Design.tsx'))
+const Studio = lazy(() => import('./pages/Studio.tsx'))
 const Responses = lazy(() => import('./pages/Responses.tsx'))
 const Share = lazy(() => import('./pages/Share.tsx'))
 const Gifts = lazy(() => import('./pages/Gifts.tsx'))
@@ -59,6 +60,7 @@ export default function App() {
               </Route>
               <Route path="/app/setup/:step?" element={<Setup />} />
               <Route path="/app/design" element={<Design />} />
+              <Route path="/app/studio" element={<Studio />} />
             </Route>
             {StyleGuide && <Route path="/styleguide" element={<StyleGuide />} />}
             <Route path="*" element={<NotFound />} />

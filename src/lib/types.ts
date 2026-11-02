@@ -1,4 +1,4 @@
-import type { Palette, Template } from '../invite/design.ts'
+import type { InvitationLook, Palette, Template } from '../invite/design.ts'
 import type { AsoEbiUnit } from './asoEbi.ts'
 
 export type User = { id: string; name: string; email: string; tourCompletedAt: string | null }
@@ -36,7 +36,7 @@ export type WeddingFields = {
   events: WeddingEvent[]
 }
 
-export type InvitationDesign = { template: Template; palette: Palette }
+export type InvitationDesign = { template: Template; palette: Palette; look: InvitationLook }
 
 /** What guests see: the answers plus the chosen design. */
 export type InvitationContent = WeddingFields & InvitationDesign

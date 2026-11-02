@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
+import { inviteAttrs } from '../invite/design.ts'
 import GiftBasket from '../invite/GiftBasket.tsx'
 import RsvpForm from '../invite/RsvpForm.tsx'
 import '../invite/styles.ts'
@@ -60,7 +61,7 @@ export default function EditRsvp() {
   }
 
   return (
-    <div className="inv" data-palette={invitation.palette} data-template={invitation.template}>
+    <div className="inv" {...inviteAttrs(invitation)}>
       <main id="main" className="inv-column">
         <section className="inv-panel" aria-labelledby="edit-heading">
           <p className="inv-eyebrow">Your RSVP for</p>

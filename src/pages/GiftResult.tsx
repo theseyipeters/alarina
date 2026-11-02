@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
+import { inviteAttrs } from '../invite/design.ts'
 import GiftBasket from '../invite/GiftBasket.tsx'
 import '../invite/styles.ts'
 import { api } from '../lib/api.ts'
@@ -70,7 +71,7 @@ export default function GiftResult() {
   const back = `/invite/${slug}`
 
   return (
-    <div className="inv" data-palette={invitation?.palette ?? 'ivory'} data-template={invitation?.template ?? 'classic'}>
+    <div className="inv" {...(invitation ? inviteAttrs(invitation) : { 'data-palette': 'ivory', 'data-template': 'classic' })}>
       <main id="main" className="inv-column">
         <section className="inv-panel rsvp-done" aria-labelledby="gift-result-title">
           {gift.status === 'success' && (

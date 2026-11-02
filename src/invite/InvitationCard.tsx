@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { formatDate, formatTime } from '../lib/format.ts'
 import type { InvitationContent, WeddingEvent } from '../lib/types.ts'
-import { elorienCanRender } from './design.ts'
+import { JOINERS, resolveLook, type Template } from './design.ts'
 import { mapLink } from './maps.ts'
 
 export type InvitationPart = 'families' | 'names' | 'when' | 'where' | 'dress' | 'rsvp' | 'message' | 'events'
@@ -10,29 +10,39 @@ type Props = {
   invitation: InvitationContent
   /** In the setup preview, the part being answered right now gets data-active for a highlight. */
   highlight?: InvitationPart | null
+  /** Prefix for element ids, so several cards (Studio thumbnails) can share a page. */
+  idPrefix?: string
 }
 
 type PartProps = { 'data-part': InvitationPart; 'data-active'?: true }
-type Ctx = { w: InvitationContent; part: (name: InvitationPart) => PartProps; nameClass?: string }
+type Ctx = { w: InvitationContent; part: (name: InvitationPart) => PartProps; id: (name: string) => string; amp: string }
+
+const LAYOUTS: Record<Template, (ctx: Ctx) => ReactNode> = {
+  classic: Classic,
+  modern: Modern,
+  editorial: Editorial,
+  garden: Garden,
+  deco: Deco,
+  adire: Adire,
+  minimal: Minimal,
+  poster: Poster,
+}
 
 /**
- * The invitation itself, in one of three layouts. Colours come from data-palette and the layout
- * from data-template on an ancestor; the card sizes itself to its own width (container queries),
- * so it looks right on a phone, in previews and on desktop.
+ * The invitation itself, in one of eight layouts. Colours, fonts and finish come from the
+ * attributes inviteAttrs() puts on an ancestor; the card sizes itself to its own width
+ * (container queries), so it looks right on a phone, in previews and on desktop.
  */
-export default function InvitationCard({ invitation, highlight }: Props) {
+export default function InvitationCard({ invitation, highlight, idPrefix = 'inv' }: Props) {
   const w = invitation
   const part = (name: InvitationPart): PartProps => ({ 'data-part': name, ...(highlight === name && { 'data-active': true }) })
-
-  // Modern sets the names in Elorien only when it can draw every character of both, so the
-  // couple's names always match; otherwise both stay in the fallback serif.
-  const both = `${w.partnerOneName ?? ''}${w.partnerTwoName ?? ''}`
-  const nameClass = w.template === 'modern' && elorienCanRender(both) ? 'inv-display--elorien' : undefined
-  const ctx: Ctx = { w, part, nameClass }
+  const id = (name: string) => `${idPrefix}-${name}`
+  const amp = JOINERS[resolveLook(w.template, w.look).joiner]
+  const Layout = LAYOUTS[w.template] ?? Classic
 
   return (
-    <article className="inv-card" aria-labelledby="inv-names">
-      {w.template === 'modern' ? <Modern {...ctx} /> : w.template === 'editorial' ? <Editorial {...ctx} /> : <Classic {...ctx} />}
+    <article className="inv-card" aria-labelledby={id('names')}>
+      <Layout w={w} part={part} id={id} amp={amp} />
     </article>
   )
 }
@@ -94,17 +104,21 @@ const cityOf = (address: string | null) =>
     .filter(Boolean)
     .at(-1) ?? null
 
-function Names({ w, part, nameClass, amp = '&' }: Ctx & { amp?: ReactNode }) {
+function Names({ w, part, id, amp }: Ctx) {
   // Long names shrink just enough to stay on one line (CSS divides the width by --chars).
   const chars = Math.max(...[w.partnerOneName, w.partnerTwoName].map((n) => [...(n ?? '').normalize('NFC')].length), 6)
   return (
-    <h1 id="inv-names" className="inv-names" style={{ '--chars': chars } as CSSProperties} {...part('names')}>
-      <span className={nameClass}>{w.partnerOneName}</span>
+    <h1 id={id('names')} className="inv-names" style={{ '--chars': chars } as CSSProperties} {...part('names')}>
+      <span>{w.partnerOneName}</span>
       <span className="inv-amp">{amp}</span>
-      <span className={nameClass}>{w.partnerTwoName}</span>
+      <span>{w.partnerTwoName}</span>
     </h1>
   )
 }
+
+/** The couple's first initials, e.g. "A & T". */
+const initials = (w: InvitationContent) =>
+  [w.partnerOneName, w.partnerTwoName].map((n) => n?.normalize('NFC').trim()[0] ?? '').filter(Boolean)
 
 function Venue({ w }: { w: InvitationContent }) {
   return (
@@ -120,12 +134,12 @@ function Venue({ w }: { w: InvitationContent }) {
   )
 }
 
-function Events({ events, part, title }: { events: WeddingEvent[]; part: Ctx['part']; title: string }) {
+function Events({ events, part, id, title }: { events: WeddingEvent[]; part: Ctx['part']; id: Ctx['id']; title: string }) {
   const named = events.filter((e) => e.name.trim())
   if (!named.length) return null
   return (
-    <section className="inv-events-section" aria-labelledby="inv-events" {...part('events')}>
-      <h2 id="inv-events" className="inv-section-title">{title}</h2>
+    <section className="inv-events-section" aria-labelledby={id('events')} {...part('events')}>
+      <h2 id={id('events')} className="inv-section-title">{title}</h2>
       <ol className="inv-events">
         {named.map((e) => (
           <li key={e.id}>
@@ -228,7 +242,7 @@ function Classic(ctx: Ctx) {
         </blockquote>
       )}
 
-      <Events events={w.events} part={part} title="Also celebrating" />
+      <Events events={w.events} part={part} id={ctx.id} title="Also celebrating" />
 
       {w.rsvpDeadline && (
         <p className="c-rsvp" {...part('rsvp')}>
@@ -264,7 +278,7 @@ function Modern(ctx: Ctx) {
         <p className="inv-eyebrow m-kicker">invite you to the wedding of</p>
       </header>
 
-      <Names {...ctx} amp="+" />
+      <Names {...ctx} />
 
       {date && (
         <div className="m-date" {...part('when')}>
@@ -308,7 +322,7 @@ function Modern(ctx: Ctx) {
         </p>
       )}
 
-      <Events events={w.events} part={part} title="Programme" />
+      <Events events={w.events} part={part} id={ctx.id} title="Programme" />
     </div>
   )
 }
@@ -330,7 +344,7 @@ function Editorial(ctx: Ctx) {
 
       <div className="e-cover">
         <span className="e-ampersand" aria-hidden="true">&amp;</span>
-        <Names {...ctx} amp={<em>and</em>} />
+        <Names {...ctx} />
       </div>
 
       {date && (
@@ -374,7 +388,412 @@ function Editorial(ctx: Ctx) {
         </p>
       )}
 
-      <Events events={w.events} part={part} title="Also in this issue" />
+      <Events events={w.events} part={part} id={ctx.id} title="Also in this issue" />
+    </div>
+  )
+}
+
+/* ── Garden: a leafy wreath and script names ───────────────────────── */
+
+/** A ring of line-drawn leaves, open at the bottom, around the couple's initials. */
+function Wreath({ w }: { w: InvitationContent }) {
+  const leaves = Array.from({ length: 18 }, (_, i) => -150 + i * 17.5)
+  return (
+    <div className="g-wreath" aria-hidden="true">
+      <svg className="inv-ornament" viewBox="0 0 100 100">
+        <path d="M24 82A40 40 0 1 1 76 82" />
+        {leaves.map((angle, i) => (
+          <path
+            key={angle}
+            transform={`rotate(${angle} 50 50)`}
+            d={i % 2 ? 'M50 10c4-4 9-5 12-3-2 4-7 6-12 3z' : 'M50 10c-4-4-9-5-12-3 2 4 7 6 12 3z'}
+          />
+        ))}
+        <path d="M24 82c6 2 12 1 16-3M76 82c-6 2-12 1-16-3" />
+      </svg>
+      <span className="g-initials">{initials(w).join(' ')}</span>
+    </div>
+  )
+}
+
+/** A curling stem with leaves, for two opposite corners. */
+function Vine({ className }: { className: string }) {
+  return (
+    <svg className={`inv-ornament g-vine ${className}`} viewBox="0 0 120 120" aria-hidden="true">
+      <path d="M4 6c30 2 52 16 64 40s18 46 14 68" />
+      <path d="M26 9c4-8 13-11 20-9-3 8-12 11-20 9zM44 18c8-4 17-2 21 4-7 5-16 3-21-4zM56 33c3-9 11-14 19-13-1 9-10 14-19 13zM66 50c9-2 17 3 19 10-8 3-16-1-19-10zM70 70c5-8 14-10 21-7-4 8-13 10-21 7zM76 90c8 1 14 7 14 14-8 0-14-6-14-14z" />
+    </svg>
+  )
+}
+
+function LeafDivider() {
+  return (
+    <svg className="inv-ornament g-leaves" viewBox="0 0 160 20" aria-hidden="true">
+      <path d="M8 10h56M96 10h56" />
+      <path d="M80 10c-6-6-14-7-18-4 4 5 12 6 18 4zM80 10c6-6 14-7 18-4-4 5-12 6-18 4zM80 10c-6 6-14 7-18 4 4-5 12-6 18-4zM80 10c6 6 14 7 18 4-4-5-12-6-18-4z" />
+    </svg>
+  )
+}
+
+function Garden(ctx: Ctx) {
+  const { w, part } = ctx
+  const date = dateParts(w.date)
+  const families = [w.partnerOneFamily, w.partnerTwoFamily].filter(Boolean)
+
+  return (
+    <div className="g-layout">
+      <Vine className="g-vine--top" />
+      <Vine className="g-vine--bottom" />
+      <Wreath w={w} />
+
+      {families.length > 0 && (
+        <div className="g-families" {...part('families')}>
+          <p className="inv-eyebrow">Together with their families</p>
+          <p className="inv-families">{families.join(' & ')}</p>
+        </div>
+      )}
+
+      <p className="g-invite">invite you to celebrate their wedding</p>
+      <Names {...ctx} />
+      <LeafDivider />
+
+      {date && (
+        <div className="g-date" {...part('when')}>
+          <span className="g-date-main">
+            {date.weekday}, {date.day} {date.month} {date.year}
+          </span>
+          {w.startTime && <span className="inv-sub">at {timePhrase(w.startTime)}</span>}
+        </div>
+      )}
+
+      <div className="g-block" {...part('where')}>
+        <span className="inv-eyebrow">Where</span>
+        <Venue w={w} />
+      </div>
+
+      {w.dressNote && (
+        <div className="g-block" {...part('dress')}>
+          <span className="inv-eyebrow">Dress code</span>
+          <span>{w.dressNote}</span>
+        </div>
+      )}
+
+      {w.message && (
+        <blockquote className="inv-quote" {...part('message')}>
+          {w.message}
+        </blockquote>
+      )}
+
+      <Events events={w.events} part={part} id={ctx.id} title="The celebrations" />
+
+      {w.rsvpDeadline && (
+        <p className="g-rsvp" {...part('rsvp')}>
+          Kindly reply by {formatDate(w.rsvpDeadline)}
+        </p>
+      )}
+    </div>
+  )
+}
+
+/* ── Deco: stepped corners and a sunburst ───────────────────────────── */
+
+function DecoCorners() {
+  return (
+    <>
+      {['tl', 'tr', 'bl', 'br'].map((c) => (
+        <svg key={c} className={`inv-ornament d-corner d-corner--${c}`} viewBox="0 0 40 40" aria-hidden="true">
+          <path d="M1 39V1h38M7 30V7h23M13 22V13h9" />
+          <path d="M20 20l3 3-3 3-3-3z" />
+        </svg>
+      ))}
+    </>
+  )
+}
+
+function Sunburst() {
+  const rays = Array.from({ length: 11 }, (_, i) => (Math.PI * (i + 1)) / 12)
+  return (
+    <svg className="inv-ornament d-sun" viewBox="0 0 120 64" aria-hidden="true">
+      <path d="M44 62a16 16 0 0 1 32 0M36 62a24 24 0 0 1 48 0" />
+      {rays.map((a) => (
+        <path
+          key={a}
+          d={`M${(60 - Math.cos(a) * 28).toFixed(1)} ${(62 - Math.sin(a) * 28).toFixed(1)}L${(60 - Math.cos(a) * 58).toFixed(1)} ${(62 - Math.sin(a) * 58).toFixed(1)}`}
+        />
+      ))}
+      <path d="M2 62h116" />
+    </svg>
+  )
+}
+
+function Deco(ctx: Ctx) {
+  const { w, part } = ctx
+  const date = dateParts(w.date)
+  const families = [w.partnerOneFamily, w.partnerTwoFamily].filter(Boolean)
+
+  return (
+    <div className="d-frame">
+      <DecoCorners />
+      <Sunburst />
+
+      {families.length > 0 && (
+        <div className="d-block" {...part('families')}>
+          <p className="inv-eyebrow">Together with their families</p>
+          <p className="d-families">{families.join(' & ')}</p>
+        </div>
+      )}
+
+      <p className="d-invite">request the honour of your presence at the marriage of</p>
+      <Names {...ctx} />
+
+      {date && (
+        <div className="d-date" {...part('when')}>
+          <span>{date.weekday}</span>
+          <span className="d-date-main">
+            {date.day} {date.month} {date.year}
+          </span>
+          <span>{w.startTime ? formatTime(w.startTime) : date.year}</span>
+        </div>
+      )}
+
+      <div className="d-block" {...part('where')}>
+        <span className="inv-eyebrow">Venue</span>
+        <Venue w={w} />
+      </div>
+
+      {w.dressNote && (
+        <div className="d-block" {...part('dress')}>
+          <span className="inv-eyebrow">Dress code</span>
+          <span>{w.dressNote}</span>
+        </div>
+      )}
+
+      {w.message && (
+        <blockquote className="inv-quote" {...part('message')}>
+          {w.message}
+        </blockquote>
+      )}
+
+      <Events events={w.events} part={part} id={ctx.id} title="The celebrations" />
+
+      {w.rsvpDeadline && (
+        <p className="d-rsvp" {...part('rsvp')}>
+          Reply by {formatDate(w.rsvpDeadline)}
+        </p>
+      )}
+    </div>
+  )
+}
+
+/* ── Adire: indigo-cloth bands and a date stamp ─────────────────────── */
+
+function Adire(ctx: Ctx) {
+  const { w, part } = ctx
+  const date = dateParts(w.date)
+  const families = [w.partnerOneFamily, w.partnerTwoFamily].filter(Boolean)
+
+  return (
+    <div className="a-layout">
+      <span className="a-band" aria-hidden="true" />
+      <div className="a-body">
+        {families.length > 0 ? (
+          <div {...part('families')}>
+            <p className="inv-eyebrow">Together with their families</p>
+            <p className="a-families">{families.join(' & ')}</p>
+          </div>
+        ) : (
+          <p className="inv-eyebrow">You are invited to the wedding of</p>
+        )}
+
+        <Names {...ctx} />
+        <p className="a-invite">and would love you to celebrate with them</p>
+
+        {date && (
+          <div className="a-stamp" {...part('when')}>
+            <span className="a-stamp-small">{date.weekday}</span>
+            <span className="a-stamp-day">{date.day}</span>
+            <span className="a-stamp-small">
+              {date.month} {date.year}
+            </span>
+            {w.startTime && <span className="a-stamp-small">{formatTime(w.startTime)}</span>}
+          </div>
+        )}
+
+        <dl className="a-details">
+          <div {...part('where')}>
+            <dt>Where</dt>
+            <dd>
+              <Venue w={w} />
+            </dd>
+          </div>
+          {w.dressNote && (
+            <div {...part('dress')}>
+              <dt>Dress code</dt>
+              <dd>{w.dressNote}</dd>
+            </div>
+          )}
+          {w.rsvpDeadline && (
+            <div {...part('rsvp')}>
+              <dt>Reply by</dt>
+              <dd>{formatDate(w.rsvpDeadline)}</dd>
+            </div>
+          )}
+        </dl>
+
+        {w.message && (
+          <p className="a-message" {...part('message')}>
+            {w.message}
+          </p>
+        )}
+
+        <Events events={w.events} part={part} id={ctx.id} title="The celebrations" />
+      </div>
+      <span className="a-band" aria-hidden="true" />
+    </div>
+  )
+}
+
+/* ── Minimal: quiet type and two columns ────────────────────────────── */
+
+function Minimal(ctx: Ctx) {
+  const { w, part } = ctx
+  const date = dateParts(w.date)
+  const families = [w.partnerOneFamily, w.partnerTwoFamily].filter(Boolean)
+  const city = cityOf(w.venueAddress)
+
+  return (
+    <div className="n-layout">
+      <div className="n-top" aria-hidden="true">
+        <span>{date?.numeric}</span>
+        <span>{city}</span>
+      </div>
+
+      <div>
+        <p className="n-kicker">The wedding of</p>
+        <Names {...ctx} />
+      </div>
+
+      <dl className="n-details">
+        {date && (
+          <div {...part('when')}>
+            <dt>When</dt>
+            <dd>
+              {date.weekday} {date.day} {date.month} {date.year}
+              {w.startTime && <span className="inv-sub">{formatTime(w.startTime)}</span>}
+            </dd>
+          </div>
+        )}
+        <div {...part('where')}>
+          <dt>Where</dt>
+          <dd>
+            <Venue w={w} />
+          </dd>
+        </div>
+        {families.length > 0 && (
+          <div {...part('families')}>
+            <dt>Hosted by</dt>
+            <dd>
+              {families.map((f) => (
+                <span key={f} className="inv-sub">{f}</span>
+              ))}
+            </dd>
+          </div>
+        )}
+        {w.dressNote && (
+          <div {...part('dress')}>
+            <dt>Dress code</dt>
+            <dd>{w.dressNote}</dd>
+          </div>
+        )}
+        {w.rsvpDeadline && (
+          <div {...part('rsvp')}>
+            <dt>Reply by</dt>
+            <dd>{formatDate(w.rsvpDeadline)}</dd>
+          </div>
+        )}
+      </dl>
+
+      {w.message && (
+        <p className="n-message" {...part('message')}>
+          {w.message}
+        </p>
+      )}
+
+      <Events events={w.events} part={part} id={ctx.id} title="Also celebrating" />
+    </div>
+  )
+}
+
+/* ── Poster: a block of colour and giant numerals ───────────────────── */
+
+function Poster(ctx: Ctx) {
+  const { w, part } = ctx
+  const date = dateParts(w.date)
+  const families = [w.partnerOneFamily, w.partnerTwoFamily].filter(Boolean)
+
+  return (
+    <div className="p-layout">
+      <header className="p-hero">
+        <p className="p-kicker">We’re getting married</p>
+        <Names {...ctx} />
+      </header>
+
+      {date && (
+        <div className="p-date" {...part('when')}>
+          <span className="p-big">{date.day.padStart(2, '0')}</span>
+          <span className="p-mid">
+            {date.weekday}
+            <br />
+            {date.month}
+            {w.startTime && (
+              <>
+                <br />
+                {formatTime(w.startTime)}
+              </>
+            )}
+          </span>
+          <span className="p-big">{date.year}</span>
+        </div>
+      )}
+
+      <dl className="p-grid">
+        <div {...part('where')}>
+          <dt>Where</dt>
+          <dd>
+            <Venue w={w} />
+          </dd>
+        </div>
+        {families.length > 0 && (
+          <div {...part('families')}>
+            <dt>Hosted by</dt>
+            <dd>
+              {families.map((f) => (
+                <span key={f} className="inv-sub">{f}</span>
+              ))}
+            </dd>
+          </div>
+        )}
+        {w.dressNote && (
+          <div {...part('dress')}>
+            <dt>Dress code</dt>
+            <dd>{w.dressNote}</dd>
+          </div>
+        )}
+        {w.rsvpDeadline && (
+          <div {...part('rsvp')}>
+            <dt>Reply by</dt>
+            <dd>{formatDate(w.rsvpDeadline)}</dd>
+          </div>
+        )}
+      </dl>
+
+      {w.message && (
+        <p className="p-message" {...part('message')}>
+          {w.message}
+        </p>
+      )}
+
+      <Events events={w.events} part={part} id={ctx.id} title="Programme" />
     </div>
   )
 }

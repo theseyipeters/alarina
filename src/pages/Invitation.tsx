@@ -4,6 +4,7 @@ import CopyLink from '../components/CopyLink.tsx'
 import { downloadIcs, googleCalendarUrl } from '../invite/calendar.ts'
 import EnvelopeIntro, { OPEN_MS } from '../invite/EnvelopeIntro.tsx'
 import GiftBasket from '../invite/GiftBasket.tsx'
+import { inviteAttrs } from '../invite/design.ts'
 import InvitationCard from '../invite/InvitationCard.tsx'
 import { mapLink } from '../invite/maps.ts'
 import RsvpForm from '../invite/RsvpForm.tsx'
@@ -116,7 +117,7 @@ function InvitationView({ invitation, names, from }: { invitation: PublicInvitat
     .join('')
 
   return (
-    <div className="inv inv--page" data-palette={invitation.palette} data-template={invitation.template}>
+    <div className="inv inv--page" {...inviteAttrs(invitation)}>
       {stage !== 'open' ? (
         <main id="main">
           <EnvelopeIntro invitation={invitation} opening={stage === 'opening'} onOpen={open} />
