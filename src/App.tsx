@@ -20,6 +20,8 @@ const Responses = lazy(() => import('./pages/Responses.tsx'))
 const Share = lazy(() => import('./pages/Share.tsx'))
 const Gifts = lazy(() => import('./pages/Gifts.tsx'))
 const GiftResult = lazy(() => import('./pages/GiftResult.tsx'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword.tsx'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword.tsx'))
 
 // Development-only reference page; the condition is compiled away so production builds don't include it.
 const StyleGuide = import.meta.env.DEV ? lazy(() => import('./pages/StyleGuide.tsx')) : null
@@ -34,6 +36,8 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/partner/accept/:token" element={<AcceptInvite />} />
             <Route path="/invite/:slug" element={<Invitation />} />
             <Route path="/invite/:slug/gift" element={<GiftResult />} />
