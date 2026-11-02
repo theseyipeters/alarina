@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { Link, useParams, useSearchParams } from 'react-router'
 import CopyLink from '../components/CopyLink.tsx'
 import InvitationCard from '../invite/InvitationCard.tsx'
 import RsvpForm from '../invite/RsvpForm.tsx'
@@ -18,6 +18,8 @@ type State =
 
 export default function Invitation() {
   const { slug = '' } = useParams()
+  // A partner's personal link adds ?from=code, so the reply is marked as their side.
+  const from = useSearchParams()[0].get('from')
   const [state, setState] = useState<State>({ status: 'loading' })
 
   useEffect(() => {
@@ -55,7 +57,7 @@ export default function Invitation() {
     <div className="inv" data-palette={invitation.palette} data-template={invitation.template}>
       <main id="main" className="inv-column">
         <InvitationCard invitation={invitation} />
-        <RsvpPanel invitation={invitation} names={names} />
+        <RsvpPanel invitation={invitation} names={names} from={from} />
         <p className="inv-footer">
           Made with <Link to="/">Alárinà</Link>
         </p>
@@ -66,7 +68,7 @@ export default function Invitation() {
 
 type Created = { rsvp: Rsvp; editLink: string; emailSent: boolean }
 
-function RsvpPanel({ invitation, names }: { invitation: PublicInvitation; names: string }) {
+function RsvpPanel({ invitation, names, from }: { invitation: PublicInvitation; names: string; from: string | null }) {
   const [created, setCreated] = useState<Created | null>(null)
   const [duplicate, setDuplicate] = useState<{ emailSent: boolean } | null>(null)
   const [closed, setClosed] = useState(!invitation.rsvpOpen)
@@ -76,7 +78,12 @@ function RsvpPanel({ invitation, names }: { invitation: PublicInvitation; names:
     setError(null)
     setDuplicate(null)
     try {
-      setCreated(await api.post<Created>(`/public/invitations/${encodeURIComponent(invitation.slug)}/rsvps`, values))
+      setCreated(
+        await api.post<Created>(`/public/invitations/${encodeURIComponent(invitation.slug)}/rsvps`, {
+          ...values,
+          ...(from && { from }),
+        }),
+      )
     } catch (err) {
       if (err instanceof ApiError && err.code === 'already_responded') {
         setDuplicate(err.details as { emailSent: boolean })

@@ -105,10 +105,10 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
       body = (
         <>
           <Field label="First partner’s name">
-            {(p) => <input {...p} type="text" autoComplete="off" maxLength={60} value={text('partnerOneName')} onChange={(e) => set('partnerOneName', e.target.value)} />}
+            {(p) => <input {...p} type="text" autoComplete="off" maxLength={60} placeholder="Ọláolúwa" value={text('partnerOneName')} onChange={(e) => set('partnerOneName', e.target.value)} />}
           </Field>
           <Field label="Second partner’s name">
-            {(p) => <input {...p} type="text" autoComplete="off" maxLength={60} value={text('partnerTwoName')} onChange={(e) => set('partnerTwoName', e.target.value)} />}
+            {(p) => <input {...p} type="text" autoComplete="off" maxLength={60} placeholder="Ẹniọlá" value={text('partnerTwoName')} onChange={(e) => set('partnerTwoName', e.target.value)} />}
           </Field>
         </>
       )
@@ -153,15 +153,15 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
       break
     case 'dress':
       body = (
-        <Field label="Dress code" optional hint="For example: aso-ebi in emerald and gold, or black tie.">
-          {(p) => <input {...p} type="text" maxLength={200} value={text('dressNote')} onChange={(e) => set('dressNote', e.target.value)} />}
+        <Field label="Dress code" optional hint="Colours for aso-ebi, black tie, or anything guests should know.">
+          {(p) => <input {...p} type="text" maxLength={200} placeholder="Aso-ebi in emerald and gold" value={text('dressNote')} onChange={(e) => set('dressNote', e.target.value)} />}
         </Field>
       )
       break
     case 'message':
       body = (
         <Field label="Message to your guests" optional hint={`${text('message').length} of 1000 characters`}>
-          {(p) => <textarea {...p} rows={6} maxLength={1000} value={text('message')} onChange={(e) => set('message', e.target.value)} />}
+          {(p) => <textarea {...p} rows={6} maxLength={1000} placeholder="We can’t wait to celebrate with you." value={text('message')} onChange={(e) => set('message', e.target.value)} />}
         </Field>
       )
       break
@@ -186,29 +186,31 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
   }
 
   return (
-    <main id="main" className="page">
+    <main id="main" className="page page--setup">
       <div className="row">
         <Link to="/app" className="brand">Alárinà</Link>
         <SaveIndicator status={status} retry={() => flush().catch(() => {})} />
       </div>
 
-      <StepNav currentIndex={index} furthest={furthest} />
+      <div className="setup-layout">
+        <StepNav currentIndex={index} furthest={furthest} />
 
-      <div className="card">
-        <h1 ref={headingRef} tabIndex={-1} className="step-heading">{QUESTIONS[current.id]}</h1>
-        {current.id === 'finish' ? (
-          body
-        ) : (
-          <form onSubmit={next}>
-            {body}
-            <div className="actions actions--end">
-              {index > 0 && (
-                <button type="button" className="btn btn--secondary" onClick={() => go(STEPS[index - 1]!.id)}>Back</button>
-              )}
-              <button className="btn">{current.id === 'events' ? 'Review' : 'Continue'}</button>
-            </div>
-          </form>
-        )}
+        <div className="card">
+          <h1 ref={headingRef} tabIndex={-1} className="step-heading">{QUESTIONS[current.id]}</h1>
+          {current.id === 'finish' ? (
+            body
+          ) : (
+            <form onSubmit={next}>
+              {body}
+              <div className="actions actions--end">
+                {index > 0 && (
+                  <button type="button" className="btn btn--secondary actions__back" onClick={() => go(STEPS[index - 1]!.id)}>Back</button>
+                )}
+                <button className="btn">{current.id === 'events' ? 'Review' : 'Continue'}</button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </main>
   )
@@ -242,29 +244,49 @@ function SaveIndicator({ status, retry }: { status: SaveStatus; retry: () => voi
   )
 }
 
-function StepNav({ currentIndex, furthest }: { currentIndex: number; furthest: number }) {
+/** Steps you've reached are links; later ones are plain text until you get there. */
+function StepList({ currentIndex, furthest }: { currentIndex: number; furthest: number }) {
   return (
-    <details className="steps-nav">
-      <summary>
-        Step {currentIndex + 1} of {STEPS.length} · {STEPS[currentIndex]!.label}
-      </summary>
-      <nav aria-label="Setup steps">
-        <ol>
-          {STEPS.map((s, i) => (
-            <li key={s.id}>
-              {i <= furthest ? (
-                <Link to={`/app/setup/${s.id}`} aria-current={i === currentIndex ? 'step' : undefined}>{s.label}</Link>
-              ) : (
-                <span className="muted">{s.label}</span>
-              )}
-            </li>
-          ))}
-        </ol>
+    <ol>
+      {STEPS.map((s, i) => (
+        <li key={s.id}>
+          {i <= furthest ? (
+            <Link to={`/app/setup/${s.id}`} aria-current={i === currentIndex ? 'step' : undefined}>{s.label}</Link>
+          ) : (
+            <span className="muted">{s.label}</span>
+          )}
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+/** Collapsible step list on phones; an always-visible sidebar on wide screens (only one shows). */
+function StepNav({ currentIndex, furthest }: { currentIndex: number; furthest: number }) {
+  const count = `Step ${currentIndex + 1} of ${STEPS.length}`
+  const progress = (
+    <div className="progress" aria-hidden="true">
+      <span style={{ width: `${((currentIndex + 1) / STEPS.length) * 100}%` }} />
+    </div>
+  )
+
+  return (
+    <>
+      <details className="steps-nav">
+        <summary>
+          {count} · {STEPS[currentIndex]!.label}
+        </summary>
+        <nav aria-label="Setup steps">
+          <StepList currentIndex={currentIndex} furthest={furthest} />
+        </nav>
+        {progress}
+      </details>
+      <nav className="steps-rail" aria-label="Setup steps">
+        <p className="steps-rail-count">{count}</p>
+        {progress}
+        <StepList currentIndex={currentIndex} furthest={furthest} />
       </nav>
-      <div className="progress" aria-hidden="true">
-        <span style={{ width: `${((currentIndex + 1) / STEPS.length) * 100}%` }} />
-      </div>
-    </details>
+    </>
   )
 }
 
@@ -365,7 +387,7 @@ function Review({ values, flush, onEdit }: ReviewProps) {
       </dl>
 
       <div className="actions actions--end">
-        <button type="button" className="btn btn--secondary" onClick={() => onEdit('events')}>Back</button>
+        <button type="button" className="btn btn--secondary actions__back" onClick={() => onEdit('events')}>Back</button>
         <button type="button" className="btn btn--secondary" onClick={() => finish(false)} disabled={busy !== null}>
           {busy === 'draft' ? 'Saving…' : 'Save as private draft'}
         </button>

@@ -38,11 +38,11 @@ export default function SignIn() {
         <form onSubmit={onSubmit}>
           <div className="field">
             <label htmlFor="email">Email</label>
-            <input id="email" name="email" type="email" autoComplete="email" required />
+            <input id="email" name="email" type="email" autoComplete="email" required placeholder="you@example.com" />
           </div>
           <div className="field">
             <label htmlFor="password">Password</label>
-            <input id="password" name="password" type="password" autoComplete="current-password" required />
+            <input id="password" name="password" type="password" autoComplete="current-password" required placeholder="Your password" />
           </div>
           <button className="btn btn--block" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
         </form>

@@ -52,7 +52,7 @@ export default function InvitePartner() {
             <form onSubmit={onSubmit}>
               <div className="field">
                 <label htmlFor="email">Partner’s email (optional)</label>
-                <input id="email" name="email" type="email" autoComplete="off" aria-describedby="email-hint" />
+                <input id="email" name="email" type="email" autoComplete="off" placeholder="partner@example.com" aria-describedby="email-hint" />
                 <span id="email-hint" className="hint">If email is set up, we’ll send the link. You can always copy it too.</span>
               </div>
               <button className="btn btn--secondary" disabled={busy}>

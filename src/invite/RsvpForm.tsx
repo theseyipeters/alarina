@@ -74,7 +74,7 @@ export default function RsvpForm({ initial, emailLocked, submitLabel, busyLabel,
 
       <Field label="Your name">
         {(p) => (
-          <input {...p} type="text" autoComplete="name" required maxLength={80} value={values.name} onChange={(e) => set('name', e.target.value)} disabled={disabled} />
+          <input {...p} type="text" autoComplete="name" required maxLength={80} placeholder="Chidi Okeke" value={values.name} onChange={(e) => set('name', e.target.value)} disabled={disabled} />
         )}
       </Field>
       {emailLocked ? (
@@ -84,7 +84,7 @@ export default function RsvpForm({ initial, emailLocked, submitLabel, busyLabel,
       ) : (
         <Field label="Email" hint="Used only by the couple, and to send you a link to change your reply.">
           {(p) => (
-            <input {...p} type="email" autoComplete="email" required maxLength={254} value={values.email} onChange={(e) => set('email', e.target.value)} disabled={disabled} />
+            <input {...p} type="email" autoComplete="email" required maxLength={254} placeholder="you@example.com" value={values.email} onChange={(e) => set('email', e.target.value)} disabled={disabled} />
           )}
         </Field>
       )}

@@ -46,12 +46,12 @@ export default function EventsEditor({ events, onChange }: Props) {
           </div>
           <Field label="Venue" optional>
             {(p) => (
-              <input {...p} type="text" maxLength={120} value={event.venueName ?? ''} onChange={(e) => update(event.id, { venueName: e.target.value })} />
+              <input {...p} type="text" maxLength={120} placeholder="Family house, Ibadan" value={event.venueName ?? ''} onChange={(e) => update(event.id, { venueName: e.target.value })} />
             )}
           </Field>
           <Field label="Address" optional>
             {(p) => (
-              <input {...p} type="text" maxLength={200} value={event.venueAddress ?? ''} onChange={(e) => update(event.id, { venueAddress: e.target.value })} />
+              <input {...p} type="text" maxLength={200} placeholder="12 Ring Road, Ibadan" value={event.venueAddress ?? ''} onChange={(e) => update(event.id, { venueAddress: e.target.value })} />
             )}
           </Field>
           <button type="button" className="btn btn--secondary" onClick={() => onChange(events.filter((e) => e.id !== event.id))}>

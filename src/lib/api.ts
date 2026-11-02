@@ -14,9 +14,13 @@ export class ApiError extends Error {
 
 type RequestOptions = Omit<RequestInit, 'body'> & { body?: unknown }
 
+// The API runs as its own server (VITE_API_URL, e.g. http://localhost:5001 in development).
+const API_BASE = `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/api`
+
 async function request<T>(path: string, { body, headers, ...init }: RequestOptions = {}): Promise<T> {
-  const res = await fetch(`/api${path}`, {
-    credentials: 'same-origin',
+  const res = await fetch(`${API_BASE}${path}`, {
+    // The API is on another origin, so the session cookie has to be sent explicitly.
+    credentials: 'include',
     ...init,
     headers: { ...(body !== undefined && { 'Content-Type': 'application/json' }), ...headers },
     ...(body !== undefined && { body: JSON.stringify(body) }),

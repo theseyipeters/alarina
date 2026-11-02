@@ -235,6 +235,11 @@ a {
   margin-top: var(--space-6);
 }
 
+/* Back sits on the left; the forward actions stay on the right. */
+.actions__back {
+  margin-right: auto;
+}
+
 /* ── Components ─────────────────────────────────────────────────────── */
 
 .skip-link {
@@ -317,9 +322,11 @@ input[type='text'],
 input[type='email'],
 input[type='password'],
 input[type='tel'],
+input[type='search'],
 input[type='date'],
 input[type='time'],
-textarea {
+textarea,
+select {
   width: 100%;
   min-width: 0;
   min-height: var(--control-height);
@@ -474,6 +481,80 @@ input[readonly] {
 
 /* Setup wizard */
 
+/* One column on phones; on wide screens a step sidebar sits beside the question card. */
+.steps-rail {
+  display: none;
+}
+
+@media (min-width: 60rem) {
+  .page--setup {
+    max-width: 64rem;
+  }
+
+  .setup-layout {
+    display: grid;
+    grid-template-columns: 15rem minmax(0, 46rem);
+    gap: var(--space-12);
+    align-items: start;
+    justify-content: center;
+  }
+
+  .setup-layout > .card {
+    padding: var(--space-12);
+  }
+
+  .steps-nav {
+    display: none;
+  }
+
+  .steps-rail {
+    position: sticky;
+    top: var(--space-8);
+    display: block;
+    font-size: var(--text-sm);
+  }
+
+}
+
+.steps-rail-count {
+  margin: 0 0 var(--space-3);
+  color: var(--text-muted);
+}
+
+.steps-rail .progress {
+  margin-bottom: var(--space-6);
+}
+
+.steps-rail ol {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.steps-rail li > * {
+  display: flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding-left: var(--space-4);
+  border-left: 1px solid var(--border);
+}
+
+.steps-rail a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.steps-rail a:hover {
+  color: var(--text);
+}
+
+.steps-rail a[aria-current='step'] {
+  color: var(--text);
+  border-left: 2px solid var(--text);
+  padding-left: calc(var(--space-4) - 1px);
+}
+
 .step-heading {
   margin-bottom: var(--space-6);
 }
@@ -556,6 +637,13 @@ input[readonly] {
 
 .summary-edit {
   font-size: var(--text-sm);
+}
+
+@media (min-width: 60rem) {
+  .summary > div {
+    grid-template-columns: 10rem minmax(0, 1fr) auto;
+    gap: var(--space-6);
+  }
 }
 
 @media (max-width: 30rem) {

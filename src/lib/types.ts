@@ -56,3 +56,30 @@ export type Wedding = InvitationContent & {
   setupCompletedAt: string | null
   publishedAt: string | null
 }
+
+/** A guest's reply as the couple sees it, with contact details and side. */
+export type Response = {
+  id: string
+  name: string
+  email: string
+  phone: string
+  attending: boolean
+  sideUserId: string | null
+  sideSource: 'link' | 'couple' | null
+  editLinkActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export type Counts = { total: number; attending: number; declined: number }
+
+export type Responses = {
+  partners: { userId: string; name: string }[]
+  summary: Counts & { bySide: (Counts & { userId: string | null })[] }
+  rsvps: Response[]
+}
+
+export type ShareLinks = {
+  generalLink: string | null
+  links: { userId: string; name: string; isYou: boolean; link: string | null }[]
+}

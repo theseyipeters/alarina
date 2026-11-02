@@ -44,15 +44,15 @@ export default function SignUp() {
         <form onSubmit={onSubmit}>
           <div className="field">
             <label htmlFor="name">Your name</label>
-            <input id="name" name="name" type="text" autoComplete="given-name" required maxLength={80} />
+            <input id="name" name="name" type="text" autoComplete="given-name" required maxLength={80} placeholder="Adaeze" />
           </div>
           <div className="field">
             <label htmlFor="email">Email</label>
-            <input id="email" name="email" type="email" autoComplete="email" required />
+            <input id="email" name="email" type="email" autoComplete="email" required placeholder="you@example.com" />
           </div>
           <div className="field">
             <label htmlFor="password">Password</label>
-            <input id="password" name="password" type="password" autoComplete="new-password" required minLength={8} maxLength={128} aria-describedby="password-hint" />
+            <input id="password" name="password" type="password" autoComplete="new-password" placeholder="Create a password" required minLength={8} maxLength={128} aria-describedby="password-hint" />
             <span id="password-hint" className="hint">At least 8 characters.</span>
           </div>
           <button className="btn btn--block" disabled={busy}>{busy ? 'Creating account…' : 'Create account'}</button>

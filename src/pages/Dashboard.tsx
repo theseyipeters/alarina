@@ -1,40 +1,30 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
 import CopyLink from '../components/CopyLink.tsx'
 import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { coupleNames, formatDate, formatTime } from '../lib/format.ts'
-import type { Wedding } from '../lib/types.ts'
+import { sideLabel } from '../lib/sides.ts'
+import type { Responses, Wedding } from '../lib/types.ts'
+import { useResponses } from '../lib/useResponses.ts'
 import { useTitle } from '../lib/useTitle.ts'
 import { useWedding } from '../lib/useWedding.ts'
 import { STEPS } from '../setup/steps.ts'
 
+/** Dashboard overview: the wedding, reply totals and the partner. */
 export default function Dashboard() {
   useTitle('Your wedding')
-  const { state, signOut } = useAuth()
+  const { state } = useAuth()
   const [wedding, setWedding] = useWedding()
-  const navigate = useNavigate()
+  const [responses] = useResponses()
   const justFinished = (useLocation().state as { justFinished?: 'published' | 'draft' } | null)?.justFinished
 
   if (state.status !== 'signedIn') return null
   const { couple } = state
 
   return (
-    <main id="main" className="page page--wide">
-      <div className="row">
-        <Link to="/app" className="brand">Alárinà</Link>
-        <button
-          className="btn btn--secondary"
-          onClick={async () => {
-            await signOut()
-            navigate('/', { replace: true })
-          }}
-        >
-          Sign out
-        </button>
-      </div>
-
+    <div className="stack">
       {justFinished && (
         <p role="status" className="alert alert--success">
           {justFinished === 'published' ? 'Your invitation is published.' : 'Saved as a private draft. Publish whenever you’re ready.'}
@@ -45,7 +35,10 @@ export default function Dashboard() {
       {wedding.status === 'error' && <p role="alert" className="alert">Your wedding couldn’t be loaded. Refresh to try again.</p>}
       {wedding.status === 'ready' &&
         (wedding.wedding?.setupCompletedAt ? (
-          <WeddingCard wedding={wedding.wedding} onChange={setWedding} />
+          <>
+            <WeddingCard wedding={wedding.wedding} onChange={setWedding} />
+            {responses.status === 'ready' && <ReplySummary data={responses.data} />}
+          </>
         ) : (
           <div className="card">
             <h1>Set up your wedding</h1>
@@ -61,7 +54,7 @@ export default function Dashboard() {
           </div>
         ))}
 
-      <div className="card section">
+      <div className="card">
         <h2>Your partner</h2>
         {couple.partner ? (
           <p>You’re planning together with {couple.partner.name}.</p>
@@ -71,7 +64,52 @@ export default function Dashboard() {
           </p>
         )}
       </div>
-    </main>
+    </div>
+  )
+}
+
+function ReplySummary({ data }: { data: Responses }) {
+  const { summary } = data
+  return (
+    <section className="card" aria-labelledby="replies-title">
+      <div className="row row--tight">
+        <h2 id="replies-title">Replies</h2>
+        <Link to="/app/responses">See all</Link>
+      </div>
+      <dl className="stats">
+        <div>
+          <dt>Attending</dt>
+          <dd>{summary.attending}</dd>
+        </div>
+        <div>
+          <dt>Declined</dt>
+          <dd>{summary.declined}</dd>
+        </div>
+        <div>
+          <dt>Total replies</dt>
+          <dd>{summary.total}</dd>
+        </div>
+      </dl>
+      {summary.total > 0 && (
+        <ul className="side-list">
+          {summary.bySide
+            .filter((s) => s.total > 0)
+            .map((s) => (
+              <li key={s.userId ?? 'none'}>
+                <span>{sideLabel(data.partners, s.userId)}</span>
+                <span className="muted">
+                  {s.attending} attending · {s.declined} declined
+                </span>
+              </li>
+            ))}
+        </ul>
+      )}
+      {summary.total === 0 && (
+        <p className="muted">
+          No replies yet. <Link to="/app/share">Share your invitation</Link> to start collecting them.
+        </p>
+      )}
+    </section>
   )
 }
 

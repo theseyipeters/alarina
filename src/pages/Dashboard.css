@@ -1,0 +1,209 @@
+/* Couple's dashboard: tabs, overview stats, the responses table and the confirm dialog. */
+
+.page--dashboard {
+  max-width: 60rem;
+}
+
+/* Tabs */
+
+.tabs {
+  display: flex;
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
+  overflow: auto hidden;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height);
+  margin-bottom: -1px;
+  color: var(--text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab[aria-current='page'] {
+  color: var(--text);
+  border-bottom-color: var(--text);
+}
+
+/* Overview */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+
+.stats > div {
+  padding: var(--space-4);
+  background: var(--bg);
+  border-radius: var(--radius);
+}
+
+.stats dt {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.stats dd {
+  margin: var(--space-1) 0 0;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  line-height: 1.1;
+}
+
+.side-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.side-list li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border);
+}
+
+/* Responses */
+
+.filters {
+  display: grid;
+  gap: var(--space-3);
+}
+
+@media (min-width: 48rem) {
+  .filters {
+    grid-template-columns: auto 12rem minmax(0, 1fr);
+    align-items: center;
+  }
+}
+
+.responses {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.responses th,
+.responses td {
+  padding: var(--space-4) var(--space-3);
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+}
+
+.responses thead th {
+  padding-top: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.responses-guest a {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.responses select {
+  width: auto;
+  max-width: 12rem;
+}
+
+.responses .hint {
+  display: block;
+  margin-top: var(--space-1);
+}
+
+/* On phones each reply becomes a card, with its labels shown beside the values. */
+@media (max-width: 47.99rem) {
+  .responses thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .responses,
+  .responses tbody,
+  .responses tr,
+  .responses th,
+  .responses td {
+    display: block;
+  }
+
+  .responses tr {
+    margin-bottom: var(--space-3);
+    padding: var(--space-4);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+
+  .responses th,
+  .responses td {
+    padding: 0;
+    border: 0;
+  }
+
+  .responses-guest {
+    margin-bottom: var(--space-3);
+  }
+
+  .responses td {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .responses td > * {
+    justify-self: start;
+  }
+
+  .responses td::before {
+    content: attr(data-label);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+  }
+
+  .responses td .hint {
+    grid-column: 2;
+    margin: 0;
+  }
+}
+
+/* Confirm dialog (native <dialog>: focus is trapped while open and returns to the trigger). */
+
+.dialog {
+  width: min(100% - 2 * var(--space-4), 28rem);
+  padding: var(--space-6);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.dialog::backdrop {
+  background: rgb(0 0 0 / 0.5);
+}
+
+.dialog h2 {
+  font-size: var(--text-xl);
+}
