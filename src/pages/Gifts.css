@@ -226,3 +226,44 @@
     transition: none;
   }
 }
+
+/* Locked: the real page shows faded behind an Unlock Gifts card that stays in view while scrolling. */
+.gifts-locked {
+  position: relative;
+}
+
+.gifts-locked-preview {
+  max-height: 36rem;
+  overflow: hidden;
+  opacity: 0.35;
+  filter: blur(2px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.unlock {
+  position: absolute;
+  top: var(--space-8);
+  left: 50%;
+  display: grid;
+  gap: var(--space-3);
+  justify-items: center;
+  width: min(100% - 2 * var(--space-4), 26rem);
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+.unlock h2,
+.unlock p {
+  margin: 0;
+}
+
+.unlock-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
