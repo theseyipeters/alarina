@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router'
 import CopyLink from '../components/CopyLink.tsx'
 import { downloadIcs, googleCalendarUrl } from '../invite/calendar.ts'
 import EnvelopeIntro, { OPEN_MS } from '../invite/EnvelopeIntro.tsx'
-import GiftOffer from '../invite/GiftOffer.tsx'
+import GiftSection from '../invite/GiftSection.tsx'
 import InvitationCard from '../invite/InvitationCard.tsx'
 import { mapLink } from '../invite/maps.ts'
 import RsvpForm from '../invite/RsvpForm.tsx'
@@ -251,14 +251,12 @@ function RsvpPanel({ invitation, names, from, sectionRef }: RsvpPanelProps) {
             <CalendarButtons invitation={invitation} />
           </div>
         )}
-        {invitation.giftsEnabled && (
-          <GiftOffer
-            slug={invitation.slug}
-            names={names}
-            guest={{ name: rsvp.name, email: rsvp.email }}
-            rsvpToken={new URL(editLink).pathname.split('/').pop()}
-          />
-        )}
+        <GiftSection
+          invitation={invitation}
+          names={names}
+          guest={{ name: rsvp.name, email: rsvp.email, phone: rsvp.phone }}
+          rsvpToken={new URL(editLink).pathname.split('/').pop()}
+        />
         <div className="rsvp-done-link">
           <p className="muted">
             Your private link to change your reply. Keep it to yourself: anyone with it can change your reply.

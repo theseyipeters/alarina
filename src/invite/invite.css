@@ -1044,6 +1044,26 @@ a.inv-map {
   font-weight: var(--weight-regular);
 }
 
+/* The choice between kinds of gift sits above the offer it switches, so the offer drops its own rule. */
+.amount-chips.gift-kinds {
+  margin-bottom: var(--space-4);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border);
+}
+
+.gift-kinds + .gift-offer {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.aso-ebi-item {
+  margin: 0 0 var(--space-4);
+}
+
+.aso-ebi-item .hint {
+  display: block;
+}
+
 .amount-chips {
   display: flex;
   flex-wrap: wrap;

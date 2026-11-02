@@ -1,15 +1,25 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
-import GiftOffer from '../invite/GiftOffer.tsx'
+import GiftSection from '../invite/GiftSection.tsx'
 import '../invite/styles.ts'
 import { api } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { coupleNames } from '../lib/format.ts'
+import { quantityLabel } from '../lib/asoEbi.ts'
 import { formatNaira } from '../lib/money.ts'
 import type { GiftStatus, PublicInvitation } from '../lib/types.ts'
 import { useTitle } from '../lib/useTitle.ts'
 
-type Result = { gift: { status: GiftStatus; amount: number; guestName: string }; invitation: PublicInvitation | null }
+type Result = {
+  gift: {
+    kind: 'cash' | 'aso_ebi'
+    status: GiftStatus
+    amount: number
+    guestName: string
+    item: { name: string; unit: string; quantity: number } | null
+  }
+  invitation: PublicInvitation | null
+}
 type State = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; result: Result }
 
 /** Where Paystack sends the guest back. Confirms the payment, themed like the invitation. */
@@ -55,6 +65,7 @@ export default function GiftResult() {
   }
 
   const { gift, invitation } = state.result
+  const retry = invitation && (invitation.giftsEnabled || invitation.asoEbi.length > 0)
   const names = invitation ? coupleNames(invitation.partnerOneName, invitation.partnerTwoName) : 'the couple'
   const firstName = gift.guestName.trim().split(/\s+/)[0]
   const back = `/invite/${slug}`
@@ -70,9 +81,17 @@ export default function GiftResult() {
                 <path d="M15 27l7 7 15-16" />
               </svg>
               <h1 id="gift-result-title" className="gift-result-title">Thank you, {firstName}</h1>
-              <p>
-                Your gift of {formatNaira(gift.amount)} is on its way to {names}. Paystack has emailed you a receipt.
-              </p>
+              {gift.item ? (
+                <p>
+                  Your order for {quantityLabel(gift.item.quantity, gift.item.unit)} of {gift.item.name} is confirmed, and{' '}
+                  {formatNaira(gift.amount)} is on its way to {names}. Paystack has emailed you a receipt. They’ll see your
+                  name and phone number so they can reach you.
+                </p>
+              ) : (
+                <p>
+                  Your gift of {formatNaira(gift.amount)} is on its way to {names}. Paystack has emailed you a receipt.
+                </p>
+              )}
             </>
           )}
           {gift.status === 'pending' && (
@@ -96,9 +115,9 @@ export default function GiftResult() {
           </p>
         </section>
 
-        {(gift.status === 'failed' || gift.status === 'abandoned') && invitation?.giftsEnabled && (
+        {(gift.status === 'failed' || gift.status === 'abandoned') && retry && (
           <section className="inv-panel">
-            <GiftOffer slug={slug} names={names} guest={{ name: gift.guestName }} />
+            <GiftSection invitation={invitation} names={names} guest={{ name: gift.guestName }} initial={gift.kind} />
           </section>
         )}
       </main>

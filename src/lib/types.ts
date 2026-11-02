@@ -1,4 +1,5 @@
 import type { Palette, Template } from '../invite/design.ts'
+import type { AsoEbiUnit } from './asoEbi.ts'
 
 export type User = { id: string; name: string; email: string; tourCompletedAt: string | null }
 
@@ -45,7 +46,11 @@ export type PublicInvitation = InvitationContent & {
   rsvpOpen: boolean
   rsvpClosedReason: 'deadline' | 'past' | null
   giftsEnabled: boolean
+  /** Items guests can buy; empty when the couple isn't offering aso-ebi. */
+  asoEbi: AsoEbiItem[]
 }
+
+export type AsoEbiItem = { id: string; name: string; description: string; unit: AsoEbiUnit; price: number }
 
 export type Rsvp = { name: string; email: string; phone: string; attending: boolean; updatedAt: string }
 
@@ -97,6 +102,28 @@ export type GiftsOverview = {
     id: string
     guestName: string
     guestEmail: string
+    amount: number
+    status: GiftStatus
+    createdAt: string
+    paidAt: string | null
+  }[]
+}
+
+export type AsoEbiOverview = {
+  configured: boolean
+  feesConfirmed: boolean
+  enabled: boolean
+  hasPayout: boolean
+  items: (AsoEbiItem & { sold: number })[]
+  totals: { received: number; count: number }
+  orders: {
+    id: string
+    guestName: string
+    guestEmail: string
+    phone: string
+    itemName: string
+    unit: string
+    quantity: number
     amount: number
     status: GiftStatus
     createdAt: string
