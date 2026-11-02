@@ -93,7 +93,7 @@ const tourSteps = (partner: string | null): TourStep[] => [
   {
     target: '[data-tour="design"]',
     title: 'Make it yours',
-    text: 'Change the layout and palette whenever you like. Guests always see the latest version.',
+    text: 'Change the layout, colours and fonts whenever you like. On a laptop, Studio has every design option. Guests always see the latest version.',
   },
   {
     target: '[data-tour="replies"]',

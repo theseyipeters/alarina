@@ -12,7 +12,7 @@ const STEPS = [
   },
   {
     title: 'Design and publish',
-    body: 'Choose a layout and colours, preview it on a phone and a laptop, then publish when it feels right.',
+    body: 'Choose from eight layouts, twelve palettes or your own colours, and fonts that suit your names. Preview it on a phone and a laptop, then publish when it feels right.',
   },
   {
     title: 'Share one link',
