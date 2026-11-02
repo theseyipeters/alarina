@@ -148,9 +148,13 @@
 
 /* ── Card ───────────────────────────────────────────────────────────── */
 
+/* Every size inside the card is relative to the card's own width (cqi), so a layout looks the
+   same in a phone, in the design preview and on a wide screen. */
 .inv-card {
   container-type: inline-size;
-  padding: var(--space-12) var(--space-6);
+  position: relative;
+  overflow: hidden;
+  padding: var(--space-3);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -167,63 +171,41 @@
 .inv-eyebrow {
   margin: 0 0 var(--space-2);
   font-size: var(--text-xs);
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
 
 .inv-families {
-  margin: 0 0 var(--space-8);
+  margin: 0;
   color: var(--text-muted);
 }
 
-.inv-families span {
-  display: block;
-}
-
 .inv-names {
+  /* The layout's size, unless the longest name needs it smaller to fit on one line. */
+  --fit: 190cqi;
+
   display: grid;
-  margin: 0 0 var(--space-8);
-  font-size: clamp(2.5rem, 12cqi, 4.5rem);
-  line-height: 1.05;
+  margin: 0;
+  font-size: min(clamp(2.75rem, 15cqi, 5.5rem), calc(var(--fit) / var(--chars, 8)));
+  line-height: 1;
   color: var(--text);
 }
 
 .inv-amp {
-  font-size: 0.6em;
+  font-size: 0.55em;
+  font-style: italic;
   color: var(--accent);
 }
 
-/* A name Elorien can't fully draw stays in the fallback serif for the whole line. */
+/* A name Elorien can't fully draw stays in the fallback serif (both names switch together). */
 .inv-display--elorien {
   font-family: 'Elorien', var(--font-invite);
 }
 
-.inv-rule {
-  width: 3rem;
-  height: 1px;
-  margin: 0 0 var(--space-8);
-  background: var(--accent);
-  border: 0;
-}
-
-.inv-details {
-  display: grid;
-  gap: var(--space-4);
-  margin: 0 0 var(--space-8);
-}
-
-.inv-details dt {
-  font-size: var(--text-xs);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.inv-details dd {
-  margin: var(--space-1) 0 0;
+.inv-venue {
+  display: block;
   font-size: var(--text-lg);
-  line-height: 1.4;
 }
 
 .inv-sub {
@@ -232,16 +214,41 @@
   color: var(--text-muted);
 }
 
-.inv-message {
-  margin: 0 0 var(--space-8);
-  font-size: var(--text-lg);
-  line-height: 1.6;
+a.inv-map {
+  color: var(--accent);
+}
+
+.inv-ornament {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.inv-quote {
+  position: relative;
+  max-width: 30rem;
+  margin: 0;
+  font-family: var(--inv-display);
+  font-size: var(--text-xl);
+  font-style: italic;
+  line-height: 1.35;
   white-space: pre-line;
 }
 
+.inv-quote::before {
+  content: '“';
+  display: block;
+  height: 0.5em;
+  font-size: 2.6em;
+  line-height: 0.9;
+  color: var(--accent);
+}
+
 .inv-section-title {
-  margin: 0 0 var(--space-4);
-  font-size: var(--text-xl);
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-lg);
 }
 
 .inv-events {
@@ -252,61 +259,377 @@
   list-style: none;
 }
 
-.inv-events li {
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--border);
+.inv-event-name {
+  display: block;
 }
 
-.inv-card > :last-child {
-  margin-bottom: 0;
-}
+/* ── Layout: Classic. Arched stationery with a double rule and flourishes. ── */
 
-/* Template: classic. Centred and symmetrical. */
-[data-template='classic'] .inv-card {
+.c-frame {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-6);
+  padding: 16cqi 9cqi 12cqi;
   text-align: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  border-radius: 50% 50% 2cqi 2cqi / 28cqi 28cqi 2cqi 2cqi;
 }
 
-[data-template='classic'] .inv-rule {
-  margin-inline: auto;
+/* Inner rule of the double frame. */
+.c-frame::before {
+  content: '';
+  position: absolute;
+  inset: 1.8cqi;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+  border-radius: 50% 50% 1.2cqi 1.2cqi / 26cqi 26cqi 1.2cqi 1.2cqi;
+  pointer-events: none;
 }
 
-/* Template: modern. Elorien names, label/value rows. */
+.inv-corner {
+  position: absolute;
+  bottom: 4cqi;
+  width: 9cqi;
+  height: 9cqi;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+.inv-corner--bl {
+  left: 4cqi;
+  transform: scaleY(-1);
+}
+
+.inv-corner--br {
+  right: 4cqi;
+  transform: scale(-1, -1);
+}
+
+.inv-sprig {
+  width: 30cqi;
+  max-width: 8rem;
+}
+
+.c-families {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.c-invite {
+  max-width: 22ch;
+  margin: 0;
+  font-family: var(--inv-display);
+  font-size: var(--text-lg);
+  font-style: italic;
+  line-height: 1.3;
+  color: var(--text-muted);
+}
+
+.inv-divider {
+  width: 42cqi;
+  max-width: 11rem;
+}
+
+/* SATURDAY | 20 | FEBRUARY 2027 */
+.c-date {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 4cqi;
+  width: 100%;
+  max-width: 26rem;
+}
+
+.c-date-side {
+  padding-block: var(--space-2);
+  font-size: var(--text-xs);
+  letter-spacing: 0.18em;
+  line-height: 1.6;
+  text-transform: uppercase;
+  border-block: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.c-date-day {
+  font-family: var(--inv-display);
+  font-size: clamp(3rem, 17cqi, 5.5rem);
+  line-height: 0.9;
+}
+
+.c-time {
+  grid-column: 1 / -1;
+  font-family: var(--inv-display);
+  font-size: var(--text-lg);
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.c-block {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.c-block .inv-eyebrow {
+  margin: 0;
+}
+
+.c-rsvp {
+  margin: 0;
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ── Layout: Modern. Asymmetric, big names, the date in numerals. ── */
+
+.m-layout {
+  position: relative;
+  display: grid;
+  gap: var(--space-8);
+  padding: 7cqi;
+}
+
+.m-side {
+  display: none;
+}
+
+@container (min-width: 30rem) {
+  .m-layout {
+    padding-right: 15cqi;
+  }
+
+  .m-side {
+    position: absolute;
+    top: 7cqi;
+    right: 5cqi;
+    display: block;
+    font-size: var(--text-xs);
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    writing-mode: vertical-rl;
+  }
+}
+
+.m-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.m-families {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.m-families span {
+  display: block;
+}
+
+.m-kicker {
+  margin: 0;
+}
+
 [data-template='modern'] .inv-names {
-  font-size: clamp(2.75rem, 14cqi, 5rem);
+  --fit: 200cqi;
+
+  justify-items: start;
+  font-size: min(clamp(3rem, 19cqi, 7rem), calc(var(--fit) / var(--chars, 8)));
+  line-height: 0.92;
 }
 
-[data-template='modern'] .inv-details > div {
-  padding-top: var(--space-4);
+[data-template='modern'] .inv-amp {
+  margin: 0.08em 0;
+  font-family: var(--font-sans);
+  font-size: 0.35em;
+  font-style: normal;
+}
+
+.m-date {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-2) var(--space-4);
+}
+
+.m-numerals {
+  font-family: var(--inv-display);
+  font-size: clamp(2.75rem, 17cqi, 5.5rem);
+  line-height: 0.85;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+}
+
+.m-date-words {
+  padding-bottom: 0.4em;
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  line-height: 1.6;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.m-rows {
+  display: grid;
+  margin: 0;
+}
+
+.m-rows > div {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-4) 0;
   border-top: 1px solid var(--border);
 }
 
-@container (min-width: 32rem) {
-  [data-template='modern'] .inv-details > div {
-    display: grid;
-    grid-template-columns: 9rem 1fr;
+@container (min-width: 30rem) {
+  .m-rows > div {
+    grid-template-columns: 8rem minmax(0, 1fr);
     gap: var(--space-4);
   }
-
-  [data-template='modern'] .inv-details dd {
-    margin: 0;
-  }
 }
 
-/* Template: editorial. Left-aligned, oversized names, italic ampersand. */
+.m-rows dt {
+  padding-top: 0.35em;
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.m-rows dd {
+  margin: 0;
+}
+
+.m-message {
+  margin: 0;
+  padding-left: var(--space-4);
+  font-size: var(--text-lg);
+  line-height: 1.6;
+  white-space: pre-line;
+  border-left: 2px solid var(--accent);
+}
+
+[data-template='modern'] .inv-events li {
+  padding-left: var(--space-4);
+  border-left: 1px solid var(--border);
+}
+
+/* ── Layout: Editorial. A magazine cover: masthead, giant ampersand, ruled columns. ── */
+
+.e-layout {
+  display: grid;
+  gap: var(--space-8);
+  padding: 7cqi;
+}
+
+.e-masthead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  font-size: var(--text-xs);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border-top: 3px double var(--text);
+  border-bottom: 1px solid var(--text);
+}
+
+.e-cover {
+  position: relative;
+  padding-block: var(--space-4);
+}
+
+.e-ampersand {
+  position: absolute;
+  top: 50%;
+  right: -6cqi;
+  font-family: var(--inv-display);
+  font-size: 72cqi;
+  font-style: italic;
+  line-height: 0.8;
+  color: color-mix(in srgb, var(--accent) 16%, transparent);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
 [data-template='editorial'] .inv-names {
-  font-size: clamp(3rem, 15cqi, 5.5rem);
-  line-height: 0.95;
+  --fit: 200cqi;
+
+  position: relative;
+  justify-items: start;
+  font-size: min(clamp(3rem, 18cqi, 7rem), calc(var(--fit) / var(--chars, 8)));
+  line-height: 0.88;
+  letter-spacing: -0.02em;
 }
 
 [data-template='editorial'] .inv-amp {
-  font-style: italic;
-  font-size: 0.75em;
+  margin: 0.12em 0 0.06em;
+  font-size: 0.32em;
 }
 
-@container (min-width: 32rem) {
-  [data-template='editorial'] .inv-details {
-    grid-template-columns: 1fr 1fr;
+.e-sentence {
+  margin: 0;
+  padding-top: var(--space-4);
+  font-family: var(--inv-display);
+  font-size: clamp(1.25rem, 6cqi, 1.875rem);
+  font-style: italic;
+  line-height: 1.3;
+  border-top: 1px solid var(--border);
+}
+
+.e-columns {
+  display: grid;
+  gap: var(--space-6);
+}
+
+@container (min-width: 30rem) {
+  .e-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-6) var(--space-8);
   }
+}
+
+.e-columns > div {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.e-columns p {
+  margin: 0;
+}
+
+.inv .e-label {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.e-letter {
+  margin: 0;
+  font-size: var(--text-lg);
+  line-height: 1.65;
+  white-space: pre-line;
+}
+
+/* Drop cap, set in the invitation serif. */
+.e-letter--dropcap::first-letter {
+  float: left;
+  padding-right: 0.08em;
+  font-family: var(--inv-display);
+  font-size: 3.6em;
+  line-height: 0.85;
+  color: var(--accent);
 }
 
 /* ── RSVP ───────────────────────────────────────────────────────────── */
@@ -362,4 +685,345 @@
   height: 1.25rem;
   margin: 0;
   accent-color: var(--primary);
+}
+
+/* ── Live preview (setup wizard) ────────────────────────────────────── */
+
+.inv--live {
+  min-height: 100%;
+  padding: var(--space-8) var(--space-6) var(--space-12);
+}
+
+.inv--live [data-part] {
+  margin-inline: calc(var(--space-3) * -1);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius);
+  transition:
+    background-color 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+/* The part being answered glows softly in the palette's accent. */
+.inv--live [data-active] {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inv--live [data-part] {
+    transition: none;
+  }
+}
+
+/* ── Guest page: envelope intro ─────────────────────────────────────── */
+
+/* The envelope takes its colours from the palette, so every invitation opens in its own style. */
+.intro {
+  --env-front: var(--primary);
+  --env-back: color-mix(in srgb, var(--primary) 78%, #000);
+  --env-fold: color-mix(in srgb, var(--primary) 90%, #000);
+  --env-flap: color-mix(in srgb, var(--primary) 92%, #fff);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - var(--space-16));
+  text-align: center;
+  transition: opacity 0.5s ease 1.85s;
+}
+
+.intro.is-opening {
+  opacity: 0;
+}
+
+.intro-names {
+  margin: var(--space-2) 0 var(--space-2);
+  font-size: clamp(2.75rem, 9vw, 5rem);
+  line-height: 1;
+}
+
+.intro-date {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.intro-envelope {
+  container-type: inline-size;
+  position: relative;
+  display: block;
+  width: min(100%, 24rem);
+  aspect-ratio: 100 / 64;
+  margin: calc(min(100vw - 2rem, 24rem) * 0.42) 0 var(--space-8);
+  padding: 0;
+  perspective: 220cqi;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.intro-envelope:disabled {
+  cursor: default;
+}
+
+.intro-back,
+.intro-pocket {
+  position: absolute;
+  inset: 0;
+  border-radius: 2cqi;
+}
+
+.intro-back {
+  background: var(--env-back);
+}
+
+.intro-card {
+  position: absolute;
+  top: 5cqi;
+  left: 6cqi;
+  z-index: 2;
+  display: grid;
+  place-items: start center;
+  width: 88cqi;
+  height: 56cqi;
+  padding-top: 9cqi;
+  font-family: var(--font-invite);
+  font-size: 7cqi;
+  color: var(--text);
+  background: var(--surface);
+  border-radius: 1.2cqi;
+  box-shadow: inset 0 0 0 1px var(--border);
+  transition: transform 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.7s;
+}
+
+.intro.is-opening .intro-card {
+  transform: translateY(-40cqi);
+}
+
+.intro-pocket {
+  z-index: 3;
+  overflow: hidden;
+  background: var(--env-front);
+  clip-path: polygon(0 0, 50% 54%, 100% 0, 100% 100%, 0 100%);
+}
+
+/* Side folds, a shade darker than the front. */
+.intro-pocket::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--env-fold);
+  clip-path: polygon(0 0, 50% 54%, 0 100%, 100% 100%, 50% 54%, 100% 0, 100% 100%, 0 100%);
+  opacity: 0.6;
+}
+
+.intro-flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  width: 100%;
+  height: 56%;
+  transform-origin: top center;
+  transform-style: preserve-3d;
+  transition:
+    transform 0.8s cubic-bezier(0.55, 0, 0.3, 1) 0.1s,
+    z-index 0s linear 0.5s;
+}
+
+.intro-flap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--env-flap);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.intro.is-opening .intro-flap {
+  z-index: 1;
+  transform: rotateX(180deg);
+}
+
+/* Wax seal with the couple's initials. */
+.intro-seal {
+  position: absolute;
+  top: calc(100% - 9cqi);
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 15cqi;
+  height: 15cqi;
+  font-family: var(--font-invite);
+  font-size: 5.5cqi;
+  color: var(--accent);
+  background: var(--surface);
+  border: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  backface-visibility: hidden;
+}
+
+.intro-envelope:hover:not(:disabled) .intro-seal {
+  transform: translateX(-50%) scale(1.06);
+  transition: transform 0.3s ease;
+}
+
+/* ── Guest page: the opened invitation ──────────────────────────────── */
+
+.inv--page {
+  position: relative;
+  overflow: hidden;
+}
+
+.inv--page .inv-column {
+  position: relative;
+}
+
+/* The couple's initials, oversized and faint, behind everything. */
+.inv-monogram {
+  position: absolute;
+  top: var(--space-12);
+  left: 50%;
+  font-family: var(--font-invite);
+  /* Wider than the card, so the initials frame it on both sides. */
+  font-size: min(95vw, 60rem);
+  line-height: 0.8;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--accent) 8%, transparent);
+  transform: translateX(-50%);
+  pointer-events: none;
+  user-select: none;
+}
+
+.inv-reveal > * {
+  animation: inv-rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.inv-reveal > :nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.inv-reveal > :nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+@keyframes inv-rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+}
+
+.plan {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+.plan p {
+  margin: 0;
+}
+
+.plan-countdown {
+  font-family: var(--font-invite);
+  font-size: var(--text-xl);
+}
+
+.plan-label {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.plan-actions {
+  justify-content: center;
+}
+
+#rsvp {
+  scroll-margin-top: var(--space-6);
+}
+
+.inv-panel h2#rsvp-heading {
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+}
+
+/* Confirmation: a drawn check (or cross), then the practical bits. */
+.rsvp-done {
+  text-align: center;
+}
+
+.rsvp-check {
+  width: 4rem;
+  height: 4rem;
+  margin-bottom: var(--space-4);
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rsvp-check circle {
+  stroke-dasharray: 151;
+  animation: draw 0.7s ease-out both;
+}
+
+.rsvp-check path {
+  stroke-width: 3;
+  stroke-dasharray: 40;
+  animation: draw 0.4s ease-out 0.55s both;
+}
+
+@keyframes draw {
+  from {
+    stroke-dashoffset: var(--len, 151);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.rsvp-check path {
+  --len: 40;
+}
+
+.rsvp-done-actions {
+  justify-content: center;
+  margin-bottom: var(--space-6);
+}
+
+.rsvp-done-link {
+  padding-top: var(--space-6);
+  text-align: left;
+  border-top: 1px solid var(--border);
+}
+
+/* Phones: a floating RSVP button until the RSVP section is on screen. */
+.rsvp-fab {
+  position: fixed;
+  bottom: var(--space-4);
+  left: 50%;
+  z-index: 10;
+  min-width: 10rem;
+  transform: translateX(-50%);
+}
+
+@media (min-width: 48rem) {
+  .rsvp-fab {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro,
+  .intro-card,
+  .intro-flap {
+    transition: none;
+  }
+
+  .inv-reveal > *,
+  .rsvp-check circle,
+  .rsvp-check path {
+    animation: none;
+  }
 }

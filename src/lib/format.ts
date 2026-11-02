@@ -19,3 +19,12 @@ export function formatTime(value: string | null) {
 export const todayInLagos = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lagos' }).format(new Date())
 
 export const coupleNames = (a: string | null, b: string | null) => [a, b].filter(Boolean).join(' & ')
+
+/** Whole days from today (in Lagos) to a YYYY-MM-DD date; negative once it has passed. */
+export function daysUntil(date: string) {
+  const toUtc = (d: string) => {
+    const [y, m, day] = d.split('-').map(Number)
+    return Date.UTC(y!, m! - 1, day!)
+  }
+  return Math.round((toUtc(date) - toUtc(todayInLagos())) / 86_400_000)
+}

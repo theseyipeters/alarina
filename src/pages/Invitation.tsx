@@ -1,12 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import CopyLink from '../components/CopyLink.tsx'
+import { downloadIcs, googleCalendarUrl } from '../invite/calendar.ts'
+import EnvelopeIntro, { OPEN_MS } from '../invite/EnvelopeIntro.tsx'
 import InvitationCard from '../invite/InvitationCard.tsx'
+import { mapLink } from '../invite/maps.ts'
 import RsvpForm from '../invite/RsvpForm.tsx'
 import '../invite/styles.ts'
 import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
-import { coupleNames } from '../lib/format.ts'
+import { coupleNames, daysUntil, formatDate } from '../lib/format.ts'
 import type { PublicInvitation, Rsvp } from '../lib/types.ts'
 import { useTitle } from '../lib/useTitle.ts'
 
@@ -52,23 +55,153 @@ export default function Invitation() {
     )
   }
 
-  const { invitation } = state
+  return <InvitationView invitation={state.invitation} names={names} from={from} />
+}
+
+type Stage = 'sealed' | 'opening' | 'open'
+
+const openedKey = (slug: string) => `alarina-opened-${slug}`
+
+/** Guests open the envelope once per visit; it's skipped for reduced motion or once opened. */
+function initialStage(slug: string): Stage {
+  try {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 'open'
+    if (sessionStorage.getItem(openedKey(slug))) return 'open'
+  } catch {
+    // Storage can be blocked; the envelope simply shows again.
+  }
+  return 'sealed'
+}
+
+function InvitationView({ invitation, names, from }: { invitation: PublicInvitation; names: string; from: string | null }) {
+  const [stage, setStage] = useState<Stage>(() => initialStage(invitation.slug))
+  const [rsvpInView, setRsvpInView] = useState(false)
+  const rsvpRef = useRef<HTMLElement>(null)
+  const openedByGuest = useRef(false)
+
+  function open() {
+    openedByGuest.current = true
+    setStage('opening')
+    window.setTimeout(() => {
+      try {
+        sessionStorage.setItem(openedKey(invitation.slug), '1')
+      } catch {
+        // Not remembered; harmless.
+      }
+      setStage('open')
+    }, OPEN_MS)
+  }
+
+  // After the guest opens the envelope, move focus to the invitation so keyboard and
+  // screen-reader users land on it (the button they pressed is gone).
+  useEffect(() => {
+    if (stage !== 'open' || !openedByGuest.current) return
+    const heading = document.getElementById('inv-names')
+    heading?.setAttribute('tabindex', '-1')
+    heading?.focus({ preventScroll: true })
+  }, [stage])
+
+  // The sticky RSVP button on phones hides once the RSVP section itself is on screen.
+  useEffect(() => {
+    const el = rsvpRef.current
+    if (!el || !('IntersectionObserver' in window)) return
+    const observer = new IntersectionObserver(([entry]) => setRsvpInView(Boolean(entry?.isIntersecting)))
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [stage])
+
+  const monogram = [invitation.partnerOneName, invitation.partnerTwoName]
+    .map((n) => n?.normalize('NFC').trim()[0] ?? '')
+    .join('')
+
   return (
-    <div className="inv" data-palette={invitation.palette} data-template={invitation.template}>
-      <main id="main" className="inv-column">
-        <InvitationCard invitation={invitation} />
-        <RsvpPanel invitation={invitation} names={names} from={from} />
-        <p className="inv-footer">
-          Made with <Link to="/">Alárinà</Link>
-        </p>
-      </main>
+    <div className="inv inv--page" data-palette={invitation.palette} data-template={invitation.template}>
+      {stage !== 'open' ? (
+        <main id="main">
+          <EnvelopeIntro invitation={invitation} opening={stage === 'opening'} onOpen={open} />
+        </main>
+      ) : (
+        <>
+          <span className="inv-monogram" aria-hidden="true">{monogram}</span>
+          <main id="main" className="inv-column inv-reveal">
+            <InvitationCard invitation={invitation} />
+            <PlanYourDay invitation={invitation} />
+            <RsvpPanel invitation={invitation} names={names} from={from} sectionRef={rsvpRef} />
+            <p className="inv-footer">
+              Made with <Link to="/">Alárinà</Link>
+            </p>
+          </main>
+          {invitation.rsvpOpen && !rsvpInView && (
+            <a href="#rsvp" className="btn rsvp-fab">RSVP</a>
+          )}
+        </>
+      )}
     </div>
+  )
+}
+
+function countdownText(date: string | null) {
+  if (!date) return null
+  const days = daysUntil(date)
+  if (days > 1) return `In ${days} days`
+  if (days === 1) return 'Tomorrow'
+  if (days === 0) return 'Today is the day'
+  return 'This celebration has taken place'
+}
+
+function CalendarButtons({ invitation }: { invitation: PublicInvitation }) {
+  return (
+    <>
+      <a className="btn btn--secondary" href={googleCalendarUrl(invitation)} target="_blank" rel="noopener noreferrer">
+        Google Calendar<span className="visually-hidden"> (opens in a new tab)</span>
+      </a>
+      <button type="button" className="btn btn--secondary" onClick={() => downloadIcs(invitation)}>
+        Apple or Outlook
+      </button>
+    </>
+  )
+}
+
+/** Countdown, calendar and directions: the practical bits, right under the invitation. */
+function PlanYourDay({ invitation }: { invitation: PublicInvitation }) {
+  const countdown = countdownText(invitation.date)
+  const upcoming = invitation.date ? daysUntil(invitation.date) >= 0 : false
+
+  return (
+    <section className="plan" aria-labelledby="plan-title">
+      <p id="plan-title" className="plan-countdown">{countdown}</p>
+      {upcoming && (
+        <>
+          <p className="plan-label">Add it to your calendar</p>
+          <div className="actions plan-actions">
+            <CalendarButtons invitation={invitation} />
+            {invitation.venueName && (
+              <a
+                className="btn btn--secondary"
+                href={mapLink(invitation.venueName, invitation.venueAddress)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Directions<span className="visually-hidden"> (opens in a new tab)</span>
+              </a>
+            )}
+          </div>
+        </>
+      )}
+    </section>
   )
 }
 
 type Created = { rsvp: Rsvp; editLink: string; emailSent: boolean }
 
-function RsvpPanel({ invitation, names, from }: { invitation: PublicInvitation; names: string; from: string | null }) {
+type RsvpPanelProps = {
+  invitation: PublicInvitation
+  names: string
+  from: string | null
+  sectionRef: RefObject<HTMLElement | null>
+}
+
+function RsvpPanel({ invitation, names, from, sectionRef }: RsvpPanelProps) {
   const [created, setCreated] = useState<Created | null>(null)
   const [duplicate, setDuplicate] = useState<{ emailSent: boolean } | null>(null)
   const [closed, setClosed] = useState(!invitation.rsvpOpen)
@@ -97,27 +230,43 @@ function RsvpPanel({ invitation, names, from }: { invitation: PublicInvitation; 
 
   if (created) {
     const { rsvp, editLink, emailSent } = created
+    const firstName = rsvp.name.trim().split(/\s+/)[0]
     return (
-      <section className="inv-panel" aria-labelledby="rsvp-heading" role="status">
-        <h2 id="rsvp-heading">Thank you, {rsvp.name}</h2>
+      <section id="rsvp" ref={sectionRef} className="inv-panel rsvp-done" aria-labelledby="rsvp-heading" role="status">
+        <svg className="rsvp-check" viewBox="0 0 52 52" aria-hidden="true">
+          <circle cx="26" cy="26" r="24" />
+          <path d={rsvp.attending ? 'M15 27l7 7 15-16' : 'M18 18l16 16M34 18L18 34'} />
+        </svg>
+        <h2 id="rsvp-heading">
+          {rsvp.attending ? `See you on ${formatDate(invitation.date)}` : `Thank you, ${firstName}`}
+        </h2>
         <p>
-          {rsvp.attending ? `${names} will be so glad you’re coming.` : `Thanks for letting ${names} know.`}
+          {rsvp.attending
+            ? `${names} will be so glad you’re coming, ${firstName}.`
+            : `${names} will miss you. Thanks for letting them know.`}
         </p>
-        <p className="muted">
-          Here is your private link to change your reply. Keep it to yourself: anyone with it can change your reply.
-        </p>
-        <CopyLink link={editLink} label="Your private RSVP link" />
-        {emailSent && <p className="hint">We’ve also emailed it to you.</p>}
-        <p>
-          <Link to={new URL(editLink).pathname}>Change my reply</Link>
-        </p>
+        {rsvp.attending && invitation.date && daysUntil(invitation.date) >= 0 && (
+          <div className="actions rsvp-done-actions">
+            <CalendarButtons invitation={invitation} />
+          </div>
+        )}
+        <div className="rsvp-done-link">
+          <p className="muted">
+            Your private link to change your reply. Keep it to yourself: anyone with it can change your reply.
+          </p>
+          <CopyLink link={editLink} label="Your private RSVP link" />
+          {emailSent && <p className="hint">We’ve also emailed it to you.</p>}
+          <p>
+            <Link to={new URL(editLink).pathname}>Change my reply</Link>
+          </p>
+        </div>
       </section>
     )
   }
 
   return (
-    <section className="inv-panel" aria-labelledby="rsvp-heading">
-      <h2 id="rsvp-heading">RSVP</h2>
+    <section id="rsvp" ref={sectionRef} className="inv-panel" aria-labelledby="rsvp-heading">
+      <h2 id="rsvp-heading">Will you join us?</h2>
       {closed ? (
         <p className="muted">
           {invitation.rsvpClosedReason === 'past'
@@ -126,7 +275,11 @@ function RsvpPanel({ invitation, names, from }: { invitation: PublicInvitation; 
         </p>
       ) : (
         <>
-          <p className="muted">Let {names} know if you can make it.</p>
+          <p className="muted">
+            {invitation.rsvpDeadline
+              ? `Kindly reply by ${formatDate(invitation.rsvpDeadline)}. It takes less than a minute.`
+              : `Let ${names} know if you can make it. It takes less than a minute.`}
+          </p>
           {duplicate && (
             <p role="alert" className="alert">
               You’ve already replied with this email.{' '}

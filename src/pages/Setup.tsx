@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
 import Field from '../components/Field.tsx'
@@ -6,11 +6,15 @@ import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { formatDate, formatTime, todayInLagos } from '../lib/format.ts'
 import type { Wedding, WeddingEvent, WeddingFields } from '../lib/types.ts'
+import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import { useTitle } from '../lib/useTitle.ts'
 import { useWedding } from '../lib/useWedding.ts'
 import EventsEditor from '../setup/EventsEditor.tsx'
 import { FIELD_STEP, REQUIRED, STEP_FIELDS, STEPS, stepIndex, type StepId } from '../setup/steps.ts'
 import { useAutosave, type SaveStatus } from '../setup/useAutosave.ts'
+
+// The live preview pulls in the invitation fonts and styles, so it loads only on wide screens.
+const LivePreview = lazy(() => import('../setup/LivePreview.tsx'))
 
 const EMPTY: WeddingFields = {
   partnerOneName: null,
@@ -66,6 +70,7 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
   const [reached, setReached] = useState(wedding?.checkpoint ?? 0)
   const { status, change, flush } = useAutosave(onSaved)
   const headingRef = useRef<HTMLHeadingElement>(null)
+  const wide = useMediaQuery('(min-width: 80rem)')
 
   // Move focus to the new question so screen reader users hear it when the step changes.
   useEffect(() => {
@@ -211,6 +216,17 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
             </form>
           )}
         </div>
+
+        {wide && (
+          <Suspense fallback={<div className="live-preview" />}>
+            <LivePreview
+              values={values}
+              template={wedding?.template ?? 'classic'}
+              palette={wedding?.palette ?? 'ivory'}
+              step={current.id}
+            />
+          </Suspense>
+        )}
       </div>
     </main>
   )

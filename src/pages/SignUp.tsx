@@ -4,6 +4,7 @@ import { useAuth } from '../auth/useAuth.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { safeNext, withNext } from '../lib/nav.ts'
 import { useTitle } from '../lib/useTitle.ts'
+import AuthLayout from '../components/AuthLayout.tsx'
 
 export default function SignUp() {
   useTitle('Create your account')
@@ -35,7 +36,7 @@ export default function SignUp() {
   }
 
   return (
-    <main id="main" className="page">
+    <AuthLayout>
       <Link to="/" className="brand">Alárinà</Link>
       <div className="card">
         <h1>Create your account</h1>
@@ -61,6 +62,6 @@ export default function SignUp() {
           Already have an account? <Link to={withNext('/signin', next)}>Sign in</Link>
         </p>
       </div>
-    </main>
+    </AuthLayout>
   )
 }

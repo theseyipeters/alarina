@@ -1,7 +1,7 @@
 /* Couple's dashboard: tabs, overview stats, the responses table and the confirm dialog. */
 
 .page--dashboard {
-  max-width: 60rem;
+  max-width: 72rem;
 }
 
 /* Tabs */
@@ -35,47 +35,397 @@
   border-bottom-color: var(--text);
 }
 
-/* Overview */
+/* Overview: a wedding "home" — countdown hero, replies board, share and partner cards. */
 
-.stats {
+.page--dashboard {
+  /* Side colours for the replies chart, avatars and legend. */
+  --side-a: var(--accent);
+  --side-b: #9b7a3c;
+  --side-none: var(--field-border);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .page--dashboard {
+    --side-b: #d9b66a;
+  }
+}
+
+:root[data-theme='dark'] .page--dashboard {
+  --side-b: #d9b66a;
+}
+
+.home {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
-  margin: var(--space-4) 0;
+  gap: var(--space-6);
 }
 
-.stats > div {
-  padding: var(--space-4);
-  background: var(--bg);
-  border-radius: var(--radius);
+.home-hero {
+  display: grid;
+  gap: var(--space-8);
+  padding: var(--space-8) 0 var(--space-6);
 }
 
-.stats dt {
+@media (min-width: 48rem) {
+  .home-hero {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+}
+
+.home-hero h1 {
+  margin: var(--space-4) 0 var(--space-3);
+  font-size: clamp(2.5rem, 6vw, 4.25rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+
+.home-hero-top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.home-edit {
   font-size: var(--text-sm);
   color: var(--text-muted);
 }
 
-.stats dd {
-  margin: var(--space-1) 0 0;
-  font-family: var(--font-display);
-  font-size: var(--text-2xl);
-  line-height: 1.1;
+.home-meta {
+  max-width: 36rem;
+  margin-bottom: var(--space-6);
+  font-size: var(--text-lg);
+  color: var(--text-muted);
 }
 
-.side-list {
+.home-hero--setup .btn {
+  margin-top: var(--space-6);
+}
+
+.progress--lg {
+  max-width: 24rem;
+  height: 4px;
+  border-radius: 999px;
+}
+
+.progress--lg span {
+  border-radius: 999px;
+}
+
+.countdown {
+  display: grid;
+  justify-items: start;
+}
+
+@media (min-width: 48rem) {
+  .countdown {
+    justify-items: end;
+    text-align: right;
+  }
+}
+
+.countdown-number {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 11vw, 7.5rem);
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+}
+
+.countdown-label {
+  color: var(--text-muted);
+}
+
+/* Bento grid: replies on the left, share and partner stacked on the right. */
+.home-grid {
+  display: grid;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (min-width: 56rem) {
+  .home-grid {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  }
+}
+
+.home-side {
+  display: grid;
+  gap: var(--space-6);
+}
+
+/* Replies board */
+
+.board-empty {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.reply-row {
+  margin-bottom: var(--space-6);
+}
+
+.reply-row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.reply-count {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  line-height: 1;
+}
+
+.bar {
+  display: flex;
+  gap: 3px;
+  height: 0.75rem;
+  overflow: hidden;
+  background: var(--bg);
+  border-radius: 999px;
+}
+
+/* The filled part sweeps in from the left as one piece. */
+.bar > span {
+  height: 100%;
+  border-radius: 999px;
+  animation: bar-sweep 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes bar-sweep {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.side-a {
+  --tone: var(--side-a);
+  background: var(--tone);
+}
+
+.side-b {
+  --tone: var(--side-b);
+  background: var(--tone);
+}
+
+.side-none {
+  --tone: var(--side-none);
+  background: var(--tone);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  margin: 0 0 var(--space-8);
+  padding: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  list-style: none;
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.legend-dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+}
+
+.feed-title {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-base);
+  color: var(--text-muted);
+}
+
+.feed {
   display: grid;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.side-list li {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: var(--space-2);
+.feed li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
   padding: var(--space-3) 0;
   border-top: 1px solid var(--border);
+  animation: feed-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.feed li:nth-child(2) {
+  animation-delay: 0.06s;
+}
+
+.feed li:nth-child(3) {
+  animation-delay: 0.12s;
+}
+
+.feed li:nth-child(4) {
+  animation-delay: 0.18s;
+}
+
+.feed li:nth-child(5) {
+  animation-delay: 0.24s;
+}
+
+@keyframes feed-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.feed-text .hint {
+  display: block;
+}
+
+/* A soft tint of the side colour with normal text, so initials stay readable in both themes. */
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: var(--text-sm);
+  color: var(--text);
+  background: color-mix(in srgb, var(--tone, var(--side-none)) 30%, var(--surface));
+  border-radius: 50%;
+}
+
+.avatar--empty {
+  color: var(--text-muted);
+  border: 1px dashed var(--field-border);
+}
+
+.feed-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.feed-icon--yes svg {
+  stroke: var(--success);
+}
+
+.pair {
+  display: flex;
+  margin: var(--space-2) 0 var(--space-4);
+}
+
+.pair .avatar {
+  width: 3rem;
+  height: 3rem;
+  border: 3px solid var(--surface);
+}
+
+.pair .avatar + .avatar {
+  margin-left: -0.75rem;
+}
+
+/* Publish celebration: petals fall across the panel a couple of times, then rest. */
+.celebrate {
+  position: relative;
+  overflow: hidden;
+  padding: var(--space-12) var(--space-8);
+  color: #f6f0e1;
+  background: #0e3a2d;
+  border-radius: var(--radius-lg);
+  --text: #f6f0e1;
+  --text-muted: #c9d3c5;
+  --surface: #134636;
+  --border: #2a5b4a;
+  --field-border: #7fa391;
+  --primary: #e2c27d;
+  --primary-hover: #eed39a;
+  --on-primary: #0e3a2d;
+  --accent: #e2c27d;
+  --focus: #e2c27d;
+  --bg: #0e3a2d;
+}
+
+.celebrate-body {
+  position: relative;
+  max-width: 34rem;
+}
+
+.celebrate h2 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  letter-spacing: -0.03em;
+}
+
+.petals {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.petal {
+  position: absolute;
+  top: -1.5rem;
+  left: var(--x);
+  width: var(--size);
+  height: calc(var(--size) * 1.4);
+  border-radius: 70% 0 70% 0;
+  opacity: 0;
+  animation: petal-fall var(--duration) var(--delay) ease-in 2 forwards;
+}
+
+.petal--0 {
+  background: #e2c27d;
+}
+
+.petal--1 {
+  background: #f4d9d0;
+}
+
+.petal--2 {
+  background: #8fc1a9;
+}
+
+@keyframes petal-fall {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(0deg);
+  }
+  10% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate(2.5rem, 12rem) rotate(160deg);
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-1rem, 24rem) rotate(320deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .petals {
+    display: none;
+  }
+
+  .bar > span,
+  .feed li {
+    animation: none;
+  }
 }
 
 /* Responses */

@@ -6,6 +6,7 @@ import { errorMessage } from '../lib/errors.ts'
 import { withNext } from '../lib/nav.ts'
 import type { Session } from '../lib/types.ts'
 import { useTitle } from '../lib/useTitle.ts'
+import AuthLayout from '../components/AuthLayout.tsx'
 
 type Lookup = { inviterName: string | null; expiresAt: string }
 
@@ -48,7 +49,7 @@ export default function AcceptInvite() {
   const here = `/partner/accept/${token}`
 
   return (
-    <main id="main" className="page">
+    <AuthLayout>
       <Link to="/" className="brand">Alárinà</Link>
       <div className="card">
         {invite === null || state.status === 'loading' ? (
@@ -95,6 +96,6 @@ export default function AcceptInvite() {
           </>
         )}
       </div>
-    </main>
+    </AuthLayout>
   )
 }
