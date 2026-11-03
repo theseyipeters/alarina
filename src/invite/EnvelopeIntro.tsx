@@ -1,17 +1,18 @@
 import { coupleNames, formatDate } from '../lib/format.ts'
 import type { InvitationContent } from '../lib/types.ts'
+import { namesInOrder } from './order.ts'
 
 export const OPEN_MS = 2400
 
-type Props = { invitation: Pick<InvitationContent, 'partnerOneName' | 'partnerTwoName' | 'date'>; opening: boolean; onOpen: () => void }
+type Props = { invitation: Pick<InvitationContent, 'partnerOneName' | 'partnerTwoName' | 'partnerOneRole' | 'partnerTwoRole' | 'date'>; opening: boolean; onOpen: () => void }
 
 /**
  * The first thing a guest sees: a sealed envelope in the invitation's own colours, sealed with
  * the couple's initials. Opening it plays once, then the full invitation takes over.
  */
 export default function EnvelopeIntro({ invitation: w, opening, onOpen }: Props) {
-  const names = coupleNames(w.partnerOneName, w.partnerTwoName)
-  const seal = [w.partnerOneName, w.partnerTwoName].map((n) => n?.normalize('NFC').trim()[0] ?? '').join('')
+  const names = coupleNames(...namesInOrder(w))
+  const seal = namesInOrder(w).map((n) => n?.normalize('NFC').trim()[0] ?? '').join('')
 
   return (
     <section className={opening ? 'intro is-opening' : 'intro'} aria-labelledby="intro-title">

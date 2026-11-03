@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { inviteAttrs } from '../invite/design.ts'
+import { namesInOrder } from '../invite/order.ts'
 import GiftBasket from '../invite/GiftBasket.tsx'
 import RsvpForm from '../invite/RsvpForm.tsx'
 import '../invite/styles.ts'
@@ -46,7 +47,7 @@ export default function EditRsvp() {
   }
 
   const { rsvp, invitation, editExpiresAt } = state
-  const names = coupleNames(invitation.partnerOneName, invitation.partnerTwoName)
+  const names = coupleNames(...namesInOrder(invitation))
 
   async function save(values: { name: string; phone: string; attending: boolean }) {
     setSaved(false)

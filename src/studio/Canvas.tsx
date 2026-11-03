@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import EnvelopeIntro, { OPEN_MS } from '../invite/EnvelopeIntro.tsx'
 import InvitationCard from '../invite/InvitationCard.tsx'
+import { namesInOrder } from '../invite/order.ts'
 import { inviteAttrs } from '../invite/design.ts'
 import RsvpForm from '../invite/RsvpForm.tsx'
 import type { InvitationContent } from '../lib/types.ts'
@@ -49,7 +50,7 @@ export default function Canvas({ invitation }: { invitation: InvitationContent }
   }
 
   const attrs = inviteAttrs(invitation)
-  const monogram = [invitation.partnerOneName, invitation.partnerTwoName]
+  const monogram = namesInOrder(invitation)
     .map((n) => n?.normalize('NFC').trim()[0] ?? '')
     .join('')
 

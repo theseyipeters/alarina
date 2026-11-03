@@ -7,6 +7,7 @@ import Tour, { type TourStep } from '../components/Tour.tsx'
 import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { coupleNames, daysUntil, formatDate, formatTime } from '../lib/format.ts'
+import { namesInOrder } from '../invite/order.ts'
 import { sideLabel } from '../lib/sides.ts'
 import { designPath, STUDIO_QUERY } from '../lib/studio.ts'
 import type { Responses, Session, Wedding } from '../lib/types.ts'
@@ -185,7 +186,7 @@ function Hero({ wedding, onChange, onTour }: { wedding: Wedding; onChange: (w: W
           <span className={published ? 'badge badge--live' : 'badge'} data-tour="status">{published ? 'Live' : 'Private draft'}</span>
           <button type="button" className="link-button home-edit" onClick={onTour}>Show me around</button>
         </div>
-        <h1 id="couple-names">{coupleNames(wedding.partnerOneName, wedding.partnerTwoName) || 'Your wedding'}</h1>
+        <h1 id="couple-names">{coupleNames(...namesInOrder(wedding)) || 'Your wedding'}</h1>
         <p className="home-meta">
           {[formatDate(wedding.date), formatTime(wedding.startTime), wedding.venueName].filter(Boolean).join(' · ')}
         </p>

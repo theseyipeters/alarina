@@ -5,6 +5,7 @@ import { JOINERS, resolveLook, type Template } from "./design.ts";
 import { mapLink } from "./maps.ts";
 import { parentSides, ROLE_LABELS, type ParentSide } from "./parents.ts";
 import { timesWithVenues, venueStops } from "./venues.ts";
+import { inBrideOrder } from "./order.ts";
 
 export type InvitationPart =
 	| "families"
@@ -52,7 +53,7 @@ export default function InvitationCard({
 	highlight,
 	idPrefix = "inv",
 }: Props) {
-	const w = invitation;
+	const w = inBrideOrder(invitation);
 	const part = (name: InvitationPart): PartProps => ({
 		"data-part": name,
 		...(highlight === name && { "data-active": true }),

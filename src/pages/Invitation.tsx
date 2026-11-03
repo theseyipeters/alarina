@@ -7,6 +7,7 @@ import GiftBasket from '../invite/GiftBasket.tsx'
 import { inviteAttrs } from '../invite/design.ts'
 import InvitationCard from '../invite/InvitationCard.tsx'
 import { venueStops } from '../invite/venues.ts'
+import { namesInOrder } from '../invite/order.ts'
 import { mapLink } from '../invite/maps.ts'
 import RsvpForm from '../invite/RsvpForm.tsx'
 import '../invite/styles.ts'
@@ -39,7 +40,7 @@ export default function Invitation() {
     }
   }, [slug])
 
-  const names = state.status === 'ready' ? coupleNames(state.invitation.partnerOneName, state.invitation.partnerTwoName) : ''
+  const names = state.status === 'ready' ? coupleNames(...namesInOrder(state.invitation)) : ''
   useTitle(names ? `${names} are getting married` : 'Wedding invitation')
 
   if (state.status === 'loading') return <p className="page muted">Opening the invitation…</p>
@@ -113,7 +114,7 @@ function InvitationView({ invitation, names, from }: { invitation: PublicInvitat
     return () => observer.disconnect()
   }, [stage])
 
-  const monogram = [invitation.partnerOneName, invitation.partnerTwoName]
+  const monogram = namesInOrder(invitation)
     .map((n) => n?.normalize('NFC').trim()[0] ?? '')
     .join('')
 

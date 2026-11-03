@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { inviteAttrs } from '../invite/design.ts'
+import { namesInOrder } from '../invite/order.ts'
 import GiftBasket from '../invite/GiftBasket.tsx'
 import '../invite/styles.ts'
 import { api } from '../lib/api.ts'
@@ -66,7 +67,7 @@ export default function GiftResult() {
 
   const { gift, invitation } = state.result
   const retry = invitation && (invitation.giftsEnabled || invitation.asoEbi.length > 0 || invitation.wishlist.length > 0)
-  const names = invitation ? coupleNames(invitation.partnerOneName, invitation.partnerTwoName) : 'the couple'
+  const names = invitation ? coupleNames(...namesInOrder(invitation)) : 'the couple'
   const firstName = gift.guestName.trim().split(/\s+/)[0]
   const back = `/invite/${slug}`
 

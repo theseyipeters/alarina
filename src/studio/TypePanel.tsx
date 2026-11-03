@@ -16,6 +16,7 @@ import {
   type Joiner,
   type NameCase,
 } from '../invite/design.ts'
+import { namesInOrder } from '../invite/order.ts'
 import { formatDate } from '../lib/format.ts'
 import { PanelSection, Segmented } from './parts.tsx'
 import type { PanelProps } from './types.ts'
@@ -28,8 +29,9 @@ export default function TypePanel({ design, change, invitation }: PanelProps) {
   const setLook = (patch: Partial<InvitationLook>, group?: string) =>
     change((d) => ({ ...d, look: { ...d.look, ...patch } }), group)
 
-  const one = invitation.partnerOneName || 'Ada'
-  const two = invitation.partnerTwoName || 'Tunde'
+  const [first, second] = namesInOrder(invitation)
+  const one = first || 'Ada'
+  const two = second || 'Tunde'
   const elorienFallback = resolved.namesFont === 'elorien' && !elorienCanRender(`${one}${two}`)
 
   return (

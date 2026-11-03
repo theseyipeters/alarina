@@ -1,4 +1,5 @@
 import type { PublicInvitation } from '../lib/types.ts'
+import { namesInOrder } from './order.ts'
 
 // Weddings rarely list an end time, so calendar entries assume five hours.
 const DURATION_MS = 5 * 60 * 60 * 1000
@@ -10,7 +11,7 @@ function range(w: PublicInvitation) {
 }
 
 const stamp = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
-const title = (w: PublicInvitation) => `${w.partnerOneName} & ${w.partnerTwoName}’s wedding`
+const title = (w: PublicInvitation) => `${namesInOrder(w).join(' & ')}’s wedding`
 const place = (w: PublicInvitation) => [w.venueName, w.venueAddress].filter(Boolean).join(', ')
 const inviteUrl = (w: PublicInvitation) => `${window.location.origin}/invite/${w.slug}`
 
