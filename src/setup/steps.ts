@@ -35,7 +35,7 @@ export const FIELD_STEP: Partial<Record<string, StepId>> = {
 /** The answers each step owns. Continue always saves these, so prefilled values are stored too. */
 export const STEP_FIELDS: Record<StepId, (keyof WeddingFields)[]> = {
   names: ['partnerOneName', 'partnerTwoName'],
-  families: ['partnerOneFather', 'partnerOneMother', 'partnerTwoFather', 'partnerTwoMother', 'lateParents', 'partnerOneFamily', 'partnerTwoFamily'],
+  families: ['partnerOneRole', 'partnerTwoRole', 'partnerOneFather', 'partnerOneMother', 'partnerTwoFather', 'partnerTwoMother', 'lateParents', 'partnerOneFamily', 'partnerTwoFamily'],
   date: ['date'],
   time: ['startTime'],
   venue: ['venueName', 'venueAddress'],

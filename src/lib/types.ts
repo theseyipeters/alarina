@@ -20,12 +20,17 @@ export type WeddingEvent = {
   venueAddress: string | null
 }
 
+export type Role = 'bride' | 'groom'
+
 export type ParentField = 'partnerOneFather' | 'partnerOneMother' | 'partnerTwoFather' | 'partnerTwoMother'
 
 /** Answers collected by the guided setup. Dates are YYYY-MM-DD and times HH:mm, Nigerian local time. */
 export type WeddingFields = {
   partnerOneName: string | null
   partnerTwoName: string | null
+  /** Bride or groom, for captions like "Parents of the Bride". Optional. */
+  partnerOneRole: Role | null
+  partnerTwoRole: Role | null
   partnerOneFamily: string | null
   partnerTwoFamily: string | null
   partnerOneFather: string | null

@@ -7,8 +7,8 @@ import Field from '../components/Field.tsx'
 import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { formatDate, formatTime, todayInLagos } from '../lib/format.ts'
-import { PARENT_SIDES, parentSides, parentsText } from '../invite/parents.ts'
-import type { ParentField, Wedding, WeddingEvent, WeddingFields } from '../lib/types.ts'
+import { PARENT_SIDES, parentSides, parentsText, ROLE_LABELS } from '../invite/parents.ts'
+import type { ParentField, Role, Wedding, WeddingEvent, WeddingFields } from '../lib/types.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import { useTitle } from '../lib/useTitle.ts'
 import { useWedding } from '../lib/useWedding.ts'
@@ -23,6 +23,8 @@ const LivePreview = lazy(() => import('../setup/LivePreview.tsx'))
 const EMPTY: WeddingFields = {
   partnerOneName: null,
   partnerTwoName: null,
+  partnerOneRole: null,
+  partnerTwoRole: null,
   partnerOneFamily: null,
   partnerTwoFamily: null,
   partnerOneFather: null,
@@ -104,6 +106,13 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
     if (name.trim()) for (const key of ['partnerOneFamily', 'partnerTwoFamily'] as const) if (values[key]) set(key, null)
   }
 
+  // Choosing one partner's role fills in the other's, unless the couple already set it.
+  const setRole = (index: number, role: Role) => {
+    const [own, other] = index === 0 ? (['partnerOneRole', 'partnerTwoRole'] as const) : (['partnerTwoRole', 'partnerOneRole'] as const)
+    set(own, role)
+    if (!values[other]) set(other, role === 'bride' ? 'groom' : 'bride')
+  }
+
   const setLate = (field: ParentField, late: boolean) =>
     set('lateParents', late ? [...values.lateParents, field] : values.lateParents.filter((f) => f !== field))
 
@@ -149,6 +158,7 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
             return (
               <fieldset key={side.partner} className="parent-group">
                 <legend>{partner}’s parents</legend>
+                <RoleChoice name={side.role} partner={partner} value={values[side.role]} onChange={(role) => setRole(i, role)} />
                 {(['father', 'mother'] as const).map((role) => (
                   <ParentInput
                     key={role}
@@ -485,5 +495,22 @@ function ParentInput({ label, of, placeholder, value, late, onName, onLate }: Pa
         </div>
       )}
     </Field>
+  )
+}
+
+/** Bride or groom, for the invitation's captions ("Parents of the Bride"). */
+function RoleChoice({ name, partner, value, onChange }: { name: string; partner: string; value: Role | null; onChange: (role: Role) => void }) {
+  return (
+    <fieldset className="role-choice">
+      <legend>{partner} is the</legend>
+      <div className="seg">
+        {(Object.keys(ROLE_LABELS) as Role[]).map((role) => (
+          <label key={role}>
+            <input type="radio" className="visually-hidden" name={name} checked={value === role} onChange={() => onChange(role)} />
+            {ROLE_LABELS[role]}
+          </label>
+        ))}
+      </div>
+    </fieldset>
   )
 }

@@ -3,7 +3,7 @@ import { formatDate, formatTime } from '../lib/format.ts'
 import type { InvitationContent, WeddingEvent } from '../lib/types.ts'
 import { JOINERS, resolveLook, type Template } from './design.ts'
 import { mapLink } from './maps.ts'
-import { parentSides, type ParentSide } from './parents.ts'
+import { parentSides, ROLE_LABELS, type ParentSide } from './parents.ts'
 
 export type InvitationPart = 'families' | 'names' | 'when' | 'where' | 'dress' | 'rsvp' | 'message' | 'events'
 
@@ -166,10 +166,11 @@ type ParentsProps = {
  */
 function Parents({ sides, className, and = 'and', mark = null }: ParentsProps) {
   // The longest run of letters that can't wrap: a word, a title held to its name, or the first
-  // name in the caption (set smaller, but in spaced capitals). CSS shrinks text to fit it.
+  // name in the caption (set smaller, but in spaced capitals; "Bride" and "Groom" are short).
+  // CSS shrinks text to fit it.
   const length = (text: string) => [...text.normalize('NFC')].length
   const words = sides.flatMap((s) => s.parents.flatMap((p) => keepTitle(p.name).split(' ')))
-  const chars = Math.max(8, ...words.map(length), ...sides.map((s) => Math.ceil(length(firstName(s.partner) ?? '') * 1.1)))
+  const chars = Math.max(8, ...words.map(length), ...sides.map((s) => (s.role ? 0 : Math.ceil(length(firstName(s.partner) ?? '') * 1.1))))
   return (
     <div className={`inv-parents ${className}`}>
       <div
@@ -214,9 +215,13 @@ function keepTitle(name: string) {
   return rest.length && TITLES.test(first!) ? `${first}\u00a0${rest.join(' ')}` : name
 }
 
-/** "Parents of Ibukun", or "Father of Ibukun" when only one is named. First name only, to stay short. */
+/**
+ * "Parents of the Bride", or "Father of the Groom" when only one is named. Without a role, the
+ * partner's first name: "Parents of Ibukun".
+ */
 function relation(side: ParentSide) {
   const who = side.parents.length > 1 ? 'Parents' : side.parents[0]!.field.endsWith('Father') ? 'Father' : 'Mother'
+  if (side.role) return `${who} of the ${ROLE_LABELS[side.role]}`
   const first = firstName(side.partner)
   return first ? `${who} of ${first}` : who
 }
