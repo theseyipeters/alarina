@@ -25,6 +25,7 @@ const EMPTY: WeddingFields = {
   partnerTwoName: null,
   partnerOneRole: null,
   partnerTwoRole: null,
+  hashtag: null,
   partnerOneFamily: null,
   partnerTwoFamily: null,
   partnerOneFather: null,
@@ -141,6 +142,25 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
           </Field>
           <Field label="Second partner’s name">
             {(p) => <input {...p} type="text" autoComplete="off" maxLength={60} placeholder="Ẹniọlá" value={text('partnerTwoName')} onChange={(e) => set('partnerTwoName', e.target.value)} />}
+          </Field>
+          <Field label="Wedding hashtag" optional hint="Guests can tag their photos with it. Letters and numbers, no spaces.">
+            {(p) => (
+              <div className="prefix-field">
+                <span aria-hidden="true">#</span>
+                <input
+                  {...p}
+                  type="text"
+                  autoComplete="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  maxLength={40}
+                  placeholder="LoveStays"
+                  value={text('hashtag')}
+                  // A tag can't hold spaces or punctuation, so they never get in.
+                  onChange={(e) => set('hashtag', e.target.value.replace(/[^\p{L}\p{M}\p{N}_]/gu, ''))}
+                />
+              </div>
+            )}
           </Field>
         </>
       )
@@ -383,6 +403,7 @@ function Review({ values, flush, onEdit }: ReviewProps) {
 
   const rows: { label: string; value: ReactNode; step: StepId }[] = [
     { label: 'Names', value: [values.partnerOneName, values.partnerTwoName].filter(Boolean).join(' & '), step: 'names' },
+    { label: 'Hashtag', value: values.hashtag && `#${values.hashtag}`, step: 'names' },
     {
       label: 'Parents',
       value: parentsText(values) || [values.partnerOneFamily, values.partnerTwoFamily].filter(Boolean).join(' and '),

@@ -183,7 +183,6 @@ function Hero({ wedding, onChange, onTour }: { wedding: Wedding; onChange: (w: W
       <div className="home-hero-main">
         <div className="home-hero-top">
           <span className={published ? 'badge badge--live' : 'badge'} data-tour="status">{published ? 'Live' : 'Private draft'}</span>
-          <Link to="/app/setup/names" className="home-edit">Edit details</Link>
           <button type="button" className="link-button home-edit" onClick={onTour}>Show me around</button>
         </div>
         <h1 id="couple-names">{coupleNames(wedding.partnerOneName, wedding.partnerTwoName) || 'Your wedding'}</h1>
@@ -202,6 +201,7 @@ function Hero({ wedding, onChange, onTour }: { wedding: Wedding; onChange: (w: W
           <button className={published ? 'btn btn--secondary' : 'btn'} onClick={toggle} disabled={busy}>
             {busy ? 'Saving…' : published ? 'Unpublish' : 'Publish invitation'}
           </button>
+          <Link to="/app/setup/names" className="btn btn--secondary">Edit details</Link>
           <Link to={designPath(studio)} className="btn btn--secondary" data-tour="design">Design invitation</Link>
           {published && link && (
             <a href={link} target="_blank" rel="noopener" className="btn btn--secondary">

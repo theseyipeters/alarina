@@ -344,6 +344,26 @@ a {
   font-size: var(--text-sm);
 }
 
+/* An input with a fixed sign inside its left edge, e.g. the "#" of a hashtag. */
+.prefix-field {
+  position: relative;
+}
+
+.prefix-field > span {
+  position: absolute;
+  top: 0;
+  left: var(--space-3);
+  display: flex;
+  align-items: center;
+  height: var(--control-height);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.prefix-field input {
+  padding-left: calc(var(--space-3) + 1ch);
+}
+
 /* Long email addresses break rather than push the card wider. */
 .break-anywhere {
   overflow-wrap: anywhere;

@@ -616,14 +616,6 @@ a.inv-map {
   margin: 0;
 }
 
-.c-rsvp {
-  margin: 0;
-  font-size: var(--text-xs);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
 /* ── Layout: Modern. Asymmetric, big names, the date in numerals. ── */
 
 .m-layout {
@@ -1026,15 +1018,6 @@ a.inv-map {
   margin: 0;
 }
 
-.g-rsvp,
-.d-rsvp {
-  margin: 0;
-  font-size: var(--text-xs);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
 /* ── Layout: Deco. Stepped corners, a sunburst and ruled date. ──────── */
 
 .d-frame {
@@ -1173,14 +1156,6 @@ a.inv-map {
 .inv[data-heading-font='unbounded'] .d-date > .d-date-main {
   border-inline: 0;
   border-block: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
-}
-
-.d-rsvp::before,
-.d-rsvp::after {
-  content: '◆';
-  margin-inline: 0.75em;
-  font-size: 0.7em;
-  color: var(--accent);
 }
 
 /* ── Layout: Adire. Indigo-cloth bands and a date stamp. ────────────── */
@@ -1843,6 +1818,128 @@ a.inv-map {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-4);
   }
+}
+
+/* ── Hashtag (all layouts) ──────────────────────────────────────────── */
+
+/* One word that never breaks: the layout's size (--tag-size), unless the tag's length needs it
+   smaller to fit the room it has (--tag-room, in card widths). */
+.inv-hashtag {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.inv-hashtag-label {
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.inv-hashtag-tag {
+  --tag-size: clamp(1.375rem, 7cqi, 2rem);
+  --tag-room: 76cqi;
+
+  font-family: var(--inv-display);
+  font-size: min(
+    var(--tag-size),
+    calc(var(--tag-room) / (var(--tag-chars, 10) * var(--tag-width, var(--display-width, 0.46))))
+  );
+  line-height: 1.15;
+  white-space: nowrap;
+  color: var(--accent);
+}
+
+/* Classic and Garden: a soft italic line under a small label, closing the card. */
+.c-hashtag .inv-hashtag-label,
+.g-hashtag .inv-hashtag-label {
+  font-family: var(--inv-display);
+  font-size: var(--text-base);
+  font-style: italic;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.g-hashtag .inv-hashtag-tag {
+  --tag-size: clamp(1.5rem, 8cqi, 2.25rem);
+}
+
+/* Deco: the label between two diamonds; the tag lightly spaced under it. */
+.d-hashtag .inv-hashtag-label::before,
+.d-hashtag .inv-hashtag-label::after {
+  content: '◆';
+  margin-inline: 0.75em;
+  font-size: 0.7em;
+  color: var(--accent);
+}
+
+.d-hashtag .inv-hashtag-tag {
+  --tag-size: clamp(1.25rem, 6cqi, 1.75rem);
+  --tag-room: 74cqi;
+  --tag-width: calc(var(--display-width, 0.57) + 0.04);
+
+  letter-spacing: 0.04em;
+}
+
+/* Adire: a dashed pill, stitched like the date stamp. */
+.a-hashtag {
+  justify-items: center;
+}
+
+.a-hashtag .inv-hashtag-tag {
+  --tag-room: 70cqi;
+
+  padding: 0.25em 0.9em;
+  border: 1px dashed var(--accent);
+  border-radius: 999px;
+}
+
+/* Modern: big, left-aligned, the accent bar of the message beside it. */
+.m-hashtag .inv-hashtag-tag {
+  --tag-size: clamp(1.75rem, 10cqi, 3rem);
+  --tag-room: 84cqi;
+
+  letter-spacing: -0.01em;
+}
+
+/* Editorial: a column of its own, in italic. */
+.e-hashtag .inv-hashtag-tag {
+  --tag-size: clamp(1.25rem, 6cqi, 1.75rem);
+  --tag-room: 84cqi;
+
+  font-style: italic;
+}
+
+@container (min-width: 30rem) {
+  .e-hashtag .inv-hashtag-tag {
+    --tag-room: 38cqi;
+  }
+}
+
+/* Minimal: a plain row, in the text colour. */
+.n-hashtag .inv-hashtag-tag {
+  --tag-size: var(--text-lg);
+  --tag-room: 80cqi;
+
+  color: var(--text);
+}
+
+@container (min-width: 30rem) {
+  .n-hashtag .inv-hashtag-tag {
+    --tag-room: 36cqi;
+  }
+}
+
+/* Poster: on the colour block, under the names, in the body font (the display face runs wide). */
+.p-hashtag .inv-hashtag-tag {
+  --tag-size: clamp(1.125rem, 6cqi, 1.75rem);
+  --tag-room: 80cqi;
+  --tag-width: 0.58;
+
+  font-family: var(--inv-body);
+
+  color: inherit;
 }
 
 /* ── RSVP ───────────────────────────────────────────────────────────── */

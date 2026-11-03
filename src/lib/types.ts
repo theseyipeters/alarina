@@ -31,6 +31,8 @@ export type WeddingFields = {
   /** Bride or groom, for captions like "Parents of the Bride". Optional. */
   partnerOneRole: Role | null
   partnerTwoRole: Role | null
+  /** The wedding hashtag without its "#", e.g. "LoveStays". */
+  hashtag: string | null
   partnerOneFamily: string | null
   partnerTwoFamily: string | null
   partnerOneFather: string | null

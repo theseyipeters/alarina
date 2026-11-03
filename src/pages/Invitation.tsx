@@ -285,7 +285,7 @@ function RsvpPanel({ invitation, names, from, sectionRef }: RsvpPanelProps) {
         <>
           <p className="muted">
             {invitation.rsvpDeadline
-              ? `Kindly reply by ${formatDate(invitation.rsvpDeadline)}. It takes less than a minute.`
+              ? `Kindly respond on or before ${formatDate(invitation.rsvpDeadline)}. It takes less than a minute.`
               : `Let ${names} know if you can make it. It takes less than a minute.`}
           </p>
           {duplicate && (

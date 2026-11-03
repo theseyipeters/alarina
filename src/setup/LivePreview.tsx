@@ -17,7 +17,6 @@ const STEP_PART: Partial<Record<StepId, InvitationPart>> = {
   venue: 'where',
   dress: 'dress',
   message: 'message',
-  rsvp: 'rsvp',
   events: 'events',
 }
 
