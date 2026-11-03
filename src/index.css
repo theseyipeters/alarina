@@ -739,27 +739,57 @@ input[readonly] {
   padding: 0 var(--space-2);
 }
 
-/* "Ibukun is the  [Bride | Groom]" at the top of each parent group. */
-.role-choice {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2) var(--space-3);
+/* A question answered by a segmented strip. Inline: "Ọlá is the  [Bride | Groom]". */
+.seg-field {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
   margin: 0 0 var(--space-4);
   padding: 0;
   border: 0;
 }
 
-.role-choice legend {
+.seg-field legend {
   float: left;
   padding: 0;
   font-size: var(--text-sm);
 }
 
+/* Full width, so options that wrap on a phone share each row evenly. */
+.seg-field:not(.seg-field--inline) .seg {
+  display: flex;
+}
+
+.seg-field:not(.seg-field--inline) .seg label {
+  flex: 1 1 auto;
+}
+
+.seg-field--inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+}
+
+/* "This event is on your wedding day": the note, then its two buttons. */
+.same-day {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.same-day p,
+.same-day .actions {
+  margin: 0;
+}
+
 /* Segmented control: radios in one bordered strip. */
 .seg {
   display: inline-flex;
+  flex-wrap: wrap;
+  justify-self: start;
+  max-width: 100%;
   padding: 2px;
   background: var(--bg);
   border: 1px solid var(--border);

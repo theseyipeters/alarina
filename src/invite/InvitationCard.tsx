@@ -4,6 +4,7 @@ import type { InvitationContent, WeddingEvent } from "../lib/types.ts";
 import { JOINERS, resolveLook, type Template } from "./design.ts";
 import { mapLink } from "./maps.ts";
 import { parentSides, ROLE_LABELS, type ParentSide } from "./parents.ts";
+import { timesWithVenues, venueStops } from "./venues.ts";
 
 export type InvitationPart =
 	| "families"
@@ -162,24 +163,41 @@ const initials = (w: InvitationContent) =>
 		.map((n) => n?.normalize("NFC").trim()[0] ?? "")
 		.filter(Boolean);
 
-function Venue({ w }: { w: InvitationContent }) {
+/**
+ * Where the day happens: the ceremony venue, and the reception's when it's somewhere else, each
+ * with its label, time, address and a Maps link. A single venue reads as before, labelled only
+ * when the couple said what kind of ceremony it is.
+ */
+function Venues({ w }: { w: InvitationContent }) {
+	const stops = venueStops(w);
+	if (!stops.length) return null;
 	return (
-		<>
-			<span className="inv-venue">{w.venueName}</span>
-			{w.venueAddress && <span className="inv-sub">{w.venueAddress}</span>}
-			{w.venueName && (
-				<a
-					className="inv-sub inv-map"
-					href={mapLink(w.venueName, w.venueAddress)}
-					target="_blank"
-					rel="noopener noreferrer">
-					Open in Maps
-					<span className="visually-hidden"> (opens in a new tab)</span>
-				</a>
-			)}
-		</>
+		<div className="inv-venues" data-stops={stops.length}>
+			{stops.map((stop) => (
+				<div key={stop.key} className="inv-stop">
+					{stop.label && (
+						<span className="inv-stop-label">
+							{[stop.label, stop.time && formatTime(stop.time)].filter(Boolean).join(" · ")}
+						</span>
+					)}
+					<span className="inv-venue">{stop.name}</span>
+					{stop.address && <span className="inv-sub">{stop.address}</span>}
+					<a
+						className="inv-sub inv-map"
+						href={mapLink(stop.name, stop.address)}
+						target="_blank"
+						rel="noopener noreferrer">
+						Open in Maps
+						<span className="visually-hidden"> for {stop.name} (opens in a new tab)</span>
+					</a>
+				</div>
+			))}
+		</div>
 	);
 }
+
+/** The time beside the date, unless each venue carries its own. */
+const dayTime = (w: InvitationContent) => (timesWithVenues(w) ? null : w.startTime);
 
 function Events({
 	events,
@@ -304,7 +322,7 @@ function Parents({ sides, className, and = "and", mark = null }: ParentsProps) {
 const TITLES =
 	/^(mr|mrs|ms|miss|dr|chief|prof|engr|rev|barr|sir|lady|oba|alhaji|alhaja|elder|pastor|deacon|deaconess|evang)\.?$/i;
 
-/** "Mr. Olorundare" never splits at the title: a line break there reads as two people. */
+/** "Mr. Okafor" never splits at the title: a line break there reads as two people. */
 function keepTitle(name: string) {
 	const [first, ...rest] = name.split(/\s+/);
 	return rest.length && TITLES.test(first!)
@@ -314,7 +332,7 @@ function keepTitle(name: string) {
 
 /**
  * "Parents of the Bride", or "Father of the Groom" when only one is named. Without a role, the
- * partner's first name: "Parents of Ibukun".
+ * partner's first name: "Parents of Ọlá".
  */
 function relation(side: ParentSide) {
 	const who =
@@ -466,8 +484,8 @@ function Classic(ctx: Ctx) {
 						<br />
 						{date.year}
 					</span>
-					{w.startTime && (
-						<span className="c-time">at {formatTime(w.startTime)}</span>
+					{dayTime(w) && (
+						<span className="c-time">at {formatTime(dayTime(w))}</span>
 					)}
 				</div>
 			)}
@@ -475,7 +493,7 @@ function Classic(ctx: Ctx) {
 			<div
 				className="c-block"
 				{...part("where")}>
-				<Venue w={w} />
+				<Venues w={w} />
 			</div>
 
 			{w.dressNote && (
@@ -561,10 +579,10 @@ function Modern(ctx: Ctx) {
 					<span className="m-numerals">{date.numeric}</span>
 					<span className="m-date-words">
 						{date.weekday}
-						{w.startTime && (
+						{dayTime(w) && (
 							<>
 								<br />
-								{formatTime(w.startTime)}
+								{formatTime(dayTime(w))}
 							</>
 						)}
 					</span>
@@ -575,7 +593,7 @@ function Modern(ctx: Ctx) {
 				<div {...part("where")}>
 					<dt>Where</dt>
 					<dd>
-						<Venue w={w} />
+						<Venues w={w} />
 					</dd>
 				</div>
 				{w.dressNote && (
@@ -642,7 +660,7 @@ function Editorial(ctx: Ctx) {
 					{...part("when")}>
 					{date.weekday}, the {ordinal(Number(date.day))} of {date.month}{" "}
 					{date.year}
-					{w.startTime && <>, at {formatTime(w.startTime)}</>}
+					{dayTime(w) && <>, at {formatTime(dayTime(w))}</>}
 				</p>
 			)}
 
@@ -663,8 +681,8 @@ function Editorial(ctx: Ctx) {
 					</div>
 				)}
 				<div {...part("where")}>
-					<h2 className="e-label">The venue</h2>
-					<Venue w={w} />
+					<h2 className="e-label">{timesWithVenues(w) ? "The venues" : "The venue"}</h2>
+					<Venues w={w} />
 				</div>
 				{w.dressNote && (
 					<div {...part("dress")}>
@@ -812,8 +830,8 @@ function Garden(ctx: Ctx) {
 					<span className="g-date-main">
 						{date.weekday}, {date.day} {date.month} {date.year}
 					</span>
-					{w.startTime && (
-						<span className="inv-sub">at {formatTime(w.startTime)}</span>
+					{dayTime(w) && (
+						<span className="inv-sub">at {formatTime(dayTime(w))}</span>
 					)}
 				</div>
 			)}
@@ -822,7 +840,7 @@ function Garden(ctx: Ctx) {
 				className="g-block"
 				{...part("where")}>
 				<span className="inv-eyebrow">Where</span>
-				<Venue w={w} />
+				<Venues w={w} />
 			</div>
 
 			{w.dressNote && (
@@ -943,21 +961,21 @@ function Deco(ctx: Ctx) {
 
 			{date && (
 				<div
-					className="d-date"
+					className={dayTime(w) ? "d-date" : "d-date d-date--two"}
 					{...part("when")}>
 					<span>{date.weekday}</span>
 					<span className="d-date-main">
 						{date.day} {date.month} {date.year}
 					</span>
-					<span>{w.startTime ? formatTime(w.startTime) : date.year}</span>
+					{dayTime(w) && <span>{formatTime(dayTime(w))}</span>}
 				</div>
 			)}
 
 			<div
 				className="d-block"
 				{...part("where")}>
-				<span className="inv-eyebrow">Venue</span>
-				<Venue w={w} />
+				<span className="inv-eyebrow">{timesWithVenues(w) ? "Venues" : "Venue"}</span>
+				<Venues w={w} />
 			</div>
 
 			{w.dressNote && (
@@ -1036,8 +1054,8 @@ function Adire(ctx: Ctx) {
 						<span className="a-stamp-small">
 							{date.month} {date.year}
 						</span>
-						{w.startTime && (
-							<span className="a-stamp-small">{formatTime(w.startTime)}</span>
+						{dayTime(w) && (
+							<span className="a-stamp-small">{formatTime(dayTime(w))}</span>
 						)}
 					</div>
 				)}
@@ -1046,7 +1064,7 @@ function Adire(ctx: Ctx) {
 					<div {...part("where")}>
 						<dt>Where</dt>
 						<dd>
-							<Venue w={w} />
+							<Venues w={w} />
 						</dd>
 					</div>
 					{w.dressNote && (
@@ -1114,8 +1132,8 @@ function Minimal(ctx: Ctx) {
 						<dt>When</dt>
 						<dd>
 							{date.weekday} {date.day} {date.month} {date.year}
-							{w.startTime && (
-								<span className="inv-sub">{formatTime(w.startTime)}</span>
+							{dayTime(w) && (
+								<span className="inv-sub">{formatTime(dayTime(w))}</span>
 							)}
 						</dd>
 					</div>
@@ -1123,7 +1141,7 @@ function Minimal(ctx: Ctx) {
 				<div {...part("where")}>
 					<dt>Where</dt>
 					<dd>
-						<Venue w={w} />
+						<Venues w={w} />
 					</dd>
 				</div>
 				{families.any && (
@@ -1215,10 +1233,10 @@ function Poster(ctx: Ctx) {
 						{date.weekday}
 						<br />
 						{date.month}
-						{w.startTime && (
+						{dayTime(w) && (
 							<>
 								<br />
-								{formatTime(w.startTime)}
+								{formatTime(dayTime(w))}
 							</>
 						)}
 					</span>
@@ -1230,7 +1248,7 @@ function Poster(ctx: Ctx) {
 				<div {...part("where")}>
 					<dt>Where</dt>
 					<dd>
-						<Venue w={w} />
+						<Venues w={w} />
 					</dd>
 				</div>
 				{families.any && (

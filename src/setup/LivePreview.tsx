@@ -13,8 +13,8 @@ const STEP_PART: Partial<Record<StepId, InvitationPart>> = {
   names: 'names',
   families: 'families',
   date: 'when',
-  time: 'when',
-  venue: 'where',
+  ceremony: 'where',
+  reception: 'where',
   dress: 'dress',
   message: 'message',
   events: 'events',
@@ -55,7 +55,10 @@ export default function LivePreview({ values, design, step }: Props) {
     look: design.look ?? EMPTY_LOOK,
     partnerOneName: values.partnerOneName?.trim() || 'Your name',
     partnerTwoName: values.partnerTwoName?.trim() || 'Your partner',
-    venueName: filled(values.venueName, 'Your venue', 'venue'),
+    venueName: filled(values.venueName, 'Your ceremony venue', 'ceremony'),
+    receptionVenueName: values.receptionSeparate
+      ? filled(values.receptionVenueName, 'Your reception venue', 'reception')
+      : values.receptionVenueName,
     dressNote: filled(values.dressNote, 'Your dress code', 'dress'),
     message: filled(values.message, 'A few words for your guests', 'message'),
     events:

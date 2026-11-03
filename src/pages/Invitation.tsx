@@ -6,6 +6,7 @@ import EnvelopeIntro, { OPEN_MS } from '../invite/EnvelopeIntro.tsx'
 import GiftBasket from '../invite/GiftBasket.tsx'
 import { inviteAttrs } from '../invite/design.ts'
 import InvitationCard from '../invite/InvitationCard.tsx'
+import { venueStops } from '../invite/venues.ts'
 import { mapLink } from '../invite/maps.ts'
 import RsvpForm from '../invite/RsvpForm.tsx'
 import '../invite/styles.ts'
@@ -177,16 +178,19 @@ function PlanYourDay({ invitation }: { invitation: PublicInvitation }) {
           <p className="plan-label">Add it to your calendar</p>
           <div className="actions plan-actions">
             <CalendarButtons invitation={invitation} />
-            {invitation.venueName && (
+            {/* One button for one venue; "Ceremony directions" and "Reception directions" for two. */}
+            {venueStops(invitation).map((stop, _, stops) => (
               <a
+                key={stop.key}
                 className="btn btn--secondary"
-                href={mapLink(invitation.venueName, invitation.venueAddress)}
+                href={mapLink(stop.name, stop.address)}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Directions<span className="visually-hidden"> (opens in a new tab)</span>
+                {stops.length > 1 ? `${stop.key === 'ceremony' ? 'Ceremony' : 'Reception'} directions` : 'Directions'}
+                <span className="visually-hidden"> to {stop.name} (opens in a new tab)</span>
               </a>
-            )}
+            ))}
           </div>
         </>
       )}

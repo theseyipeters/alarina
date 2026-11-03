@@ -5,9 +5,14 @@ import Field from '../components/Field.tsx'
 
 const MAX_EVENTS = 10
 
-type Props = { events: WeddingEvent[]; onChange: (events: WeddingEvent[]) => void }
+type Props = {
+  events: WeddingEvent[]
+  /** To point out an event on the wedding day itself, which belongs in Ceremony or Reception. */
+  weddingDate: string | null
+  onChange: (events: WeddingEvent[]) => void
+}
 
-export default function EventsEditor({ events, onChange }: Props) {
+export default function EventsEditor({ events, weddingDate, onChange }: Props) {
   const update = (id: string, patch: Partial<WeddingEvent>) =>
     onChange(events.map((e) => (e.id === id ? { ...e, ...patch } : e)))
 
@@ -35,7 +40,11 @@ export default function EventsEditor({ events, onChange }: Props) {
             )}
           </Field>
           <div className="field-row">
-            <Field label="Date" optional>
+            <Field
+              label="Date"
+              optional
+              hint={event.date && event.date === weddingDate ? 'That’s your wedding day. A church service or reception goes in the Ceremony or Reception step.' : undefined}
+            >
               {(p) => (
                 <DatePicker {...p} clearable value={event.date ?? ''} onChange={(date) => update(event.id, { date: date || null })} />
               )}

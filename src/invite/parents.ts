@@ -33,7 +33,7 @@ export function parentSides(w: Source): ParentSide[] {
   })).filter((side) => side.parents.length > 0)
 }
 
-/** One line for summaries: "Mr Hassan & Mrs Hassan (Ibukun, bride) · Late Mr Ade (Tosin, groom)". */
+/** One line for summaries: "Mr Adébáyọ̀ & Mrs Adébáyọ̀ (Ọlá, bride) · Late Mr Okafor (Ẹni, groom)". */
 export const parentsText = (w: Source) =>
   parentSides(w)
     .map((s) => {

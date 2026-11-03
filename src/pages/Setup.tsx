@@ -8,6 +8,7 @@ import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { formatDate, formatTime, todayInLagos } from '../lib/format.ts'
 import { PARENT_SIDES, parentSides, parentsText, ROLE_LABELS } from '../invite/parents.ts'
+import { CEREMONY_TYPES, VENUE_PROMPTS } from '../invite/venues.ts'
 import type { ParentField, Role, Wedding, WeddingEvent, WeddingFields } from '../lib/types.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import { useTitle } from '../lib/useTitle.ts'
@@ -37,6 +38,11 @@ const EMPTY: WeddingFields = {
   startTime: null,
   venueName: null,
   venueAddress: null,
+  ceremonyType: null,
+  receptionSeparate: false,
+  receptionVenueName: null,
+  receptionVenueAddress: null,
+  receptionTime: null,
   dressNote: null,
   message: null,
   rsvpDeadline: null,
@@ -114,6 +120,40 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
     if (!values[other]) set(other, role === 'bride' ? 'groom' : 'bride')
   }
 
+  // An event the couple added on the wedding day (before the day had a ceremony and a reception)
+  // can become either one. As the ceremony, the venue they had becomes the reception.
+  const sameDay = values.date ? values.events.filter((e) => e.name.trim() && e.date === values.date && e.venueName) : []
+  const moveEventTo = (event: WeddingEvent, as: 'ceremony' | 'reception') => {
+    if (as === 'ceremony') {
+      if (values.venueName && !(values.receptionSeparate && values.receptionVenueName)) {
+        set('receptionSeparate', true)
+        set('receptionVenueName', values.venueName)
+        set('receptionVenueAddress', values.venueAddress)
+        set('receptionTime', values.startTime)
+      }
+      set('venueName', event.venueName)
+      set('venueAddress', event.venueAddress)
+      if (event.startTime) set('startTime', event.startTime)
+    } else {
+      set('receptionSeparate', true)
+      set('receptionVenueName', event.venueName)
+      set('receptionVenueAddress', event.venueAddress)
+      set('receptionTime', event.startTime)
+    }
+    set('events', values.events.filter((e) => e.id !== event.id))
+  }
+  const sameDayNotice = sameDay.map((event) => (
+    <div key={event.id} className="alert alert--info same-day">
+      <p>
+        “{event.name}” is on your wedding day, under Other days. Move it here so guests see it with the rest of the day.
+      </p>
+      <div className="actions">
+        <button type="button" className="btn btn--secondary" onClick={() => moveEventTo(event, 'ceremony')}>Use as the ceremony</button>
+        <button type="button" className="btn btn--secondary" onClick={() => moveEventTo(event, 'reception')}>Use as the reception</button>
+      </div>
+    </div>
+  ))
+
   const setLate = (field: ParentField, late: boolean) =>
     set('lateParents', late ? [...values.lateParents, field] : values.lateParents.filter((f) => f !== field))
 
@@ -154,7 +194,7 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
                   autoCapitalize="off"
                   spellCheck={false}
                   maxLength={40}
-                  placeholder="LoveStays"
+                  placeholder="OlaAndEni2027"
                   value={text('hashtag')}
                   // A tag can't hold spaces or punctuation, so they never get in.
                   onChange={(e) => set('hashtag', e.target.value.replace(/[^\p{L}\p{M}\p{N}_]/gu, ''))}
@@ -205,22 +245,57 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
         </Field>
       )
       break
-    case 'time':
-      body = (
-        <Field label="Start time" hint="Nigerian time (WAT).">
-          {(p) => <TimeSelect {...p} value={text('startTime')} onChange={(time) => set('startTime', time || null)} />}
-        </Field>
-      )
-      break
-    case 'venue':
+    case 'ceremony': {
+      const prompt = VENUE_PROMPTS[values.ceremonyType ?? 'none']
       body = (
         <>
-          <Field label="Venue name">
-            {(p) => <input {...p} type="text" maxLength={120} placeholder="Eko Hotel and Suites" value={text('venueName')} onChange={(e) => set('venueName', e.target.value)} />}
+          {sameDayNotice}
+          <Choice
+            legend="What kind of ceremony?"
+            name="ceremonyType"
+            options={CEREMONY_TYPES}
+            value={values.ceremonyType}
+            onChange={(type) => set('ceremonyType', type)}
+          />
+          <Field label={prompt.label}>
+            {(p) => <input {...p} type="text" maxLength={120} placeholder={prompt.placeholder} value={text('venueName')} onChange={(e) => set('venueName', e.target.value)} />}
           </Field>
           <Field label="Address" optional hint="Helps guests find their way.">
             {(p) => <input {...p} type="text" maxLength={200} placeholder="Plot 1415 Adetokunbo Ademola Street, Victoria Island, Lagos" value={text('venueAddress')} onChange={(e) => set('venueAddress', e.target.value)} />}
           </Field>
+          <Field label="Start time" hint="Nigerian time (WAT).">
+            {(p) => <TimeSelect {...p} value={text('startTime')} onChange={(time) => set('startTime', time || null)} />}
+          </Field>
+        </>
+      )
+      break
+    }
+    case 'reception':
+      body = (
+        <>
+          {sameDayNotice}
+          <Choice
+            legend="Where is the reception?"
+            name="receptionSeparate"
+            options={RECEPTION_PLACES}
+            value={values.receptionSeparate ? 'elsewhere' : 'same'}
+            onChange={(place) => set('receptionSeparate', place === 'elsewhere')}
+          />
+          {values.receptionSeparate ? (
+            <>
+              <Field label="Reception venue">
+                {(p) => <input {...p} type="text" maxLength={120} placeholder="The Civic Centre, Victoria Island" value={text('receptionVenueName')} onChange={(e) => set('receptionVenueName', e.target.value)} />}
+              </Field>
+              <Field label="Address" optional>
+                {(p) => <input {...p} type="text" maxLength={200} placeholder="Ozumba Mbadiwe Avenue, Victoria Island, Lagos" value={text('receptionVenueAddress')} onChange={(e) => set('receptionVenueAddress', e.target.value)} />}
+              </Field>
+              <Field label="Start time" optional hint="Nigerian time (WAT).">
+                {(p) => <TimeSelect {...p} optional value={text('receptionTime')} onChange={(time) => set('receptionTime', time || null)} />}
+              </Field>
+            </>
+          ) : (
+            <p className="muted">Guests will see one venue{values.venueName ? `: ${values.venueName}` : ''}.</p>
+          )}
         </>
       )
       break
@@ -251,7 +326,7 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
       )
       break
     case 'events':
-      body = <EventsEditor events={values.events} onChange={(events) => set('events', events)} />
+      body = <EventsEditor events={values.events} weddingDate={values.date} onChange={(events) => set('events', events)} />
       break
     case 'finish':
       body = <Review values={values} flush={flush} onEdit={go} />
@@ -303,12 +378,12 @@ const QUESTIONS: Record<StepId, string> = {
   names: 'What are your names?',
   families: 'Which families are hosting?',
   date: 'When is the wedding?',
-  time: 'What time does it start?',
-  venue: 'Where is it?',
+  ceremony: 'Where and when is the ceremony?',
+  reception: 'And the reception?',
   dress: 'Is there a dress code?',
   message: 'Anything you’d like to say to your guests?',
   rsvp: 'When should guests reply by?',
-  events: 'Are there other events?',
+  events: 'Any celebrations on other days?',
   finish: 'Review your invitation',
 }
 
@@ -410,8 +485,20 @@ function Review({ values, flush, onEdit }: ReviewProps) {
       step: 'families',
     },
     { label: 'Date', value: formatDate(values.date), step: 'date' },
-    { label: 'Start time', value: formatTime(values.startTime), step: 'time' },
-    { label: 'Venue', value: [values.venueName, values.venueAddress].filter(Boolean).join(', '), step: 'venue' },
+    {
+      label: 'Ceremony',
+      value: [values.ceremonyType && CEREMONY_TYPES[values.ceremonyType], formatTime(values.startTime), values.venueName, values.venueAddress]
+        .filter(Boolean)
+        .join(' · '),
+      step: 'ceremony',
+    },
+    {
+      label: 'Reception',
+      value: values.receptionSeparate
+        ? [formatTime(values.receptionTime), values.receptionVenueName, values.receptionVenueAddress].filter(Boolean).join(' · ')
+        : 'At the ceremony venue',
+      step: 'reception',
+    },
     { label: 'Dress code', value: values.dressNote, step: 'dress' },
     { label: 'Message', value: values.message, step: 'message' },
     { label: 'RSVP by', value: formatDate(values.rsvpDeadline), step: 'rsvp' },
@@ -521,14 +608,31 @@ function ParentInput({ label, of, placeholder, value, late, onName, onLate }: Pa
 
 /** Bride or groom, for the invitation's captions ("Parents of the Bride"). */
 function RoleChoice({ name, partner, value, onChange }: { name: string; partner: string; value: Role | null; onChange: (role: Role) => void }) {
+  return <Choice legend={`${partner} is the`} name={name} options={ROLE_LABELS} value={value} onChange={onChange} inline />
+}
+
+const RECEPTION_PLACES = { same: 'At the ceremony venue', elsewhere: 'Somewhere else' }
+
+type ChoiceProps<T extends string> = {
+  legend: string
+  name: string
+  options: Record<T, string>
+  value: T | null
+  onChange: (value: T) => void
+  /** Legend and choices on one line, for short options. */
+  inline?: boolean
+}
+
+/** One answer from a few, as a segmented strip of radios. */
+function Choice<T extends string>({ legend, name, options, value, onChange, inline }: ChoiceProps<T>) {
   return (
-    <fieldset className="role-choice">
-      <legend>{partner} is the</legend>
+    <fieldset className={inline ? 'seg-field seg-field--inline' : 'seg-field'}>
+      <legend>{legend}</legend>
       <div className="seg">
-        {(Object.keys(ROLE_LABELS) as Role[]).map((role) => (
-          <label key={role}>
-            <input type="radio" className="visually-hidden" name={name} checked={value === role} onChange={() => onChange(role)} />
-            {ROLE_LABELS[role]}
+        {(Object.keys(options) as T[]).map((option) => (
+          <label key={option}>
+            <input type="radio" className="visually-hidden" name={name} checked={value === option} onChange={() => onChange(option)} />
+            {options[option]}
           </label>
         ))}
       </div>

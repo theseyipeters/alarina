@@ -1132,6 +1132,15 @@ a.inv-map {
   border-inline: 1px solid var(--accent);
 }
 
+/* No time beside the date (each venue has its own): weekday | date. */
+.d-date--two {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.d-date--two > .d-date-main {
+  border-right: 0;
+}
+
 /* Too narrow for weekday | date | time in a row (or set in wide Unbounded): three ruled
    lines, so no word breaks. */
 @container (max-width: 30rem) {
@@ -1383,6 +1392,11 @@ a.inv-map {
 .p-message,
 [data-template='poster'] .inv-events-section {
   margin-inline: 4cqi;
+}
+
+/* Inset from the card's edges, so it can't also be full width. */
+.p-grid {
+  width: auto;
 }
 
 .p-date {
@@ -1818,6 +1832,106 @@ a.inv-map {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-4);
   }
+}
+
+/* ── Venues: the ceremony, and the reception when it's elsewhere (all layouts) ── */
+
+.inv-venues {
+  display: grid;
+  gap: var(--space-4);
+  overflow-wrap: break-word;
+}
+
+.inv-stop {
+  display: grid;
+  gap: var(--space-1);
+  align-content: start;
+}
+
+/* "CHURCH SERVICE · 10:00 AM" */
+.inv-stop-label {
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* Centred layouts: on a phone the two stack with a short rule between; with room, they sit
+   side by side, split by a hairline. */
+.c-block .inv-stop + .inv-stop::before,
+.g-block .inv-stop + .inv-stop::before,
+.d-block .inv-stop + .inv-stop::before {
+  content: '';
+  justify-self: center;
+  width: 2.5rem;
+  margin-bottom: var(--space-3);
+  border-top: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+@container (min-width: 30rem) {
+  .c-block .inv-venues[data-stops='2'],
+  .g-block .inv-venues[data-stops='2'],
+  .d-block .inv-venues[data-stops='2'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+  }
+
+  .c-block .inv-stop,
+  .g-block .inv-stop,
+  .d-block .inv-stop {
+    padding-inline: 4cqi;
+  }
+
+  .c-block .inv-stop + .inv-stop,
+  .g-block .inv-stop + .inv-stop,
+  .d-block .inv-stop + .inv-stop {
+    border-left: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+
+  .c-block .inv-stop + .inv-stop::before,
+  .g-block .inv-stop + .inv-stop::before,
+  .d-block .inv-stop + .inv-stop::before {
+    content: none;
+  }
+}
+
+.c-block,
+.g-block,
+.d-block {
+  width: 100%;
+}
+
+/* Garden and Editorial: the label in soft italics rather than spaced capitals. */
+.g-block .inv-stop-label,
+.e-columns .inv-stop-label {
+  font-family: var(--inv-display);
+  font-size: var(--text-base);
+  font-style: italic;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Modern and Poster: a bar beside each stop when there are two. */
+.m-rows .inv-venues[data-stops='2'] .inv-stop,
+.p-grid .inv-venues[data-stops='2'] .inv-stop {
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--accent);
+}
+
+.p-grid .inv-venues[data-stops='2'] .inv-stop {
+  border-left-color: var(--primary);
+}
+
+/* Adire: dashed between, like its detail rows. */
+.a-details .inv-stop + .inv-stop {
+  padding-top: var(--space-4);
+  border-top: 1px dashed color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+/* Minimal: quiet, in the text colour. */
+.n-details .inv-stop-label {
+  color: var(--text-muted);
 }
 
 /* ── Hashtag (all layouts) ──────────────────────────────────────────── */
