@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import InvitationCard, { type InvitationPart } from '../invite/InvitationCard.tsx'
 import { EMPTY_LOOK, inviteAttrs } from '../invite/design.ts'
 import '../invite/styles.ts'
+import { parentSides } from '../invite/parents.ts'
 import type { InvitationDesign, WeddingFields } from '../lib/types.ts'
 import { designPath, STUDIO_QUERY } from '../lib/studio.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
@@ -42,14 +43,19 @@ export default function LivePreview({ values, design, step }: Props) {
   const filled = (value: string | null | undefined, standIn: string, forStep: StepId) =>
     value?.trim() ? value : step === forStep ? standIn : value ?? null
 
+  // While the families step is open and nothing is written yet, show where the parents go.
+  const parentStandIns =
+    step === 'families' && !parentSides(values).length && !values.partnerOneFamily && !values.partnerTwoFamily
+      ? { partnerOneFather: 'Your father', partnerOneMother: 'Your mother', partnerTwoFather: 'Their father', partnerTwoMother: 'Their mother' }
+      : {}
+
   const invitation = {
     ...values,
     ...design,
+    ...parentStandIns,
     look: design.look ?? EMPTY_LOOK,
     partnerOneName: values.partnerOneName?.trim() || 'Your name',
     partnerTwoName: values.partnerTwoName?.trim() || 'Your partner',
-    partnerOneFamily: filled(values.partnerOneFamily, 'Your family', 'families'),
-    partnerTwoFamily: filled(values.partnerTwoFamily, 'Your partner’s family', 'families'),
     venueName: filled(values.venueName, 'Your venue', 'venue'),
     dressNote: filled(values.dressNote, 'Your dress code', 'dress'),
     message: filled(values.message, 'A few words for your guests', 'message'),

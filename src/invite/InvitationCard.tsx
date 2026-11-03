@@ -1,8 +1,9 @@
-import type { CSSProperties, ReactNode } from 'react'
+import { Fragment, type CSSProperties, type ReactNode } from 'react'
 import { formatDate, formatTime } from '../lib/format.ts'
 import type { InvitationContent, WeddingEvent } from '../lib/types.ts'
 import { JOINERS, resolveLook, type Template } from './design.ts'
 import { mapLink } from './maps.ts'
+import { parentSides, type ParentSide } from './parents.ts'
 
 export type InvitationPart = 'families' | 'names' | 'when' | 'where' | 'dress' | 'rsvp' | 'message' | 'events'
 
@@ -61,14 +62,6 @@ function dateParts(date: string | null) {
     year: String(y),
     numeric: `${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.${String(y).slice(2)}`,
   }
-}
-
-/** "09:30" → "9:30 in the morning", "13:00" → "1:00 in the afternoon". Always in figures, never words. */
-function timePhrase(time: string | null) {
-  if (!time) return null
-  const h = Number(time.split(':')[0])
-  const period = h < 12 ? 'in the morning' : h < 17 ? 'in the afternoon' : 'in the evening'
-  return `${formatTime(time).replace(/\s?(am|pm)$/, '')} ${period}`
 }
 
 /** 1 → "1st", 2 → "2nd", 11 → "11th", 22 → "22nd" */
@@ -151,6 +144,85 @@ function Events({ events, part, id, title }: { events: WeddingEvent[]; part: Ctx
   )
 }
 
+/** Parents when the couple has added them, otherwise the older one-line family names. */
+function familiesOf(w: InvitationContent) {
+  const sides = parentSides(w)
+  const legacy = sides.length ? [] : [w.partnerOneFamily, w.partnerTwoFamily].filter((f): f is string => !!f)
+  return { sides, legacy, any: sides.length > 0 || legacy.length > 0 }
+}
+
+type ParentsProps = {
+  sides: ParentSide[]
+  className: string
+  /** Between father and mother. */
+  and?: string
+  /** Drawn on the rule between the two sides; false leaves the sides apart with no rule. */
+  mark?: ReactNode | false
+}
+
+/**
+ * Each side's father and mother, then whose parents they are. The block is its own container,
+ * so on a narrow card the sides stack instead of squeezing names until words break.
+ */
+function Parents({ sides, className, and = 'and', mark = null }: ParentsProps) {
+  // The longest run of letters that can't wrap: a word, a title held to its name, or the first
+  // name in the caption (set smaller, but in spaced capitals). CSS shrinks text to fit it.
+  const length = (text: string) => [...text.normalize('NFC')].length
+  const words = sides.flatMap((s) => s.parents.flatMap((p) => keepTitle(p.name).split(' ')))
+  const chars = Math.max(8, ...words.map(length), ...sides.map((s) => Math.ceil(length(firstName(s.partner) ?? '') * 1.1)))
+  return (
+    <div className={`inv-parents ${className}`}>
+      <div
+        className="inv-parents-grid"
+        style={{ '--parents-chars': chars } as CSSProperties}
+        data-sides={sides.length}
+        {...(chars > 16 && { 'data-stack': true })}
+        {...(mark === false && { 'data-mark': 'none' })}
+      >
+        {sides.map((side, i) => (
+          <Fragment key={side.parents[0]!.field}>
+            {i > 0 && mark !== false && (
+              <span className="inv-parents-mark" aria-hidden="true">
+                {mark}
+              </span>
+            )}
+            <p className="inv-parents-side">
+              {/* The spaces aren't drawn between flex items, but keep the words apart for screen readers. */}
+              {side.parents.map((p, j) => (
+                <Fragment key={p.field}>
+                  {j > 0 && <span className="inv-parents-and">{and}</span>}{' '}
+                  <span className="inv-parent">
+                    {p.late && <span className="inv-late">Late </span>}
+                    {keepTitle(p.name)}
+                  </span>{' '}
+                </Fragment>
+              ))}
+              <span className="inv-parents-of">{relation(side)}</span>
+            </p>
+          </Fragment>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const TITLES = /^(mr|mrs|ms|miss|dr|chief|prof|engr|rev|barr|sir|lady|oba|alhaji|alhaja|elder|pastor|deacon|deaconess|evang)\.?$/i
+
+/** "Mr. Olorundare" never splits at the title: a line break there reads as two people. */
+function keepTitle(name: string) {
+  const [first, ...rest] = name.split(/\s+/)
+  return rest.length && TITLES.test(first!) ? `${first}\u00a0${rest.join(' ')}` : name
+}
+
+/** "Parents of Ibukun", or "Father of Ibukun" when only one is named. First name only, to stay short. */
+function relation(side: ParentSide) {
+  const who = side.parents.length > 1 ? 'Parents' : side.parents[0]!.field.endsWith('Father') ? 'Father' : 'Mother'
+  const first = firstName(side.partner)
+  return first ? `${who} of ${first}` : who
+}
+
+const firstName = (name: string | null) => name?.split(/\s+/)[0] ?? null
+
 /* Thin ornaments, drawn in the palette's accent colour. Purely decorative. */
 
 function Sprig() {
@@ -168,6 +240,15 @@ function Diamond() {
   return (
     <svg className="inv-ornament inv-divider" viewBox="0 0 120 12" aria-hidden="true">
       <path d="M4 6h46M70 6h46M60 1l5 5-5 5-5-5z" />
+    </svg>
+  )
+}
+
+/** Two petals, for the rule between the families. */
+function Bud() {
+  return (
+    <svg className="inv-ornament" viewBox="0 0 12 24" aria-hidden="true">
+      <path d="M6 2c3 3 3 7 0 10-3-3-3-7 0-10zM6 22c3-3 3-7 0-10-3 3-3 7 0 10z" />
     </svg>
   )
 }
@@ -190,17 +271,21 @@ function Corners() {
 function Classic(ctx: Ctx) {
   const { w, part } = ctx
   const date = dateParts(w.date)
-  const families = [w.partnerOneFamily, w.partnerTwoFamily].filter(Boolean)
+  const families = familiesOf(w)
 
   return (
     <div className="c-frame">
       <Corners />
       <Sprig />
 
-      {families.length > 0 && (
+      {families.any && (
         <div className="c-families" {...part('families')}>
           <p className="inv-eyebrow">Together with their families</p>
-          <p className="inv-families">{families.join(' & ')}</p>
+          {families.sides.length ? (
+            <Parents sides={families.sides} className="c-parents" mark={<Bud />} />
+          ) : (
+            <p className="inv-families">{families.legacy.join(' & ')}</p>
+          )}
         </div>
       )}
 
@@ -217,7 +302,7 @@ function Classic(ctx: Ctx) {
             <br />
             {date.year}
           </span>
-          {w.startTime && <span className="c-time">at {timePhrase(w.startTime)}</span>}
+          {w.startTime && <span className="c-time">at {formatTime(w.startTime)}</span>}
         </div>
       )}
 
@@ -254,7 +339,7 @@ function Classic(ctx: Ctx) {
 function Modern(ctx: Ctx) {
   const { w, part } = ctx
   const date = dateParts(w.date)
-  const families = [w.partnerOneFamily, w.partnerTwoFamily].filter(Boolean)
+  const families = familiesOf(w)
   const city = cityOf(w.venueAddress)
 
   return (
@@ -264,9 +349,14 @@ function Modern(ctx: Ctx) {
       </span>
 
       <header className="m-head">
-        {families.length > 0 && (
+        {families.sides.length > 0 && (
+          <div className="m-hosts" {...part('families')}>
+            <Parents sides={families.sides} className="m-parents" and="&" mark={false} />
+          </div>
+        )}
+        {families.legacy.length > 0 && (
           <p className="m-families" {...part('families')}>
-            {families.map((f) => (
+            {families.legacy.map((f) => (
               <span key={f}>{f}</span>
             ))}
           </p>
@@ -328,7 +418,7 @@ function Modern(ctx: Ctx) {
 function Editorial(ctx: Ctx) {
   const { w, part } = ctx
   const date = dateParts(w.date)
-  const families = [w.partnerOneFamily, w.partnerTwoFamily].filter(Boolean)
+  const families = familiesOf(w)
   const city = cityOf(w.venueAddress)
 
   return (
@@ -346,17 +436,19 @@ function Editorial(ctx: Ctx) {
       {date && (
         <p className="e-sentence" {...part('when')}>
           {date.weekday}, the {ordinal(Number(date.day))} of {date.month} {date.year}
-          {w.startTime && <>, at {timePhrase(w.startTime)}</>}
+          {w.startTime && <>, at {formatTime(w.startTime)}</>}
         </p>
       )}
 
       <div className="e-columns">
-        {families.length > 0 && (
-          <div {...part('families')}>
+        {families.any && (
+          <div className={families.sides.length ? 'e-hosts' : undefined} {...part('families')}>
             <h2 className="e-label">Hosted by</h2>
-            {families.map((f) => (
-              <p key={f}>{f}</p>
-            ))}
+            {families.sides.length ? (
+              <Parents sides={families.sides} className="e-parents" />
+            ) : (
+              families.legacy.map((f) => <p key={f}>{f}</p>)
+            )}
           </div>
         )}
         <div {...part('where')}>
@@ -422,6 +514,15 @@ function Vine({ className }: { className: string }) {
   )
 }
 
+/** A stem with two leaves, standing between the families. */
+function LeafMark() {
+  return (
+    <svg className="inv-ornament" viewBox="0 0 16 28" aria-hidden="true">
+      <path d="M8 2v24M8 12c-4-1-6-4-6-8 4 0 6 3 6 8zM8 20c4-1 6-4 6-8-4 0-6 3-6 8z" />
+    </svg>
+  )
+}
+
 function LeafDivider() {
   return (
     <svg className="inv-ornament g-leaves" viewBox="0 0 160 20" aria-hidden="true">
@@ -434,7 +535,7 @@ function LeafDivider() {
 function Garden(ctx: Ctx) {
   const { w, part } = ctx
   const date = dateParts(w.date)
-  const families = [w.partnerOneFamily, w.partnerTwoFamily].filter(Boolean)
+  const families = familiesOf(w)
 
   return (
     <div className="g-layout">
@@ -442,10 +543,14 @@ function Garden(ctx: Ctx) {
       <Vine className="g-vine--bottom" />
       <Wreath w={w} />
 
-      {families.length > 0 && (
+      {families.any && (
         <div className="g-families" {...part('families')}>
           <p className="inv-eyebrow">Together with their families</p>
-          <p className="inv-families">{families.join(' & ')}</p>
+          {families.sides.length ? (
+            <Parents sides={families.sides} className="g-parents" and="&" mark={<LeafMark />} />
+          ) : (
+            <p className="inv-families">{families.legacy.join(' & ')}</p>
+          )}
         </div>
       )}
 
@@ -458,7 +563,7 @@ function Garden(ctx: Ctx) {
           <span className="g-date-main">
             {date.weekday}, {date.day} {date.month} {date.year}
           </span>
-          {w.startTime && <span className="inv-sub">at {timePhrase(w.startTime)}</span>}
+          {w.startTime && <span className="inv-sub">at {formatTime(w.startTime)}</span>}
         </div>
       )}
 
@@ -506,6 +611,15 @@ function DecoCorners() {
   )
 }
 
+/** A stepped diamond, the corners' motif in small. */
+function DecoMark() {
+  return (
+    <svg className="inv-ornament" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M8 1l7 7-7 7-7-7zM8 5l3 3-3 3-3-3z" />
+    </svg>
+  )
+}
+
 function Sunburst() {
   const rays = Array.from({ length: 11 }, (_, i) => (Math.PI * (i + 1)) / 12)
   return (
@@ -525,17 +639,21 @@ function Sunburst() {
 function Deco(ctx: Ctx) {
   const { w, part } = ctx
   const date = dateParts(w.date)
-  const families = [w.partnerOneFamily, w.partnerTwoFamily].filter(Boolean)
+  const families = familiesOf(w)
 
   return (
     <div className="d-frame">
       <DecoCorners />
       <Sunburst />
 
-      {families.length > 0 && (
+      {families.any && (
         <div className="d-block" {...part('families')}>
           <p className="inv-eyebrow">Together with their families</p>
-          <p className="d-families">{families.join(' & ')}</p>
+          {families.sides.length ? (
+            <Parents sides={families.sides} className="d-parents" and="&" mark={<DecoMark />} />
+          ) : (
+            <p className="d-families">{families.legacy.join(' & ')}</p>
+          )}
         </div>
       )}
 
@@ -586,16 +704,20 @@ function Deco(ctx: Ctx) {
 function Adire(ctx: Ctx) {
   const { w, part } = ctx
   const date = dateParts(w.date)
-  const families = [w.partnerOneFamily, w.partnerTwoFamily].filter(Boolean)
+  const families = familiesOf(w)
 
   return (
     <div className="a-layout">
       <span className="a-band" aria-hidden="true" />
       <div className="a-body">
-        {families.length > 0 ? (
+        {families.any ? (
           <div {...part('families')}>
             <p className="inv-eyebrow">Together with their families</p>
-            <p className="a-families">{families.join(' & ')}</p>
+            {families.sides.length ? (
+              <Parents sides={families.sides} className="a-parents" mark={false} />
+            ) : (
+              <p className="a-families">{families.legacy.join(' & ')}</p>
+            )}
           </div>
         ) : (
           <p className="inv-eyebrow">You are invited to the wedding of</p>
@@ -654,7 +776,7 @@ function Adire(ctx: Ctx) {
 function Minimal(ctx: Ctx) {
   const { w, part } = ctx
   const date = dateParts(w.date)
-  const families = [w.partnerOneFamily, w.partnerTwoFamily].filter(Boolean)
+  const families = familiesOf(w)
   const city = cityOf(w.venueAddress)
 
   return (
@@ -685,13 +807,17 @@ function Minimal(ctx: Ctx) {
             <Venue w={w} />
           </dd>
         </div>
-        {families.length > 0 && (
-          <div {...part('families')}>
+        {families.any && (
+          <div className={families.sides.length ? 'n-hosts' : undefined} {...part('families')}>
             <dt>Hosted by</dt>
             <dd>
-              {families.map((f) => (
-                <span key={f} className="inv-sub">{f}</span>
-              ))}
+              {families.sides.length ? (
+                <Parents sides={families.sides} className="n-parents" and="&" mark={false} />
+              ) : (
+                families.legacy.map((f) => (
+                  <span key={f} className="inv-sub">{f}</span>
+                ))
+              )}
             </dd>
           </div>
         )}
@@ -725,7 +851,7 @@ function Minimal(ctx: Ctx) {
 function Poster(ctx: Ctx) {
   const { w, part } = ctx
   const date = dateParts(w.date)
-  const families = [w.partnerOneFamily, w.partnerTwoFamily].filter(Boolean)
+  const families = familiesOf(w)
 
   return (
     <div className="p-layout">
@@ -759,13 +885,17 @@ function Poster(ctx: Ctx) {
             <Venue w={w} />
           </dd>
         </div>
-        {families.length > 0 && (
-          <div {...part('families')}>
+        {families.any && (
+          <div className={families.sides.length ? 'p-hosts' : undefined} {...part('families')}>
             <dt>Hosted by</dt>
             <dd>
-              {families.map((f) => (
-                <span key={f} className="inv-sub">{f}</span>
-              ))}
+              {families.sides.length ? (
+                <Parents sides={families.sides} className="p-parents" mark={false} />
+              ) : (
+                families.legacy.map((f) => (
+                  <span key={f} className="inv-sub">{f}</span>
+                ))
+              )}
             </dd>
           </div>
         )}

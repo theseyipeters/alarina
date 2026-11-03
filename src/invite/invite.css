@@ -282,12 +282,14 @@
 }
 
 /* Three roles: names, headings (and numerals, quotes), and body text. The Studio picks each one;
-   inviteAttrs() always sets all three. Fonts are never synthesised in bold or italic. */
-.inv[data-heading-font='cormorant'] { --inv-display: var(--ff-cormorant); }
-.inv[data-heading-font='noto-display'] { --inv-display: var(--ff-noto-display); }
-.inv[data-heading-font='eb-garamond'] { --inv-display: var(--ff-eb-garamond); }
-.inv[data-heading-font='spectral'] { --inv-display: var(--ff-spectral); }
-.inv[data-heading-font='unbounded'] { --inv-display: var(--ff-unbounded); }
+   inviteAttrs() always sets all three. Fonts are never synthesised in bold or italic.
+   --display-width is the heading font's average letter width in em, so text that must not
+   break (the parents' names) can size itself to fit. */
+.inv[data-heading-font='cormorant'] { --inv-display: var(--ff-cormorant); --display-width: 0.46; }
+.inv[data-heading-font='noto-display'] { --inv-display: var(--ff-noto-display); --display-width: 0.57; }
+.inv[data-heading-font='eb-garamond'] { --inv-display: var(--ff-eb-garamond); --display-width: 0.5; }
+.inv[data-heading-font='spectral'] { --inv-display: var(--ff-spectral); --display-width: 0.55; }
+.inv[data-heading-font='unbounded'] { --inv-display: var(--ff-unbounded); --display-width: 0.78; }
 
 .inv[data-names-font='instrument'] { --inv-names: var(--ff-instrument); }
 .inv[data-names-font='elorien'] { --inv-names: var(--ff-elorien); }
@@ -570,8 +572,9 @@ a.inv-map {
 
 .c-date-side {
   padding-block: var(--space-2);
-  font-size: var(--text-xs);
-  letter-spacing: 0.18em;
+  /* Shrinks a touch on phones so "WEDNESDAY" and "SEPTEMBER" fit whole. */
+  font-size: min(var(--text-xs), 3.3cqi);
+  letter-spacing: 0.12em;
   line-height: 1.6;
   text-transform: uppercase;
   border-block: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
@@ -589,6 +592,19 @@ a.inv-map {
   font-size: var(--text-lg);
   font-style: italic;
   color: var(--text-muted);
+}
+
+/* On the smallest phones, or with the wide Unbounded numerals, the three parts stack. */
+@container (max-width: 18rem) {
+  .c-date {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+}
+
+.inv[data-heading-font='unbounded'] .c-date {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
 }
 
 .c-block {
@@ -687,7 +703,9 @@ a.inv-map {
 
 .m-numerals {
   font-family: var(--inv-display);
-  font-size: clamp(2.75rem, 17cqi, 5.5rem);
+  /* 22.09.27 stays on one line, even in a wide heading font. */
+  font-size: min(clamp(2.75rem, 17cqi, 5.5rem), calc(84cqi / (8 * var(--display-width, 0.5))));
+  white-space: nowrap;
   line-height: 0.85;
   letter-spacing: -0.02em;
   color: var(--accent);
@@ -1103,7 +1121,8 @@ a.inv-map {
 
 .d-date {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  /* Weekday and time keep their width; the date between them wraps at a space if it must. */
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   width: 100%;
   max-width: 30rem;
@@ -1112,6 +1131,7 @@ a.inv-map {
 
 .d-date > span {
   padding: var(--space-3) var(--space-2);
+  white-space: nowrap;
   font-size: var(--text-xs);
   letter-spacing: 0.18em;
   line-height: 1.5;
@@ -1120,11 +1140,39 @@ a.inv-map {
 
 .d-date > .d-date-main {
   padding-inline: 4cqi;
+  white-space: normal;
+  overflow-wrap: break-word;
   font-family: var(--inv-display);
   font-size: clamp(1.25rem, 5.5cqi, 1.75rem);
   letter-spacing: 0.02em;
   text-transform: none;
   border-inline: 1px solid var(--accent);
+}
+
+/* Too narrow for weekday | date | time in a row (or set in wide Unbounded): three ruled
+   lines, so no word breaks. */
+@container (max-width: 30rem) {
+  .d-date {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .d-date > span {
+    padding-block: var(--space-2);
+  }
+
+  .d-date > .d-date-main {
+    border-inline: 0;
+    border-block: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+}
+
+.inv[data-heading-font='unbounded'] .d-date {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.inv[data-heading-font='unbounded'] .d-date > .d-date-main {
+  border-inline: 0;
+  border-block: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 .d-rsvp::before,
@@ -1387,9 +1435,414 @@ a.inv-map {
   color: var(--text-muted);
 }
 
+/* On a narrow card the words drop under the numerals, rather than breaking between them. */
+@container (max-width: 24rem) {
+  .p-date {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .p-date > .p-big:last-child {
+    justify-self: end;
+  }
+
+  .p-mid {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
 .p-grid > div {
   padding: var(--space-3) 0;
   border-top: 1px solid var(--text);
+}
+
+/* ── Parents: each side's father and mother (all layouts) ─────────── */
+
+/* The families block fills its row, so the parents container has a width to measure. */
+.inv-card [data-part='families'] {
+  justify-self: stretch;
+}
+
+/* A container of its own: sizes follow the block's width, and the sides stack when it's narrow. */
+.inv-parents {
+  container: parents / inline-size;
+  width: 100%;
+  /* Words wrap whole; a letter only moves to the next line if one word is wider than its column. */
+  overflow-wrap: break-word;
+}
+
+.inv-parents-grid {
+  /* The layout's size (--parents-size), unless the longest word (--parents-chars, set by the
+     card) needs it smaller to fit its column (--parents-col) without breaking. */
+  --parents-size: clamp(0.9375rem, 5.6cqi, 1.25rem);
+  --parents-col: 42cqi;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 5cqi;
+  font-size: min(
+    var(--parents-size),
+    calc(var(--parents-col) / (var(--parents-chars, 10) * var(--display-width, 0.46)))
+  );
+  line-height: 1.3;
+}
+
+.inv-parents-grid[data-mark='none'] {
+  --parents-col: 46cqi;
+
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* One side, or a name too long to share the width: one column. Beats the layouts' own --parents-col. */
+.inv-parents .inv-parents-grid[data-sides='1'],
+.inv-parents .inv-parents-grid[data-stack] {
+  --parents-col: 88cqi;
+
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.inv-parent {
+  font-family: var(--inv-display);
+}
+
+.inv-parents-side {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.15em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.inv-late {
+  font-family: var(--inv-display);
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.inv-parents-and {
+  font-family: var(--inv-display);
+  font-size: 0.85em;
+  font-style: italic;
+  line-height: 1.1;
+  color: var(--accent);
+}
+
+.inv-parents-of {
+  margin-top: 0.55em;
+  font-family: var(--inv-body);
+  font-size: max(0.625rem, 0.62em);
+  letter-spacing: 0.14em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* A hairline between the sides, with an ornament at its middle. */
+.inv-parents-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.inv-parents-mark:empty {
+  gap: 0;
+}
+
+.inv-parents-mark::before,
+.inv-parents-mark::after {
+  content: '';
+  flex: 1;
+  border-left: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.inv-parents-mark svg {
+  flex: none;
+  width: 0.75em;
+}
+
+/* Classic: names in the invitation serif, a bud on the rule. */
+.c-families,
+.g-families {
+  width: 100%;
+}
+
+.c-parents .inv-parents-grid,
+.g-parents .inv-parents-grid,
+.d-parents .inv-parents-grid {
+  max-width: 34rem;
+  margin-inline: auto;
+}
+
+.c-parents .inv-parent {
+  color: var(--text);
+}
+
+/* Garden: the "&" in the names' script, and soft italic captions. Its serif runs small. */
+.g-parents .inv-parents-grid {
+  --parents-size: clamp(1rem, 6cqi, 1.375rem);
+}
+
+.g-parents .inv-parents-and {
+  font-family: var(--inv-names);
+  font-size: 1.35em;
+  font-style: normal;
+  line-height: 1;
+}
+
+.g-parents .inv-parents-of {
+  font-family: var(--inv-display);
+  font-size: 0.8em;
+  font-style: italic;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.g-parents .inv-parents-mark svg {
+  width: 0.9em;
+}
+
+/* Deco: whose parents on top, ruled off in the accent, like a plaque. */
+.d-parents {
+  margin-top: var(--space-2);
+}
+
+.d-parents .inv-parents-of {
+  order: -1;
+  margin: 0 auto 0.5em;
+  padding-bottom: 0.45em;
+  color: var(--accent);
+  border-bottom: 1px solid var(--accent);
+}
+
+.d-parents .inv-parent {
+  letter-spacing: 0.02em;
+}
+
+.d-parents .inv-parents-mark::before,
+.d-parents .inv-parents-mark::after {
+  border-left-color: var(--accent);
+}
+
+/* Adire: each side on its own dashed tile, like the date stamp. */
+.a-parents .inv-parents-grid {
+  --parents-col: 39cqi;
+
+  gap: 3cqi;
+}
+
+.a-parents .inv-parents-side {
+  justify-content: flex-start;
+  padding: 5cqi 4cqi;
+  border: 1px dashed var(--accent);
+  border-radius: 4cqi;
+}
+
+.a-parents .inv-parents-of {
+  order: -1;
+  margin: 0 0 0.5em;
+  color: var(--accent);
+}
+
+/* Modern: left-aligned columns under a short accent bar. */
+.m-hosts {
+  flex: 1 1 100%;
+}
+
+.m-parents .inv-parents-grid {
+  --parents-size: clamp(0.9375rem, 5cqi, 1.125rem);
+}
+
+.m-parents .inv-parents-side {
+  justify-content: flex-start;
+  padding-top: var(--space-3);
+  border-top: 2px solid var(--accent);
+}
+
+.m-parents .inv-parents-of {
+  order: -1;
+  margin: 0 0 0.4em;
+}
+
+.m-parents .inv-parents-and {
+  font-family: inherit;
+  font-style: normal;
+}
+
+/* Editorial: a credit line across the page, the rule as a column divider. */
+.e-hosts {
+  grid-column: 1 / -1;
+}
+
+.e-parents .inv-parents-grid {
+  --parents-size: clamp(1rem, 6cqi, 1.375rem);
+
+  font-family: var(--inv-display);
+}
+
+.e-parents .inv-parents-of {
+  font-family: var(--inv-display);
+  font-size: 0.8em;
+  font-style: italic;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.e-parents .inv-parents-of::before {
+  content: '— ';
+}
+
+.e-parents .inv-parents-mark::before,
+.e-parents .inv-parents-mark::after {
+  border-left-color: var(--border);
+}
+
+/* Minimal and Poster: plain columns, whose parents first. */
+.n-hosts,
+.p-hosts {
+  grid-column: 1 / -1;
+}
+
+.n-parents .inv-parents-grid,
+.p-parents .inv-parents-grid {
+  --parents-size: clamp(0.9375rem, 4.4cqi, 1.0625rem);
+}
+
+/* Minimal and Poster set names in the body font, like the rest of their rows. */
+.p-parents .inv-parent,
+.n-parents .inv-late,
+.p-parents .inv-late {
+  font-family: inherit;
+}
+
+.n-parents .inv-parents-grid,
+.p-parents .inv-parents-grid {
+  --display-width: 0.56;
+}
+
+.p-parents .inv-parents-grid {
+  --parents-col: 40cqi;
+}
+
+.n-parents .inv-parents-side,
+.p-parents .inv-parents-side {
+  justify-content: flex-start;
+}
+
+.n-parents .inv-parents-of,
+.p-parents .inv-parents-of {
+  order: -1;
+  margin: 0 0 0.3em;
+}
+
+.n-parents .inv-parent {
+  font-family: inherit;
+}
+
+.n-parents .inv-parents-of {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.n-parents .inv-parents-and,
+.p-parents .inv-parents-and {
+  font-family: inherit;
+  font-style: normal;
+  color: var(--text-muted);
+}
+
+.p-parents .inv-parents-side {
+  padding-left: var(--space-3);
+  border-left: 3px solid var(--primary);
+}
+
+/* Too narrow for two columns: the sides stack and the rule lies flat between them. */
+@container parents (max-width: 15rem) {
+  .inv-parents .inv-parents-grid[data-sides] {
+    --parents-col: 88cqi;
+
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  .inv-parents-mark {
+    flex-direction: row;
+    width: 40%;
+    justify-self: center;
+  }
+
+  .inv-parents-mark::before,
+  .inv-parents-mark::after {
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+
+  .inv-parents-mark svg {
+    transform: rotate(90deg);
+  }
+}
+
+/* Unbounded is too wide for two families side by side on any phone. */
+@container parents (max-width: 30rem) {
+  .inv[data-heading-font='unbounded'] .inv-parents-grid[data-sides] {
+    --parents-col: 88cqi;
+
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  .inv[data-heading-font='unbounded'] .inv-parents-mark {
+    display: none;
+  }
+}
+
+/* Deco's serif runs wide, as do Noto Serif Display and Spectral: on a phone each family gets
+   the full width, one above the other. */
+@container parents (max-width: 19rem) {
+  .d-parents .inv-parents-grid[data-sides],
+  .inv[data-heading-font='noto-display'] .inv-parents-grid[data-sides],
+  .inv[data-heading-font='spectral'] .inv-parents-grid[data-sides] {
+    --parents-col: 88cqi;
+
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  .d-parents .inv-parents-mark,
+  .inv[data-heading-font='noto-display'] .inv-parents-mark,
+  .inv[data-heading-font='spectral'] .inv-parents-mark {
+    flex-direction: row;
+    width: 40%;
+    justify-self: center;
+  }
+
+  .d-parents .inv-parents-mark::before,
+  .d-parents .inv-parents-mark::after,
+  .inv[data-heading-font='noto-display'] .inv-parents-mark::before,
+  .inv[data-heading-font='noto-display'] .inv-parents-mark::after,
+  .inv[data-heading-font='spectral'] .inv-parents-mark::before,
+  .inv[data-heading-font='spectral'] .inv-parents-mark::after {
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+
+  .inv[data-heading-font='noto-display'] .inv-parents-mark svg,
+  .inv[data-heading-font='spectral'] .inv-parents-mark svg {
+    transform: rotate(90deg);
+  }
+}
+
+/* The left-aligned layouts read just as well stacked, so they stack a little sooner. */
+@container parents (max-width: 17rem) {
+  .m-parents .inv-parents-grid[data-sides],
+  .n-parents .inv-parents-grid[data-sides],
+  .p-parents .inv-parents-grid[data-sides] {
+    --parents-col: 88cqi;
+
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
 }
 
 /* ── RSVP ───────────────────────────────────────────────────────────── */

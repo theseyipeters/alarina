@@ -20,12 +20,20 @@ export type WeddingEvent = {
   venueAddress: string | null
 }
 
+export type ParentField = 'partnerOneFather' | 'partnerOneMother' | 'partnerTwoFather' | 'partnerTwoMother'
+
 /** Answers collected by the guided setup. Dates are YYYY-MM-DD and times HH:mm, Nigerian local time. */
 export type WeddingFields = {
   partnerOneName: string | null
   partnerTwoName: string | null
   partnerOneFamily: string | null
   partnerTwoFamily: string | null
+  partnerOneFather: string | null
+  partnerOneMother: string | null
+  partnerTwoFather: string | null
+  partnerTwoMother: string | null
+  /** Which of the four parents have passed away. */
+  lateParents: ParentField[]
   date: string | null
   startTime: string | null
   venueName: string | null

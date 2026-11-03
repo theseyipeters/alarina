@@ -7,7 +7,8 @@ import Field from '../components/Field.tsx'
 import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { formatDate, formatTime, todayInLagos } from '../lib/format.ts'
-import type { Wedding, WeddingEvent, WeddingFields } from '../lib/types.ts'
+import { PARENT_SIDES, parentSides, parentsText } from '../invite/parents.ts'
+import type { ParentField, Wedding, WeddingEvent, WeddingFields } from '../lib/types.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import { useTitle } from '../lib/useTitle.ts'
 import { useWedding } from '../lib/useWedding.ts'
@@ -24,6 +25,11 @@ const EMPTY: WeddingFields = {
   partnerTwoName: null,
   partnerOneFamily: null,
   partnerTwoFamily: null,
+  partnerOneFather: null,
+  partnerOneMother: null,
+  partnerTwoFather: null,
+  partnerTwoMother: null,
+  lateParents: [],
   date: null,
   startTime: null,
   venueName: null,
@@ -92,6 +98,15 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
     change({ [key]: saved })
   }
 
+  // Parents replace the older one-line family names, so those are cleared once a parent is named.
+  const setParent = (field: ParentField, name: string) => {
+    set(field, name)
+    if (name.trim()) for (const key of ['partnerOneFamily', 'partnerTwoFamily'] as const) if (values[key]) set(key, null)
+  }
+
+  const setLate = (field: ParentField, late: boolean) =>
+    set('lateParents', late ? [...values.lateParents, field] : values.lateParents.filter((f) => f !== field))
+
   const go = (to: StepId) => navigate(`/app/setup/${to}`)
 
   function next(e: FormEvent) {
@@ -121,18 +136,38 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
         </>
       )
       break
-    case 'families':
+    case 'families': {
+      const legacy = [values.partnerOneFamily, values.partnerTwoFamily].filter(Boolean).join(' & ')
       body = (
         <>
-          <Field label="First partner’s family" optional>
-            {(p) => <input {...p} type="text" maxLength={80} placeholder="The Adébáyọ̀ family" value={text('partnerOneFamily')} onChange={(e) => set('partnerOneFamily', e.target.value)} />}
-          </Field>
-          <Field label="Second partner’s family" optional>
-            {(p) => <input {...p} type="text" maxLength={80} placeholder="The Okafor family" value={text('partnerTwoFamily')} onChange={(e) => set('partnerTwoFamily', e.target.value)} />}
-          </Field>
+          <p className="muted">Write each name as it should appear, with any title: Chief, Dr, Alhaji, Mrs. Leave out anyone you’d rather not name.</p>
+          {legacy && !parentSides(values).length && (
+            <p className="alert alert--info">Your invitation now says “{legacy}”. Parents you add here take its place.</p>
+          )}
+          {PARENT_SIDES.map((side, i) => {
+            const partner = values[side.partner]?.trim() || (i === 0 ? 'First partner' : 'Second partner')
+            return (
+              <fieldset key={side.partner} className="parent-group">
+                <legend>{partner}’s parents</legend>
+                {(['father', 'mother'] as const).map((role) => (
+                  <ParentInput
+                    key={role}
+                    label={role === 'father' ? 'Father' : 'Mother'}
+                    of={partner}
+                    placeholder={PARENT_PLACEHOLDERS[i]![role]}
+                    value={text(side[role])}
+                    late={values.lateParents.includes(side[role])}
+                    onName={(name) => setParent(side[role], name)}
+                    onLate={(late) => setLate(side[role], late)}
+                  />
+                ))}
+              </fieldset>
+            )
+          })}
         </>
       )
       break
+    }
     case 'date':
       body = (
         <Field label="Wedding date" error={values.date && values.date < today ? 'This date has already passed.' : null}>
@@ -338,7 +373,11 @@ function Review({ values, flush, onEdit }: ReviewProps) {
 
   const rows: { label: string; value: ReactNode; step: StepId }[] = [
     { label: 'Names', value: [values.partnerOneName, values.partnerTwoName].filter(Boolean).join(' & '), step: 'names' },
-    { label: 'Families', value: [values.partnerOneFamily, values.partnerTwoFamily].filter(Boolean).join(' and '), step: 'families' },
+    {
+      label: 'Parents',
+      value: parentsText(values) || [values.partnerOneFamily, values.partnerTwoFamily].filter(Boolean).join(' and '),
+      step: 'families',
+    },
     { label: 'Date', value: formatDate(values.date), step: 'date' },
     { label: 'Start time', value: formatTime(values.startTime), step: 'time' },
     { label: 'Venue', value: [values.venueName, values.venueAddress].filter(Boolean).join(', '), step: 'venue' },
@@ -414,5 +453,37 @@ function Review({ values, flush, onEdit }: ReviewProps) {
         </button>
       </div>
     </>
+  )
+}
+
+const PARENT_PLACEHOLDERS = [
+  { father: 'Chief Adébáyọ̀ Ọláolúwa', mother: 'Mrs Fúnmiláyọ̀ Ọláolúwa' },
+  { father: 'Mr Chukwuemeka Okafor', mother: 'Mrs Ngozi Okafor' },
+]
+
+type ParentInputProps = {
+  label: string
+  of: string
+  placeholder: string
+  value: string
+  late: boolean
+  onName: (name: string) => void
+  onLate: (late: boolean) => void
+}
+
+/** A parent's name, with a box to mark that they have passed away. */
+function ParentInput({ label, of, placeholder, value, late, onName, onLate }: ParentInputProps) {
+  return (
+    <Field label={label} optional>
+      {(p) => (
+        <div className="parent-input">
+          <input {...p} type="text" autoComplete="off" maxLength={80} placeholder={placeholder} value={value} onChange={(e) => onName(e.target.value)} />
+          <label className="check">
+            <input type="checkbox" checked={late} onChange={(e) => onLate(e.target.checked)} />
+            Late<span className="visually-hidden"> ({label.toLowerCase()} of {of})</span>
+          </label>
+        </div>
+      )}
+    </Field>
   )
 }
