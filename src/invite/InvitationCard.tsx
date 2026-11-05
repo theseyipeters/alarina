@@ -15,7 +15,7 @@ export type InvitationPart =
 	| "dress"
 	| "message"
 	| "events"
-	| "strict";
+	| "foot";
 
 type Props = {
 	invitation: InvitationContent;
@@ -383,15 +383,34 @@ function Hashtag({
 	);
 }
 
-/** The card's last line, on every layout, unless the couple turned it off. */
-function StrictlyByInvitation({ w, part, className }: Ctx & { className: string }) {
-	if (!w.strictlyByInvitation) return null;
+/**
+ * The foot of the card, on every layout: the numbers guests can call, then "Strictly by
+ * Invitation". The couple can leave out either.
+ */
+function Foot({ w, part, layout }: Ctx & { layout: string }) {
+	const phones = [w.contactPhoneOne, w.contactPhoneTwo].filter((p): p is string => Boolean(p?.trim()));
+	if (!phones.length && !w.strictlyByInvitation) return null;
 	return (
-		<p
-			className={`inv-strict ${className}`}
-			{...part("strict")}>
-			Strictly by Invitation
-		</p>
+		<div
+			className={`inv-foot ${layout}-foot`}
+			{...part("foot")}>
+			{phones.length > 0 && (
+				<div className="inv-phones">
+					<span className="inv-phones-label">R.S.V.P.</span>
+					<span className="inv-phones-numbers">
+						{phones.map((phone, i) => (
+							<a
+								key={i}
+								className="inv-phone"
+								href={`tel:${phone.replace(/[^\d+]/g, "")}`}>
+								{phone}
+							</a>
+						))}
+					</span>
+				</div>
+			)}
+			{w.strictlyByInvitation && <p className={`inv-strict ${layout}-strict`}>Strictly by Invitation</p>}
+		</div>
 	);
 }
 
@@ -540,9 +559,9 @@ function Classic(ctx: Ctx) {
 				label="Share the day with"
 			/>
 
-			<StrictlyByInvitation
+			<Foot
 				{...ctx}
-				className="c-strict"
+				layout="c"
 			/>
 		</div>
 	);
@@ -644,9 +663,9 @@ function Modern(ctx: Ctx) {
 				title="Programme"
 			/>
 
-			<StrictlyByInvitation
+			<Foot
 				{...ctx}
-				className="m-strict"
+				layout="m"
 			/>
 		</div>
 	);
@@ -743,9 +762,9 @@ function Editorial(ctx: Ctx) {
 				title="Also in this issue"
 			/>
 
-			<StrictlyByInvitation
+			<Foot
 				{...ctx}
-				className="e-strict"
+				layout="e"
 			/>
 		</div>
 	);
@@ -902,9 +921,9 @@ function Garden(ctx: Ctx) {
 				label="Share your photos with"
 			/>
 
-			<StrictlyByInvitation
+			<Foot
 				{...ctx}
-				className="g-strict"
+				layout="g"
 			/>
 		</div>
 	);
@@ -1042,9 +1061,9 @@ function Deco(ctx: Ctx) {
 				label="Share with"
 			/>
 
-			<StrictlyByInvitation
+			<Foot
 				{...ctx}
-				className="d-strict"
+				layout="d"
 			/>
 		</div>
 	);
@@ -1135,9 +1154,9 @@ function Adire(ctx: Ctx) {
 					title="The celebrations"
 				/>
 
-				<StrictlyByInvitation
+				<Foot
 					{...ctx}
-					className="a-strict"
+					layout="a"
 				/>
 			</div>
 			<span
@@ -1247,9 +1266,9 @@ function Minimal(ctx: Ctx) {
 				title="Also celebrating"
 			/>
 
-			<StrictlyByInvitation
+			<Foot
 				{...ctx}
-				className="n-strict"
+				layout="n"
 			/>
 		</div>
 	);
@@ -1347,9 +1366,9 @@ function Poster(ctx: Ctx) {
 				title="Programme"
 			/>
 
-			<StrictlyByInvitation
+			<Foot
 				{...ctx}
-				className="p-strict"
+				layout="p"
 			/>
 		</div>
 	);

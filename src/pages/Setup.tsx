@@ -46,6 +46,8 @@ const EMPTY: WeddingFields = {
   dressNote: null,
   message: null,
   rsvpDeadline: null,
+  contactPhoneOne: null,
+  contactPhoneTwo: null,
   strictlyByInvitation: true,
   events: [],
 }
@@ -325,6 +327,13 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
           >
             {(p) => <DatePicker {...p} clearable min={today} max={values.date ?? undefined} value={text('rsvpDeadline')} onChange={(date) => set('rsvpDeadline', date || null)} />}
           </Field>
+          <PhoneField
+            label="Phone number"
+            hint="For guests to call about directions or anything else. Anyone with your invitation link can see it."
+            value={text('contactPhoneOne')}
+            onChange={(phone) => set('contactPhoneOne', phone)}
+          />
+          <PhoneField label="Second phone number" value={text('contactPhoneTwo')} onChange={(phone) => set('contactPhoneTwo', phone)} />
           <label className="check">
             <input type="checkbox" checked={values.strictlyByInvitation} onChange={(e) => set('strictlyByInvitation', e.target.checked)} />
             Show “Strictly by Invitation” on the invitation
@@ -389,7 +398,7 @@ const QUESTIONS: Record<StepId, string> = {
   reception: 'And the reception?',
   dress: 'Is there a dress code?',
   message: 'Anything you’d like to say to your guests?',
-  rsvp: 'When should guests reply by?',
+  rsvp: 'When and how should guests reply?',
   events: 'Any celebrations on other days?',
   finish: 'Review your invitation',
 }
@@ -509,6 +518,7 @@ function Review({ values, flush, onEdit }: ReviewProps) {
     { label: 'Dress code', value: values.dressNote, step: 'dress' },
     { label: 'Message', value: values.message, step: 'message' },
     { label: 'RSVP by', value: formatDate(values.rsvpDeadline), step: 'rsvp' },
+    { label: 'Phone numbers', value: [values.contactPhoneOne, values.contactPhoneTwo].filter(Boolean).join(' · '), step: 'rsvp' },
     { label: 'Strictly by Invitation', value: values.strictlyByInvitation ? 'Shown on the invitation' : 'Not shown', step: 'rsvp' },
     {
       label: 'Other events',
@@ -615,11 +625,22 @@ function ParentInput({ label, of, placeholder, value, late, onName, onLate }: Pa
 }
 
 /** Bride or groom, for the invitation's captions ("Parents of the Bride"). */
+function PhoneField({ label, hint, value, onChange }: { label: string; hint?: string; value: string; onChange: (phone: string) => void }) {
+  const digits = value.replace(/\D/g, '').length
+  return (
+    <Field label={label} optional hint={hint} error={digits > 0 && digits < PHONE_MIN_DIGITS ? 'Enter a full phone number.' : null}>
+      {(p) => <input {...p} type="tel" inputMode="tel" autoComplete="off" maxLength={PHONE_MAX} placeholder="0800 000 0000" value={value} onChange={(e) => onChange(e.target.value.replace(/[^0-9+()\s-]/g, ''))} />}
+    </Field>
+  )
+}
+
 function RoleChoice({ name, partner, value, onChange }: { name: string; partner: string; value: Role | null; onChange: (role: Role) => void }) {
   return <Choice legend={`${partner} is the`} name={name} options={ROLE_LABELS} value={value} onChange={onChange} inline />
 }
 
 const EVENT_NAME_MAX = 80
+const PHONE_MAX = 20
+const PHONE_MIN_DIGITS = 7
 
 const RECEPTION_PLACES = { same: 'At the ceremony venue', elsewhere: 'Somewhere else' }
 

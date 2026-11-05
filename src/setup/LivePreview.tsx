@@ -17,7 +17,7 @@ const STEP_PART: Partial<Record<StepId, InvitationPart>> = {
   reception: 'where',
   dress: 'dress',
   message: 'message',
-  rsvp: 'strict',
+  rsvp: 'foot',
   events: 'events',
 }
 
@@ -62,6 +62,7 @@ export default function LivePreview({ values, design, step }: Props) {
     receptionVenueName: values.receptionSeparate
       ? filled(values.receptionVenueName, 'Your reception venue', 'reception')
       : values.receptionVenueName,
+    contactPhoneOne: values.contactPhoneTwo ? values.contactPhoneOne : filled(values.contactPhoneOne, 'Your phone number', 'rsvp'),
     dressNote: filled(values.dressNote, 'Your dress code', 'dress'),
     message: filled(values.message, 'A few words for your guests', 'message'),
     events:

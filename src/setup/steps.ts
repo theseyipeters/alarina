@@ -10,7 +10,7 @@ export const STEPS: { id: StepId; label: string }[] = [
   { id: 'reception', label: 'Reception' },
   { id: 'dress', label: 'Dress code' },
   { id: 'message', label: 'Message' },
-  { id: 'rsvp', label: 'RSVP deadline' },
+  { id: 'rsvp', label: 'RSVP' },
   { id: 'events', label: 'Other days' },
   { id: 'finish', label: 'Review' },
 ]
@@ -30,6 +30,8 @@ export const REQUIRED: { field: keyof WeddingFields; label: string; step: StepId
 export const FIELD_STEP: Partial<Record<string, StepId>> = {
   ...Object.fromEntries(REQUIRED.map((r) => [r.field, r.step])),
   rsvpDeadline: 'rsvp',
+  contactPhoneOne: 'rsvp',
+  contactPhoneTwo: 'rsvp',
   receptionVenueName: 'reception',
   ceremonyName: 'ceremony',
   receptionName: 'reception',
@@ -44,7 +46,7 @@ export const STEP_FIELDS: Record<StepId, (keyof WeddingFields)[]> = {
   reception: ['receptionSeparate', 'receptionName', 'receptionVenueName', 'receptionVenueAddress', 'receptionTime'],
   dress: ['dressNote'],
   message: ['message'],
-  rsvp: ['rsvpDeadline', 'strictlyByInvitation'],
+  rsvp: ['rsvpDeadline', 'contactPhoneOne', 'contactPhoneTwo', 'strictlyByInvitation'],
   events: ['events'],
   finish: [],
 }

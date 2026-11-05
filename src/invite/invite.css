@@ -1935,7 +1935,76 @@ a.inv-map {
   color: var(--text-muted);
 }
 
-/* ── Strictly by Invitation (all layouts): the card's last line ─────── */
+/* ── Foot of the card (all layouts): numbers to call, Strictly by Invitation ── */
+
+.inv-foot {
+  display: grid;
+  gap: var(--space-6);
+  width: 100%;
+}
+
+.inv-phones {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.inv-phones-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.inv-phones-numbers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-8);
+}
+
+/* Spaced like a printed number, and never split across two lines. */
+.inv-phone {
+  font-size: var(--text-lg);
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  white-space: nowrap;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.inv-phone:hover {
+  text-decoration: underline;
+}
+
+/* Centred layouts: the label between two short rules. */
+.c-foot .inv-phones-label,
+.g-foot .inv-phones-label,
+.d-foot .inv-phones-label,
+.a-foot .inv-phones-label {
+  justify-content: center;
+}
+
+.c-foot .inv-phones-label::before,
+.c-foot .inv-phones-label::after,
+.g-foot .inv-phones-label::before,
+.g-foot .inv-phones-label::after,
+.d-foot .inv-phones-label::before,
+.d-foot .inv-phones-label::after,
+.a-foot .inv-phones-label::before,
+.a-foot .inv-phones-label::after {
+  content: '';
+  width: 2.5rem;
+  border-top: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.c-foot .inv-phones-numbers,
+.g-foot .inv-phones-numbers,
+.d-foot .inv-phones-numbers,
+.a-foot .inv-phones-numbers {
+  justify-content: center;
+}
 
 .inv-strict {
   margin: 0;
@@ -1965,14 +2034,15 @@ a.inv-map {
 }
 
 /* Modern, Editorial and Poster: closed off with a rule. */
-.m-strict,
-.e-strict,
-.p-strict {
+.m-foot,
+.e-foot,
+.p-foot {
   padding-top: var(--space-3);
   border-top: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
-.p-strict {
+.p-foot {
+  width: auto;
   margin-inline: 4cqi;
 }
 

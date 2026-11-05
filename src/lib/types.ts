@@ -56,6 +56,9 @@ export type WeddingFields = {
   dressNote: string | null
   message: string | null
   rsvpDeadline: string | null
+  /** Numbers guests can call, as the couple typed them. */
+  contactPhoneOne: string | null
+  contactPhoneTwo: string | null
   /** Whether the card ends with "Strictly by Invitation". */
   strictlyByInvitation: boolean
   events: WeddingEvent[]
