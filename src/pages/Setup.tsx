@@ -189,7 +189,7 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
           <Field label="Second partner’s name">
             {(p) => <input {...p} type="text" autoComplete="off" maxLength={60} placeholder="Ẹniọlá" value={text('partnerTwoName')} onChange={(e) => set('partnerTwoName', e.target.value)} />}
           </Field>
-          <Field label="Wedding hashtag" optional hint="Guests can tag their photos with it. Letters and numbers, no spaces.">
+          <Field label="Wedding hashtag" optional hint="Guests can tag their photos with it. Letters, numbers and apostrophes, no spaces.">
             {(p) => (
               <div className="prefix-field">
                 <span aria-hidden="true">#</span>
@@ -202,8 +202,7 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
                   maxLength={40}
                   placeholder="OlaAndEni2027"
                   value={text('hashtag')}
-                  // A tag can't hold spaces or punctuation, so they never get in.
-                  onChange={(e) => set('hashtag', e.target.value.replace(/[^\p{L}\p{M}\p{N}_]/gu, ''))}
+                  onChange={(e) => set('hashtag', cleanHashtag(e.target.value))}
                 />
               </div>
             )}
@@ -637,6 +636,9 @@ function PhoneField({ label, hint, value, onChange }: { label: string; hint?: st
 function RoleChoice({ name, partner, value, onChange }: { name: string; partner: string; value: Role | null; onChange: (role: Role) => void }) {
   return <Choice legend={`${partner} is the`} name={name} options={ROLE_LABELS} value={value} onChange={onChange} inline />
 }
+
+/** Letters, numbers and apostrophes only (phone keyboards type curly ones), and never an apostrophe first. */
+const cleanHashtag = (value: string) => value.replace(/[^\p{L}\p{M}\p{N}'’]/gu, '').replace(/^['’]+/, '')
 
 const EVENT_NAME_MAX = 80
 const PHONE_MAX = 20
