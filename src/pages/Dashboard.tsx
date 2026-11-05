@@ -317,19 +317,20 @@ const whatsapp = (link: string) =>
   `https://wa.me/?text=${encodeURIComponent(`You're invited to our wedding. Please reply here: ${link}`)}`
 
 const SIDE_CLASSES = ['side-a', 'side-b']
+const BAR_LABELS = { attending: 'Attending', declined: 'Declined', rejected: 'Rejected' }
 
 function ReplyBoard({ data }: { data: Responses }) {
   const { summary, partners, rsvps } = data
   const sideClass = (userId: string | null) =>
     userId ? (SIDE_CLASSES[partners.findIndex((p) => p.userId === userId)] ?? 'side-none') : 'side-none'
 
-  const bar = (kind: 'attending' | 'declined') => {
+  const bar = (kind: 'attending' | 'declined' | 'rejected') => {
     const parts = summary.bySide.filter((s) => s[kind] > 0)
     const description = parts.map((s) => `${s[kind]} from ${sideLabel(partners, s.userId).toLowerCase()}`).join(', ')
     return (
       <div className="reply-row">
         <div className="reply-row-head">
-          <span>{kind === 'attending' ? 'Attending' : 'Declined'}</span>
+          <span>{BAR_LABELS[kind]}</span>
           <span className="reply-count">{summary[kind]}</span>
         </div>
         <div
@@ -367,6 +368,7 @@ function ReplyBoard({ data }: { data: Responses }) {
         <>
           {bar('attending')}
           {bar('declined')}
+          {summary.rejected > 0 && bar('rejected')}
           <ul className="legend">
             {[...partners.map((p) => p.userId), null].map((id) => (
               <li key={id ?? 'none'}>
@@ -378,22 +380,25 @@ function ReplyBoard({ data }: { data: Responses }) {
 
           <h3 className="feed-title">Latest</h3>
           <ul className="feed">
-            {rsvps.slice(0, 5).map((r) => (
-              <li key={r.id}>
-                <span className={`avatar ${sideClass(r.sideUserId)}`} aria-hidden="true">{initials(r.name)}</span>
-                <span className="feed-text">
-                  {r.name} {r.attending ? 'is coming' : 'can’t make it'}
-                  <span className="hint">
-                    {sideLabel(partners, r.sideUserId)} · {timeAgo(r.createdAt)}
+            {rsvps.slice(0, 5).map((r) => {
+              const coming = r.attending && !r.rejected
+              return (
+                <li key={r.id}>
+                  <span className={`avatar ${sideClass(r.sideUserId)}`} aria-hidden="true">{initials(r.name)}</span>
+                  <span className="feed-text">
+                    {r.name} {r.rejected ? 'was rejected' : coming ? 'is coming' : 'can’t make it'}
+                    <span className="hint">
+                      {sideLabel(partners, r.sideUserId)} · {timeAgo(r.createdAt)}
+                    </span>
                   </span>
-                </span>
-                <span className={r.attending ? 'feed-icon feed-icon--yes' : 'feed-icon'} aria-hidden="true">
-                  <svg viewBox="0 0 24 24">
-                    <path d={r.attending ? 'M5 12.5l4.5 4.5L19 7.5' : 'M7 7l10 10M17 7L7 17'} />
-                  </svg>
-                </span>
-              </li>
-            ))}
+                  <span className={coming ? 'feed-icon feed-icon--yes' : 'feed-icon'} aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <path d={coming ? 'M5 12.5l4.5 4.5L19 7.5' : 'M7 7l10 10M17 7L7 17'} />
+                    </svg>
+                  </span>
+                </li>
+              )
+            })}
           </ul>
         </>
       )}

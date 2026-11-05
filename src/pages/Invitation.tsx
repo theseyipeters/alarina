@@ -245,11 +245,11 @@ function RsvpPanel({ invitation, names, from, sectionRef }: RsvpPanelProps) {
           <path d={rsvp.attending ? 'M15 27l7 7 15-16' : 'M18 18l16 16M34 18L18 34'} />
         </svg>
         <h2 id="rsvp-heading">
-          {rsvp.attending ? `See you on ${formatDate(invitation.date)}` : `Thank you, ${firstName}`}
+          {rsvp.attending ? 'We’ve received your reply' : `Thank you, ${firstName}`}
         </h2>
         <p>
           {rsvp.attending
-            ? `${names} will be so glad you’re coming, ${firstName}.`
+            ? `Thank you, ${firstName}. ${names} will reach out if there’s anything you need to know.`
             : `${names} will miss you. Thanks for letting them know.`}
         </p>
         {rsvp.attending && invitation.date && daysUntil(invitation.date) >= 0 && (

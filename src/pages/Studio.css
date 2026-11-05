@@ -405,12 +405,6 @@ fieldset.studio-grid,
   color: var(--text-muted);
 }
 
-.badge--warn {
-  color: var(--danger);
-  background: var(--danger-bg);
-  border-color: transparent;
-}
-
 /* ── Type ───────────────────────────────────────────────────────────── */
 
 .studio-pairings {

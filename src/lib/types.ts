@@ -98,7 +98,15 @@ export type AsoEbiItem = {
   price: number
 }
 
-export type Rsvp = { name: string; email: string; phone: string; attending: boolean; updatedAt: string }
+export type Rsvp = {
+  name: string
+  email: string
+  phone: string
+  attending: boolean
+  rejected: boolean
+  rejectionNote: string | null
+  updatedAt: string
+}
 
 export type Wedding = InvitationContent & {
   id: string
@@ -116,6 +124,8 @@ export type Response = {
   email: string
   phone: string
   attending: boolean
+  rejected: boolean
+  rejectionNote: string | null
   sideUserId: string | null
   sideSource: 'link' | 'couple' | null
   editLinkActive: boolean
@@ -123,7 +133,7 @@ export type Response = {
   updatedAt: string
 }
 
-export type Counts = { total: number; attending: number; declined: number }
+export type Counts = { total: number; attending: number; declined: number; rejected: number }
 
 export type Responses = {
   partners: { userId: string; name: string }[]

@@ -492,6 +492,17 @@
   margin-top: var(--space-1);
 }
 
+.responses-actions {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  white-space: nowrap;
+}
+
+.responses-actions .hint {
+  margin-top: 0;
+}
+
 /* On phones each reply becomes a card, with its labels shown beside the values. */
 @media (max-width: 47.99rem) {
   .responses thead {

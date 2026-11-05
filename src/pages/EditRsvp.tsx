@@ -61,6 +61,26 @@ export default function EditRsvp() {
     }
   }
 
+  if (rsvp.rejected) {
+    return (
+      <div className="inv" {...inviteAttrs(invitation)}>
+        <main id="main" className="inv-column">
+          <section className="inv-panel" aria-labelledby="edit-heading">
+            <p className="inv-eyebrow">Your RSVP for</p>
+            <h1 id="edit-heading">{names}</h1>
+            <p>Thank you for replying. Unfortunately {names} are unable to confirm a place for you at their wedding.</p>
+            {rsvp.rejectionNote && (
+              <>
+                <p className="hint">A note from the couple</p>
+                <p>{rsvp.rejectionNote}</p>
+              </>
+            )}
+          </section>
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="inv" {...inviteAttrs(invitation)}>
       <main id="main" className="inv-column">
