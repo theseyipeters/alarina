@@ -14,7 +14,8 @@ export type InvitationPart =
 	| "where"
 	| "dress"
 	| "message"
-	| "events";
+	| "events"
+	| "foot";
 
 type Props = {
 	invitation: InvitationContent;
@@ -166,8 +167,7 @@ const initials = (w: InvitationContent) =>
 
 /**
  * Where the day happens: the ceremony venue, and the reception's when it's somewhere else, each
- * with its label, time, address and a Maps link. A single venue reads as before, labelled only
- * when the couple said what kind of ceremony it is.
+ * with the couple's name for the event, its time, address and a Maps link.
  */
 function Venues({ w }: { w: InvitationContent }) {
 	const stops = venueStops(w);
@@ -176,9 +176,10 @@ function Venues({ w }: { w: InvitationContent }) {
 		<div className="inv-venues" data-stops={stops.length}>
 			{stops.map((stop) => (
 				<div key={stop.key} className="inv-stop">
-					{stop.label && (
+					{(stop.label || stop.time) && (
 						<span className="inv-stop-label">
-							{[stop.label, stop.time && formatTime(stop.time)].filter(Boolean).join(" · ")}
+							{stop.label && <span>{stop.label}</span>}
+							{stop.time && <span>{formatTime(stop.time)}</span>}
 						</span>
 					)}
 					<span className="inv-venue">{stop.name}</span>
@@ -382,6 +383,37 @@ function Hashtag({
 	);
 }
 
+/**
+ * The foot of the card, on every layout: the numbers guests can call, then "Strictly by
+ * Invitation". The couple can leave out either.
+ */
+function Foot({ w, part, layout }: Ctx & { layout: string }) {
+	const phones = [w.contactPhoneOne, w.contactPhoneTwo].filter((p): p is string => Boolean(p?.trim()));
+	if (!phones.length && !w.strictlyByInvitation) return null;
+	return (
+		<div
+			className={`inv-foot ${layout}-foot`}
+			{...part("foot")}>
+			{phones.length > 0 && (
+				<div className="inv-phones">
+					<span className="inv-phones-label">R.S.V.P.</span>
+					<span className="inv-phones-numbers">
+						{phones.map((phone, i) => (
+							<a
+								key={i}
+								className="inv-phone"
+								href={`tel:${phone.replace(/[^\d+]/g, "")}`}>
+								{phone}
+							</a>
+						))}
+					</span>
+				</div>
+			)}
+			{w.strictlyByInvitation && <p className={`inv-strict ${layout}-strict`}>Strictly by Invitation</p>}
+		</div>
+	);
+}
+
 /* Thin ornaments, drawn in the palette's accent colour. Purely decorative. */
 
 function Sprig() {
@@ -526,6 +558,11 @@ function Classic(ctx: Ctx) {
 				className="c-hashtag"
 				label="Share the day with"
 			/>
+
+			<Foot
+				{...ctx}
+				layout="c"
+			/>
 		</div>
 	);
 }
@@ -625,6 +662,11 @@ function Modern(ctx: Ctx) {
 				id={ctx.id}
 				title="Programme"
 			/>
+
+			<Foot
+				{...ctx}
+				layout="m"
+			/>
 		</div>
 	);
 }
@@ -718,6 +760,11 @@ function Editorial(ctx: Ctx) {
 				part={part}
 				id={ctx.id}
 				title="Also in this issue"
+			/>
+
+			<Foot
+				{...ctx}
+				layout="e"
 			/>
 		</div>
 	);
@@ -873,6 +920,11 @@ function Garden(ctx: Ctx) {
 				className="g-hashtag"
 				label="Share your photos with"
 			/>
+
+			<Foot
+				{...ctx}
+				layout="g"
+			/>
 		</div>
 	);
 }
@@ -1008,6 +1060,11 @@ function Deco(ctx: Ctx) {
 				className="d-hashtag"
 				label="Share with"
 			/>
+
+			<Foot
+				{...ctx}
+				layout="d"
+			/>
 		</div>
 	);
 }
@@ -1095,6 +1152,11 @@ function Adire(ctx: Ctx) {
 					part={part}
 					id={ctx.id}
 					title="The celebrations"
+				/>
+
+				<Foot
+					{...ctx}
+					layout="a"
 				/>
 			</div>
 			<span
@@ -1203,6 +1265,11 @@ function Minimal(ctx: Ctx) {
 				id={ctx.id}
 				title="Also celebrating"
 			/>
+
+			<Foot
+				{...ctx}
+				layout="n"
+			/>
 		</div>
 	);
 }
@@ -1297,6 +1364,11 @@ function Poster(ctx: Ctx) {
 				part={part}
 				id={ctx.id}
 				title="Programme"
+			/>
+
+			<Foot
+				{...ctx}
+				layout="p"
 			/>
 		</div>
 	);

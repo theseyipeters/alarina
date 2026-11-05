@@ -10,7 +10,7 @@ export const STEPS: { id: StepId; label: string }[] = [
   { id: 'reception', label: 'Reception' },
   { id: 'dress', label: 'Dress code' },
   { id: 'message', label: 'Message' },
-  { id: 'rsvp', label: 'RSVP deadline' },
+  { id: 'rsvp', label: 'RSVP' },
   { id: 'events', label: 'Other days' },
   { id: 'finish', label: 'Review' },
 ]
@@ -30,7 +30,11 @@ export const REQUIRED: { field: keyof WeddingFields; label: string; step: StepId
 export const FIELD_STEP: Partial<Record<string, StepId>> = {
   ...Object.fromEntries(REQUIRED.map((r) => [r.field, r.step])),
   rsvpDeadline: 'rsvp',
+  contactPhoneOne: 'rsvp',
+  contactPhoneTwo: 'rsvp',
   receptionVenueName: 'reception',
+  ceremonyName: 'ceremony',
+  receptionName: 'reception',
 }
 
 /** The answers each step owns. Continue always saves these, so prefilled values are stored too. */
@@ -38,11 +42,11 @@ export const STEP_FIELDS: Record<StepId, (keyof WeddingFields)[]> = {
   names: ['partnerOneName', 'partnerTwoName', 'hashtag'],
   families: ['partnerOneRole', 'partnerTwoRole', 'partnerOneFather', 'partnerOneMother', 'partnerTwoFather', 'partnerTwoMother', 'lateParents', 'partnerOneFamily', 'partnerTwoFamily'],
   date: ['date'],
-  ceremony: ['ceremonyType', 'startTime', 'venueName', 'venueAddress'],
-  reception: ['receptionSeparate', 'receptionVenueName', 'receptionVenueAddress', 'receptionTime'],
+  ceremony: ['ceremonyName', 'startTime', 'venueName', 'venueAddress'],
+  reception: ['receptionSeparate', 'receptionName', 'receptionVenueName', 'receptionVenueAddress', 'receptionTime'],
   dress: ['dressNote'],
   message: ['message'],
-  rsvp: ['rsvpDeadline'],
+  rsvp: ['rsvpDeadline', 'contactPhoneOne', 'contactPhoneTwo', 'strictlyByInvitation'],
   events: ['events'],
   finish: [],
 }

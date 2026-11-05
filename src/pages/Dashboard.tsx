@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
 import CopyLink from '../components/CopyLink.tsx'
@@ -63,7 +63,7 @@ export default function Dashboard() {
       {tourOpen && <Tour steps={tourSteps(partner)} onClose={endTour} />}
       <Hero wedding={w} onChange={setWedding} onTour={() => setTour(true)} />
 
-      {justFinished === 'published' && link && <Celebration link={link} />}
+      {w.status === 'published' && link && <Celebration link={link} />}
       {justFinished === 'draft' && (
         <p role="status" className="alert alert--success">Saved as a private draft. Publish whenever you’re ready.</p>
       )}
@@ -216,35 +216,87 @@ function Hero({ wedding, onChange, onTour }: { wedding: Wedding; onChange: (w: W
   )
 }
 
-// Deterministic "random" spread so the petals look scattered but render the same every time.
+// As far across and down their area as a petal goes, in %, so it never reaches the text.
+const PETAL_MAX_X = 95
+const PETAL_MAX_Y = 80
+
+// Deterministic "random" spread so the petals start scattered and render the same every time.
 const PETALS = Array.from({ length: 22 }, (_, i) => ({
-  x: (i * 37) % 100,
-  delay: ((i * 53) % 40) / 10,
-  duration: 4.5 + ((i * 29) % 30) / 10,
+  x: (i * 37) % PETAL_MAX_X,
+  y: (i * 61) % PETAL_MAX_Y,
+  angle: (i * 47) % 360,
   size: 8 + ((i * 17) % 9),
   tone: i % 3,
 }))
 
-/** Shown once, right after publishing: petals fall, and the link is ready to share. */
+const between = (min: number, max: number) => min + Math.random() * (max - min)
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
+
+/** Keeps a petal drifting in small random hops until the returned function stops it. */
+function wander(petal: Element, { x, y, angle }: (typeof PETALS)[number]) {
+  const transform = (s: { x: number; y: number; angle: number }) =>
+    `translate(${s.x - x}cqw, ${s.y - y}cqh) rotate(${s.angle}deg)`
+  let from = { x, y, angle }
+  let animation: Animation
+
+  function hop() {
+    const to = {
+      x: clamp(from.x + between(-14, 14), 0, PETAL_MAX_X),
+      y: clamp(from.y + between(-22, 22), 0, PETAL_MAX_Y),
+      angle: from.angle + between(-120, 120),
+    }
+    animation = petal.animate([{ transform: transform(from) }, { transform: transform(to) }], {
+      duration: between(3000, 7000),
+      easing: 'ease-in-out',
+      fill: 'forwards',
+    })
+    animation.onfinish = hop
+    from = to
+  }
+
+  hop()
+  return () => {
+    animation.onfinish = null
+    animation.cancel()
+  }
+}
+
+/** Petals drifting at random for as long as they're on screen; still for anyone who prefers less motion. */
+function Petals() {
+  const ref = useRef<HTMLDivElement>(null)
+  const still = useMediaQuery('(prefers-reduced-motion: reduce)')
+
+  useEffect(() => {
+    if (still || !ref.current) return
+    const stops = Array.from(ref.current.children, (petal, i) => wander(petal, PETALS[i]))
+    return () => stops.forEach((stop) => stop())
+  }, [still])
+
+  return (
+    <div className="petals" aria-hidden="true" ref={ref}>
+      {PETALS.map((p, i) => (
+        <span
+          key={i}
+          className={`petal petal--${p.tone}`}
+          style={
+            {
+              '--x': `${p.x}%`,
+              '--y': `${p.y}%`,
+              '--angle': `${p.angle}deg`,
+              '--size': `${p.size}px`,
+            } as CSSProperties
+          }
+        />
+      ))}
+    </div>
+  )
+}
+
+/** Shown while the invitation is live: petals drift across the panel, and the link is ready to share. */
 function Celebration({ link }: { link: string }) {
   return (
-    <section className="celebrate" role="status" aria-labelledby="celebrate-title">
-      <div className="petals" aria-hidden="true">
-        {PETALS.map((p, i) => (
-          <span
-            key={i}
-            className={`petal petal--${p.tone}`}
-            style={
-              {
-                '--x': `${p.x}%`,
-                '--delay': `${p.delay}s`,
-                '--duration': `${p.duration}s`,
-                '--size': `${p.size}px`,
-              } as CSSProperties
-            }
-          />
-        ))}
-      </div>
+    <section className="celebrate" aria-labelledby="celebrate-title">
+      <Petals />
       <div className="celebrate-body">
         <p className="eyebrow">Published</p>
         <h2 id="celebrate-title">Your invitation is live</h2>

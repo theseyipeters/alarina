@@ -8,7 +8,6 @@ import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { formatDate, formatTime, todayInLagos } from '../lib/format.ts'
 import { PARENT_SIDES, parentSides, parentsText, ROLE_LABELS } from '../invite/parents.ts'
-import { CEREMONY_TYPES, VENUE_PROMPTS } from '../invite/venues.ts'
 import type { ParentField, Role, Wedding, WeddingEvent, WeddingFields } from '../lib/types.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
 import { useTitle } from '../lib/useTitle.ts'
@@ -38,14 +37,18 @@ const EMPTY: WeddingFields = {
   startTime: null,
   venueName: null,
   venueAddress: null,
-  ceremonyType: null,
+  ceremonyName: null,
   receptionSeparate: false,
+  receptionName: null,
   receptionVenueName: null,
   receptionVenueAddress: null,
   receptionTime: null,
   dressNote: null,
   message: null,
   rsvpDeadline: null,
+  contactPhoneOne: null,
+  contactPhoneTwo: null,
+  strictlyByInvitation: true,
   events: [],
 }
 
@@ -130,7 +133,9 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
         set('receptionVenueName', values.venueName)
         set('receptionVenueAddress', values.venueAddress)
         set('receptionTime', values.startTime)
+        set('receptionName', values.ceremonyName)
       }
+      set('ceremonyName', event.name)
       set('venueName', event.venueName)
       set('venueAddress', event.venueAddress)
       if (event.startTime) set('startTime', event.startTime)
@@ -139,6 +144,7 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
       set('receptionVenueName', event.venueName)
       set('receptionVenueAddress', event.venueAddress)
       set('receptionTime', event.startTime)
+      set('receptionName', event.name)
     }
     set('events', values.events.filter((e) => e.id !== event.id))
   }
@@ -183,7 +189,7 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
           <Field label="Second partner’s name">
             {(p) => <input {...p} type="text" autoComplete="off" maxLength={60} placeholder="Ẹniọlá" value={text('partnerTwoName')} onChange={(e) => set('partnerTwoName', e.target.value)} />}
           </Field>
-          <Field label="Wedding hashtag" optional hint="Guests can tag their photos with it. Letters and numbers, no spaces.">
+          <Field label="Wedding hashtag" optional hint="Guests can tag their photos with it. Letters, numbers and apostrophes, no spaces.">
             {(p) => (
               <div className="prefix-field">
                 <span aria-hidden="true">#</span>
@@ -196,8 +202,7 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
                   maxLength={40}
                   placeholder="OlaAndEni2027"
                   value={text('hashtag')}
-                  // A tag can't hold spaces or punctuation, so they never get in.
-                  onChange={(e) => set('hashtag', e.target.value.replace(/[^\p{L}\p{M}\p{N}_]/gu, ''))}
+                  onChange={(e) => set('hashtag', cleanHashtag(e.target.value))}
                 />
               </div>
             )}
@@ -245,20 +250,15 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
         </Field>
       )
       break
-    case 'ceremony': {
-      const prompt = VENUE_PROMPTS[values.ceremonyType ?? 'none']
+    case 'ceremony':
       body = (
         <>
           {sameDayNotice}
-          <Choice
-            legend="What kind of ceremony?"
-            name="ceremonyType"
-            options={CEREMONY_TYPES}
-            value={values.ceremonyType}
-            onChange={(type) => set('ceremonyType', type)}
-          />
-          <Field label={prompt.label}>
-            {(p) => <input {...p} type="text" maxLength={120} placeholder={prompt.placeholder} value={text('venueName')} onChange={(e) => set('venueName', e.target.value)} />}
+          <Field label="Event name" optional={!values.receptionSeparate} hint="The name guests see on your invitation.">
+            {(p) => <input {...p} type="text" maxLength={EVENT_NAME_MAX} placeholder="Holy Matrimony" value={text('ceremonyName')} onChange={(e) => set('ceremonyName', e.target.value)} />}
+          </Field>
+          <Field label="Venue name">
+            {(p) => <input {...p} type="text" maxLength={120} placeholder="St. Leo’s Catholic Church, Ikeja" value={text('venueName')} onChange={(e) => set('venueName', e.target.value)} />}
           </Field>
           <Field label="Address" optional hint="Helps guests find their way.">
             {(p) => <input {...p} type="text" maxLength={200} placeholder="Plot 1415 Adetokunbo Ademola Street, Victoria Island, Lagos" value={text('venueAddress')} onChange={(e) => set('venueAddress', e.target.value)} />}
@@ -269,7 +269,6 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
         </>
       )
       break
-    }
     case 'reception':
       body = (
         <>
@@ -283,6 +282,9 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
           />
           {values.receptionSeparate ? (
             <>
+              <Field label="Event name" hint="The name guests see on your invitation.">
+                {(p) => <input {...p} type="text" maxLength={EVENT_NAME_MAX} placeholder="Wedding Reception" value={text('receptionName')} onChange={(e) => set('receptionName', e.target.value)} />}
+              </Field>
               <Field label="Reception venue">
                 {(p) => <input {...p} type="text" maxLength={120} placeholder="The Civic Centre, Victoria Island" value={text('receptionVenueName')} onChange={(e) => set('receptionVenueName', e.target.value)} />}
               </Field>
@@ -315,14 +317,27 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
       break
     case 'rsvp':
       body = (
-        <Field
-          label="RSVP by"
-          optional
-          hint="Guests can’t send new RSVPs after this date. Leave it empty to accept RSVPs until the day."
-          error={values.rsvpDeadline && values.date && values.rsvpDeadline > values.date ? 'Choose a date on or before the wedding.' : null}
-        >
-          {(p) => <DatePicker {...p} clearable min={today} max={values.date ?? undefined} value={text('rsvpDeadline')} onChange={(date) => set('rsvpDeadline', date || null)} />}
-        </Field>
+        <>
+          <Field
+            label="RSVP by"
+            optional
+            hint="Guests can’t send new RSVPs after this date. Leave it empty to accept RSVPs until the day."
+            error={values.rsvpDeadline && values.date && values.rsvpDeadline > values.date ? 'Choose a date on or before the wedding.' : null}
+          >
+            {(p) => <DatePicker {...p} clearable min={today} max={values.date ?? undefined} value={text('rsvpDeadline')} onChange={(date) => set('rsvpDeadline', date || null)} />}
+          </Field>
+          <PhoneField
+            label="Phone number"
+            hint="For guests to call about directions or anything else. Anyone with your invitation link can see it."
+            value={text('contactPhoneOne')}
+            onChange={(phone) => set('contactPhoneOne', phone)}
+          />
+          <PhoneField label="Second phone number" value={text('contactPhoneTwo')} onChange={(phone) => set('contactPhoneTwo', phone)} />
+          <label className="check">
+            <input type="checkbox" checked={values.strictlyByInvitation} onChange={(e) => set('strictlyByInvitation', e.target.checked)} />
+            Show “Strictly by Invitation” on the invitation
+          </label>
+        </>
       )
       break
     case 'events':
@@ -382,7 +397,7 @@ const QUESTIONS: Record<StepId, string> = {
   reception: 'And the reception?',
   dress: 'Is there a dress code?',
   message: 'Anything you’d like to say to your guests?',
-  rsvp: 'When should guests reply by?',
+  rsvp: 'When and how should guests reply?',
   events: 'Any celebrations on other days?',
   finish: 'Review your invitation',
 }
@@ -487,7 +502,7 @@ function Review({ values, flush, onEdit }: ReviewProps) {
     { label: 'Date', value: formatDate(values.date), step: 'date' },
     {
       label: 'Ceremony',
-      value: [values.ceremonyType && CEREMONY_TYPES[values.ceremonyType], formatTime(values.startTime), values.venueName, values.venueAddress]
+      value: [values.ceremonyName, formatTime(values.startTime), values.venueName, values.venueAddress]
         .filter(Boolean)
         .join(' · '),
       step: 'ceremony',
@@ -495,13 +510,15 @@ function Review({ values, flush, onEdit }: ReviewProps) {
     {
       label: 'Reception',
       value: values.receptionSeparate
-        ? [formatTime(values.receptionTime), values.receptionVenueName, values.receptionVenueAddress].filter(Boolean).join(' · ')
+        ? [values.receptionName, formatTime(values.receptionTime), values.receptionVenueName, values.receptionVenueAddress].filter(Boolean).join(' · ')
         : 'At the ceremony venue',
       step: 'reception',
     },
     { label: 'Dress code', value: values.dressNote, step: 'dress' },
     { label: 'Message', value: values.message, step: 'message' },
     { label: 'RSVP by', value: formatDate(values.rsvpDeadline), step: 'rsvp' },
+    { label: 'Phone numbers', value: [values.contactPhoneOne, values.contactPhoneTwo].filter(Boolean).join(' · '), step: 'rsvp' },
+    { label: 'Strictly by Invitation', value: values.strictlyByInvitation ? 'Shown on the invitation' : 'Not shown', step: 'rsvp' },
     {
       label: 'Other events',
       value: values.events.filter((e) => e.name.trim()).map((e) => e.name).join(', '),
@@ -607,9 +624,25 @@ function ParentInput({ label, of, placeholder, value, late, onName, onLate }: Pa
 }
 
 /** Bride or groom, for the invitation's captions ("Parents of the Bride"). */
+function PhoneField({ label, hint, value, onChange }: { label: string; hint?: string; value: string; onChange: (phone: string) => void }) {
+  const digits = value.replace(/\D/g, '').length
+  return (
+    <Field label={label} optional hint={hint} error={digits > 0 && digits < PHONE_MIN_DIGITS ? 'Enter a full phone number.' : null}>
+      {(p) => <input {...p} type="tel" inputMode="tel" autoComplete="off" maxLength={PHONE_MAX} placeholder="0800 000 0000" value={value} onChange={(e) => onChange(e.target.value.replace(/[^0-9+()\s-]/g, ''))} />}
+    </Field>
+  )
+}
+
 function RoleChoice({ name, partner, value, onChange }: { name: string; partner: string; value: Role | null; onChange: (role: Role) => void }) {
   return <Choice legend={`${partner} is the`} name={name} options={ROLE_LABELS} value={value} onChange={onChange} inline />
 }
+
+/** Letters, numbers and apostrophes only (phone keyboards type curly ones), and never an apostrophe first. */
+const cleanHashtag = (value: string) => value.replace(/[^\p{L}\p{M}\p{N}'’]/gu, '').replace(/^['’]+/, '')
+
+const EVENT_NAME_MAX = 80
+const PHONE_MAX = 20
+const PHONE_MIN_DIGITS = 7
 
 const RECEPTION_PLACES = { same: 'At the ceremony venue', elsewhere: 'Somewhere else' }
 

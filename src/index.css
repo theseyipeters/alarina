@@ -344,7 +344,8 @@ a {
   font-size: var(--text-sm);
 }
 
-/* An input with a fixed sign inside its left edge, e.g. the "#" of a hashtag. */
+/* An input with a fixed sign inside its left edge, e.g. the "#" of a hashtag. It sits outside
+   the input, so it can't be typed over or deleted. */
 .prefix-field {
   position: relative;
 }
@@ -356,12 +357,11 @@ a {
   display: flex;
   align-items: center;
   height: var(--control-height);
-  color: var(--text-muted);
   pointer-events: none;
 }
 
-.prefix-field input {
-  padding-left: calc(var(--space-3) + 1ch);
+.prefix-field input[type='text'] {
+  padding-left: calc(var(--space-3) + 1.25em);
 }
 
 /* Long email addresses break rather than push the card wider. */

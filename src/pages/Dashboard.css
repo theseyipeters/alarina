@@ -362,7 +362,7 @@
   margin-left: -0.75rem;
 }
 
-/* Publish celebration: petals fall across the panel a couple of times, then rest. */
+/* Live panel: petals drift, clear of the text. Dashboard.tsx moves them. */
 .celebrate {
   position: relative;
   overflow: hidden;
@@ -395,19 +395,32 @@
 
 .petals {
   position: absolute;
-  inset: 0;
+  inset: 0 0 0 calc(var(--space-8) + 36rem);
   pointer-events: none;
+  container-type: size;
+}
+
+/* Too narrow to drift beside the text: a band above it instead. */
+@media (max-width: 62rem) {
+  .celebrate {
+    padding-top: 7rem;
+  }
+
+  .petals {
+    inset: var(--space-4) var(--space-4) auto;
+    height: 5.5rem;
+  }
 }
 
 .petal {
   position: absolute;
-  top: -1.5rem;
+  top: var(--y);
   left: var(--x);
   width: var(--size);
   height: calc(var(--size) * 1.4);
   border-radius: 70% 0 70% 0;
-  opacity: 0;
-  animation: petal-fall var(--duration) var(--delay) ease-in 2 forwards;
+  opacity: 0.9;
+  transform: rotate(var(--angle));
 }
 
 .petal--0 {
@@ -422,31 +435,7 @@
   background: #8fc1a9;
 }
 
-@keyframes petal-fall {
-  0% {
-    opacity: 0;
-    transform: translate(0, 0) rotate(0deg);
-  }
-  10% {
-    opacity: 0.9;
-  }
-  50% {
-    transform: translate(2.5rem, 12rem) rotate(160deg);
-  }
-  90% {
-    opacity: 0.8;
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-1rem, 24rem) rotate(320deg);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .petals {
-    display: none;
-  }
-
   .bar > span,
   .feed li {
     animation: none;

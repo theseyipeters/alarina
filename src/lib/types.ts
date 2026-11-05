@@ -22,8 +22,6 @@ export type WeddingEvent = {
 
 export type Role = 'bride' | 'groom'
 
-export type CeremonyType = 'church' | 'mosque' | 'registry' | 'traditional' | 'other'
-
 export type ParentField = 'partnerOneFather' | 'partnerOneMother' | 'partnerTwoFather' | 'partnerTwoMother'
 
 /** Answers collected by the guided setup. Dates are YYYY-MM-DD and times HH:mm, Nigerian local time. */
@@ -47,16 +45,22 @@ export type WeddingFields = {
   startTime: string | null
   venueName: string | null
   venueAddress: string | null
-  /** The ceremony at the venue above; startTime is when it starts. */
-  ceremonyType: CeremonyType | null
-  /** A reception somewhere else the same day, with its own venue and time. */
+  /** The couple's name for the event at the venue above; startTime is when it starts. */
+  ceremonyName: string | null
+  /** A reception somewhere else the same day, with its own name, venue and time. */
   receptionSeparate: boolean
+  receptionName: string | null
   receptionVenueName: string | null
   receptionVenueAddress: string | null
   receptionTime: string | null
   dressNote: string | null
   message: string | null
   rsvpDeadline: string | null
+  /** Numbers guests can call, as the couple typed them. */
+  contactPhoneOne: string | null
+  contactPhoneTwo: string | null
+  /** Whether the card ends with "Strictly by Invitation". */
+  strictlyByInvitation: boolean
   events: WeddingEvent[]
 }
 
