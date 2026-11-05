@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
-import { flushSync } from 'react-dom'
 import { Link, useParams, useSearchParams } from 'react-router'
 import CopyLink from '../components/CopyLink.tsx'
 import { downloadIcs, googleCalendarUrl } from '../invite/calendar.ts'
@@ -72,8 +71,8 @@ const repliedKey = (slug: string) => `alarina-replied-${slug}`
 type Replied = { firstName: string; emailSent: boolean }
 
 /**
- * Who last replied from this browser, to discourage a second reply. It's only a nudge: phones get
- * shared, so it never holds the private link and "Reply for someone else" is always there.
+ * Who replied from this browser. Each browser sends one reply per wedding, and anyone else invited
+ * replies from their own. It never holds the private link, in case someone else picks up the phone.
  */
 function readReplied(slug: string): Replied | null {
   try {
@@ -243,6 +242,12 @@ function RsvpPanel({ invitation, names, from, sectionRef }: RsvpPanelProps) {
   const [error, setError] = useState<string | null>(null)
 
   async function submit(values: { name: string; email: string; phone: string; attending: boolean }) {
+    // Checked again here: the form may have been open in another tab when the reply was sent.
+    const already = readReplied(invitation.slug)
+    if (already) {
+      setReplied(already)
+      return
+    }
     setError(null)
     setDuplicate(null)
     try {
@@ -261,16 +266,6 @@ function RsvpPanel({ invitation, names, from, sectionRef }: RsvpPanelProps) {
         setError(errorMessage(err))
       }
     }
-  }
-
-  // The button that opened the form goes away with this panel, so focus moves to the form's heading.
-  function replyForSomeoneElse() {
-    flushSync(() => {
-      setCreated(null)
-      setReplied(null)
-      setDuplicate(null)
-    })
-    document.getElementById('rsvp-heading')?.focus()
   }
 
   if (created) {
@@ -310,9 +305,6 @@ function RsvpPanel({ invitation, names, from, sectionRef }: RsvpPanelProps) {
           <p>
             <Link to={new URL(editLink).pathname}>Change my reply</Link>
           </p>
-          <p>
-            <button type="button" className="link-button" onClick={replyForSomeoneElse}>Reply for someone else</button>
-          </p>
         </div>
       </section>
     )
@@ -327,14 +319,14 @@ function RsvpPanel({ invitation, names, from, sectionRef }: RsvpPanelProps) {
             ? 'To change your reply, use the private link we emailed you.'
             : 'To change your reply, use the private link you got when you replied.'}
         </p>
-        <button type="button" className="btn btn--secondary" onClick={replyForSomeoneElse}>Reply for someone else</button>
+        <p className="muted">Each device can send one reply, so anyone else invited should use their own.</p>
       </section>
     )
   }
 
   return (
     <section id="rsvp" ref={sectionRef} className="inv-panel" aria-labelledby="rsvp-heading">
-      <h2 id="rsvp-heading" tabIndex={-1}>Will you join us?</h2>
+      <h2 id="rsvp-heading">Will you join us?</h2>
       {closed ? (
         <p className="muted">
           {invitation.rsvpClosedReason === 'past'
