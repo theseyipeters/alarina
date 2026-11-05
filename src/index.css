@@ -475,6 +475,10 @@ input[readonly] {
   cursor: pointer;
 }
 
+.link-button--danger {
+  color: var(--danger);
+}
+
 /* Feedback */
 
 .alert {
@@ -513,6 +517,12 @@ input[readonly] {
 .badge--live {
   color: var(--success);
   background: var(--success-bg);
+  border-color: transparent;
+}
+
+.badge--warn {
+  color: var(--danger);
+  background: var(--danger-bg);
   border-color: transparent;
 }
 

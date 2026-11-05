@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { Link } from 'react-router'
+import Field from '../components/Field.tsx'
 import Select from '../components/Select.tsx'
 import { api } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
@@ -9,8 +10,14 @@ import type { Response, Responses as ResponsesData } from '../lib/types.ts'
 import { useResponses } from '../lib/useResponses.ts'
 import { useTitle } from '../lib/useTitle.ts'
 
-type ReplyFilter = 'all' | 'attending' | 'declined'
+type Reply = 'attending' | 'declined' | 'rejected'
+type Asking = { kind: 'revoke' | 'reject' | 'restore'; rsvp: Response }
 const NO_SIDE = 'none'
+const REPLY_LABELS: Record<Reply, string> = { attending: 'Attending', declined: 'Declined', rejected: 'Rejected' }
+const BADGES: Record<Reply, string> = { attending: 'badge badge--live', declined: 'badge', rejected: 'badge badge--warn' }
+const ENDPOINTS = { revoke: 'revoke-link', reject: 'reject', restore: 'restore' }
+
+const replyOf = (r: Response): Reply => (r.rejected ? 'rejected' : r.attending ? 'attending' : 'declined')
 
 const repliedOn = (iso: string) =>
   new Intl.DateTimeFormat('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(iso))
@@ -18,12 +25,14 @@ const repliedOn = (iso: string) =>
 /** Every reply with contact details. A table on wide screens, stacked cards on phones. */
 export default function Responses() {
   useTitle('Responses')
-  const [state, setState] = useResponses()
-  const [reply, setReply] = useState<ReplyFilter>('all')
+  const [state, setState, load] = useResponses()
+  const [reply, setReply] = useState<'all' | Reply>('all')
   const [side, setSide] = useState<string>('all')
   const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [revoking, setRevoking] = useState<Response | null>(null)
+  const [asking, setAsking] = useState<Asking | null>(null)
+  const [note, setNote] = useState('')
+  const [busy, setBusy] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const returnFocusRef = useRef<{ trigger: HTMLElement; rsvpId: string } | null>(null)
 
@@ -34,7 +43,7 @@ export default function Responses() {
     const q = query.trim().toLowerCase()
     return data.rsvps.filter(
       (r) =>
-        (reply === 'all' || r.attending === (reply === 'attending')) &&
+        (reply === 'all' || replyOf(r) === reply) &&
         (side === 'all' || (side === NO_SIDE ? !r.sideUserId : r.sideUserId === side)) &&
         (!q || [r.name, r.email, r.phone].some((v) => v.toLowerCase().includes(q))),
     )
@@ -67,9 +76,9 @@ export default function Responses() {
     }
   }
 
-  function askRevoke(r: Response, trigger: HTMLElement) {
+  function ask(kind: Asking['kind'], r: Response, trigger: HTMLElement) {
     returnFocusRef.current = { trigger, rsvpId: r.id }
-    setRevoking(r)
+    setAsking({ kind, rsvp: r })
     dialogRef.current?.showModal()
   }
 
@@ -77,18 +86,31 @@ export default function Responses() {
     dialogRef.current?.close()
   }
 
-  async function confirmRevoke() {
-    if (!revoking) return
+  async function confirm() {
+    if (!asking) return
+    const { kind } = asking
     setError(null)
+    setBusy(true)
     try {
-      const { rsvp } = await api.post<{ rsvp: Response }>(`/wedding/rsvps/${revoking.id}/revoke-link`)
-      // The Revoke button disappears with this update, so focus moves to the guest's name.
+      const { rsvp, emailSent } = await api.post<{ rsvp: Response; emailSent?: boolean }>(
+        `/wedding/rsvps/${asking.rsvp.id}/${ENDPOINTS[kind]}`,
+        kind === 'reject' ? { note: note.trim() || undefined } : undefined,
+      )
+      // The button disappears with this update, so focus moves to the guest's name.
       flushSync(() => replace(rsvp))
       closeDialog()
       document.getElementById(`guest-${rsvp.id}`)?.focus()
+      if (kind !== 'revoke') await load()
+      if (emailSent === false) {
+        setError(`We couldn’t email ${rsvp.name}. Please let them know yourself.`)
+        // The guest doesn't know yet, so this can't sit unseen above a long list.
+        window.scrollTo(0, 0)
+      }
     } catch (err) {
       setError(errorMessage(err))
       closeDialog()
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -106,7 +128,7 @@ export default function Responses() {
       </div>
       <p className="muted">
         {summary.total} {summary.total === 1 ? 'reply' : 'replies'} · {summary.attending} attending · {summary.declined}{' '}
-        declined
+        declined{summary.rejected > 0 && ` · ${summary.rejected} rejected`}
       </p>
 
       {error && <p role="alert" className="alert">{error}</p>}
@@ -122,7 +144,7 @@ export default function Responses() {
         <>
           <div className="filters">
             <div className="actions" role="group" aria-label="Filter by reply">
-              {(['all', 'attending', 'declined'] as const).map((f) => (
+              {(['all', 'attending', 'declined', 'rejected'] as const).map((f) => (
                 <button
                   key={f}
                   type="button"
@@ -130,7 +152,7 @@ export default function Responses() {
                   aria-pressed={f === reply}
                   onClick={() => setReply(f)}
                 >
-                  {f === 'all' ? 'All' : f === 'attending' ? 'Attending' : 'Declined'}
+                  {f === 'all' ? 'All' : REPLY_LABELS[f]}
                 </button>
               ))}
             </div>
@@ -170,7 +192,7 @@ export default function Responses() {
                   <th scope="col">Side</th>
                   <th scope="col">Replied</th>
                   <th scope="col">
-                    <span className="visually-hidden">Edit link</span>
+                    <span className="visually-hidden">Actions</span>
                   </th>
                 </tr>
               </thead>
@@ -183,9 +205,7 @@ export default function Responses() {
                       <a href={`tel:${r.phone.replace(/[^\d+]/g, '')}`}>{r.phone}</a>
                     </th>
                     <td data-label="Reply">
-                      <span className={r.attending ? 'badge badge--live' : 'badge'}>
-                        {r.attending ? 'Attending' : 'Declined'}
-                      </span>
+                      <span className={BADGES[replyOf(r)]}>{REPLY_LABELS[replyOf(r)]}</span>
                     </td>
                     <td data-label="Side">
                       <Select
@@ -200,17 +220,26 @@ export default function Responses() {
                       {r.sideSource === 'link' && <span className="hint">From their link</span>}
                     </td>
                     <td data-label="Replied">{repliedOn(r.createdAt)}</td>
-                    <td data-label="Edit link">
-                      {r.editLinkActive ? (
-                        <button
-                          type="button"
-                          className="link-button"
-                          onClick={(e) => askRevoke(r, e.currentTarget)}
-                        >
-                          Revoke edit link<span className="visually-hidden"> for {r.name}</span>
+                    <td data-label="Actions">
+                      {r.rejected ? (
+                        <button type="button" className="link-button" onClick={(e) => ask('restore', r, e.currentTarget)}>
+                          Undo rejection<span className="visually-hidden"> for {r.name}</span>
                         </button>
                       ) : (
-                        <span className="hint">Link inactive</span>
+                        <div className="responses-actions">
+                          {r.attending && (
+                            <button type="button" className="link-button link-button--danger" onClick={(e) => ask('reject', r, e.currentTarget)}>
+                              Reject<span className="visually-hidden"> {r.name}</span>
+                            </button>
+                          )}
+                          {r.editLinkActive ? (
+                            <button type="button" className="link-button" onClick={(e) => ask('revoke', r, e.currentTarget)}>
+                              Revoke edit link<span className="visually-hidden"> for {r.name}</span>
+                            </button>
+                          ) : (
+                            <span className="hint">Link inactive</span>
+                          )}
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -224,26 +253,50 @@ export default function Responses() {
       <dialog
         ref={dialogRef}
         className="dialog"
-        aria-labelledby="revoke-title"
+        aria-labelledby="confirm-title"
         onClose={() => {
-          setRevoking(null)
+          setAsking(null)
+          setNote('')
           // Back to the button that opened it; if revoking removed that button, to the guest's name.
           const target = returnFocusRef.current
           if (target?.trigger.isConnected) target.trigger.focus()
           else if (target) document.getElementById(`guest-${target.rsvpId}`)?.focus()
         }}
       >
-        <h2 id="revoke-title">Revoke {revoking?.name}’s edit link?</h2>
-        <p className="muted">
-          The private link they got when they replied will stop working, so they won’t be able to change their reply
-          with it. Their reply stays as it is. This can’t be undone.
-        </p>
+        {asking?.kind === 'reject' ? (
+          <>
+            <h2 id="confirm-title">Reject {asking.rsvp.name}?</h2>
+            <p className="muted">
+              We’ll email {asking.rsvp.email} to say you’re unable to confirm a place for them. They won’t count as
+              attending and can’t change their reply. You can undo this later. Rejecting doesn’t refund any gift
+              they’ve sent.
+            </p>
+            <Field label="Add a note" optional hint="We’ll include this in the email.">
+              {(p) => <textarea {...p} rows={3} maxLength={300} value={note} onChange={(e) => setNote(e.target.value)} />}
+            </Field>
+          </>
+        ) : asking?.kind === 'restore' ? (
+          <>
+            <h2 id="confirm-title">Undo {asking.rsvp.name}’s rejection?</h2>
+            <p className="muted">
+              They’ll count as attending again, and we’ll email {asking.rsvp.email} to say their place is confirmed.
+            </p>
+          </>
+        ) : (
+          <>
+            <h2 id="confirm-title">Revoke {asking?.rsvp.name}’s edit link?</h2>
+            <p className="muted">
+              The private link they got when they replied will stop working, so they won’t be able to change their reply
+              with it. Their reply stays as it is. This can’t be undone.
+            </p>
+          </>
+        )}
         <div className="actions actions--end">
           <button type="button" className="btn btn--secondary" onClick={closeDialog} autoFocus>
             Cancel
           </button>
-          <button type="button" className="btn" onClick={confirmRevoke}>
-            Revoke link
+          <button type="button" className="btn" onClick={confirm} disabled={busy}>
+            {asking?.kind === 'reject' ? 'Reject and notify' : asking?.kind === 'restore' ? 'Undo and notify' : 'Revoke link'}
           </button>
         </div>
       </dialog>
@@ -260,7 +313,7 @@ function downloadCsv(data: ResponsesData) {
       r.name,
       r.email,
       r.phone,
-      r.attending ? 'Attending' : 'Declined',
+      REPLY_LABELS[replyOf(r)],
       sideLabel(data.partners, r.sideUserId),
       r.createdAt.slice(0, 10),
     ]),
