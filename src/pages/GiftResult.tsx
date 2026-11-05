@@ -118,9 +118,11 @@ export default function GiftResult() {
               </p>
             </>
           )}
-          <p>
-            <Link to={back}>Back to the invitation</Link>
-          </p>
+          {invitation && (
+            <p>
+              <Link to={back}>Back to the invitation</Link>
+            </p>
+          )}
         </section>
 
         {(gift.status === 'failed' || gift.status === 'abandoned') && retry && (

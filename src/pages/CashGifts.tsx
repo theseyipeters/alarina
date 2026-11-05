@@ -86,6 +86,7 @@ function PayoutAccount({ payout, onSaved }: { payout: GiftsOverview['payout']; o
   const [bankCode, setBankCode] = useState('')
   const [accountNumber, setAccountNumber] = useState('')
   const [resolved, setResolved] = useState<Resolved | null>(null)
+  const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -110,11 +111,12 @@ function PayoutAccount({ payout, onSaved }: { payout: GiftsOverview['payout']; o
     }
   }
 
-  async function save() {
+  async function save(e: FormEvent) {
+    e.preventDefault()
     setBusy(true)
     setError(null)
     try {
-      await api.put('/wedding/gifts/account', { bankCode, accountNumber })
+      await api.put('/wedding/gifts/account', { bankCode, accountNumber, password })
       setEditing(false)
       setResolved(null)
       setAccountNumber('')
@@ -122,8 +124,15 @@ function PayoutAccount({ payout, onSaved }: { payout: GiftsOverview['payout']; o
     } catch (err) {
       setError(errorMessage(err))
     } finally {
+      setPassword('')
       setBusy(false)
     }
+  }
+
+  function useDifferentAccount() {
+    setResolved(null)
+    setPassword('')
+    setError(null)
   }
 
   return (
@@ -147,21 +156,31 @@ function PayoutAccount({ payout, onSaved }: { payout: GiftsOverview['payout']; o
           <p className="muted">Gifts are paid into a Nigerian bank account. We check the name on it before saving.</p>
           {error && <p role="alert" className="alert">{error}</p>}
           {resolved ? (
-            <div className="resolved">
+            <form className="resolved" onSubmit={save}>
               <p className="resolved-name">{resolved.accountName}</p>
               <p className="muted">
                 {resolved.bankName} · ending {accountNumber.slice(-4)}
               </p>
               <p>Is this the right account?</p>
+              <Field label="Your password" hint="To keep gifts safe, we check it’s you. We’ll email everyone in your wedding space about this change.">
+                {(p) => (
+                  <input
+                    {...p}
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                )}
+              </Field>
               <div className="actions">
-                <button type="button" className="btn" onClick={save} disabled={busy}>
-                  {busy ? 'Saving…' : 'Yes, save account'}
-                </button>
-                <button type="button" className="btn btn--secondary" onClick={() => setResolved(null)} disabled={busy}>
+                <button className="btn" disabled={busy}>{busy ? 'Saving…' : 'Yes, save account'}</button>
+                <button type="button" className="btn btn--secondary" onClick={useDifferentAccount} disabled={busy}>
                   Use a different account
                 </button>
               </div>
-            </div>
+            </form>
           ) : (
             <form onSubmit={check}>
               <Field label="Bank">

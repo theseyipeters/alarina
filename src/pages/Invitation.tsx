@@ -297,7 +297,7 @@ function RsvpPanel({ invitation, names, from, sectionRef }: RsvpPanelProps) {
             <p role="alert" className="alert">
               You’ve already replied with this email.{' '}
               {duplicate.emailSent
-                ? 'We’ve emailed you a new link to change your reply.'
+                ? 'We’ve emailed you a link to change your reply.'
                 : 'Use the private link you got when you replied to change it.'}
             </p>
           )}
