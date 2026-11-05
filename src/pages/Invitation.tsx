@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState, type RefObject } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type RefObject } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import CopyLink from '../components/CopyLink.tsx'
+import Field from '../components/Field.tsx'
 import { downloadIcs, googleCalendarUrl } from '../invite/calendar.ts'
 import EnvelopeIntro, { OPEN_MS } from '../invite/EnvelopeIntro.tsx'
 import GiftBasket from '../invite/GiftBasket.tsx'
@@ -65,6 +66,34 @@ export default function Invitation() {
 type Stage = 'sealed' | 'opening' | 'open'
 
 const openedKey = (slug: string) => `alarina-opened-${slug}`
+
+const repliedKey = (slug: string) => `alarina-replied-${slug}`
+
+type Replied = { name: string; emailSent: boolean }
+
+/**
+ * Who replied from this browser. Each browser sends one reply per wedding, and anyone else invited
+ * replies from their own. It never holds the private link, in case someone else picks up the phone.
+ */
+function readReplied(slug: string): Replied | null {
+  try {
+    // `firstName`: what this held before the gift basket needed the guest's whole name.
+    const saved = JSON.parse(localStorage.getItem(repliedKey(slug)) ?? 'null') as (Partial<Replied> & { firstName?: string }) | null
+    const name = saved?.name ?? saved?.firstName
+    return typeof name === 'string' ? { name, emailSent: Boolean(saved?.emailSent) } : null
+  } catch {
+    // Storage can be blocked; the form simply shows.
+    return null
+  }
+}
+
+function rememberReplied(slug: string, replied: Replied) {
+  try {
+    localStorage.setItem(repliedKey(slug), JSON.stringify(replied))
+  } catch {
+    // Not remembered; harmless.
+  }
+}
 
 /** Guests open the envelope once per visit; it's skipped for reduced motion or once opened. */
 function initialStage(slug: string): Stage {
@@ -199,6 +228,59 @@ function PlanYourDay({ invitation }: { invitation: PublicInvitation }) {
   )
 }
 
+/** For a guest who lost their private link. Says the same thing whether or not the address has replied. */
+function LinkRecovery({ slug }: { slug: string }) {
+  const [open, setOpen] = useState(false)
+  const [email, setEmail] = useState('')
+  const [sent, setSent] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function send(e: FormEvent) {
+    e.preventDefault()
+    setBusy(true)
+    setError(null)
+    try {
+      await api.post(`/public/invitations/${encodeURIComponent(slug)}/rsvps/resend`, { email })
+      setSent(true)
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (sent) return <p role="status" className="alert alert--success">If that email replied to this invitation, your link is on its way.</p>
+  if (!open) {
+    return (
+      <p>
+        <button type="button" className="link-button" onClick={() => setOpen(true)}>Email me my link</button>
+      </p>
+    )
+  }
+  return (
+    <form onSubmit={send}>
+      {error && <p role="alert" className="alert">{error}</p>}
+      <Field label="Your email" hint="The one you replied with.">
+        {(p) => (
+          <input
+            {...p}
+            type="email"
+            autoComplete="email"
+            autoFocus
+            required
+            maxLength={254}
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        )}
+      </Field>
+      <button className="btn btn--secondary" disabled={busy}>{busy ? 'Sending…' : 'Email me my link'}</button>
+    </form>
+  )
+}
+
 type Created = { rsvp: Rsvp; editLink: string; emailSent: boolean }
 
 type RsvpPanelProps = {
@@ -210,20 +292,27 @@ type RsvpPanelProps = {
 
 function RsvpPanel({ invitation, names, from, sectionRef }: RsvpPanelProps) {
   const [created, setCreated] = useState<Created | null>(null)
+  const [replied, setReplied] = useState(() => readReplied(invitation.slug))
   const [duplicate, setDuplicate] = useState<{ emailSent: boolean } | null>(null)
   const [closed, setClosed] = useState(!invitation.rsvpOpen)
   const [error, setError] = useState<string | null>(null)
 
   async function submit(values: { name: string; email: string; phone: string; attending: boolean }) {
+    // Checked again here: the form may have been open in another tab when the reply was sent.
+    const already = readReplied(invitation.slug)
+    if (already) {
+      setReplied(already)
+      return
+    }
     setError(null)
     setDuplicate(null)
     try {
-      setCreated(
-        await api.post<Created>(`/public/invitations/${encodeURIComponent(invitation.slug)}/rsvps`, {
-          ...values,
-          ...(from && { from }),
-        }),
-      )
+      const result = await api.post<Created>(`/public/invitations/${encodeURIComponent(invitation.slug)}/rsvps`, {
+        ...values,
+        ...(from && { from }),
+      })
+      setCreated(result)
+      rememberReplied(invitation.slug, { name: result.rsvp.name, emailSent: result.emailSent })
     } catch (err) {
       if (err instanceof ApiError && err.code === 'already_responded') {
         setDuplicate(err.details as { emailSent: boolean })
@@ -277,6 +366,24 @@ function RsvpPanel({ invitation, names, from, sectionRef }: RsvpPanelProps) {
     )
   }
 
+  // Past the deadline this still shows: guests can give, and may need their link, until the day.
+  if (replied && invitation.rsvpClosedReason !== 'past') {
+    return (
+      <section id="rsvp" ref={sectionRef} className="inv-panel" aria-labelledby="rsvp-heading">
+        <h2 id="rsvp-heading">You’ve already replied, {replied.name.trim().split(/\s+/)[0]}</h2>
+        <p className="muted">
+          {replied.emailSent
+            ? 'To change your reply, use the private link we emailed you.'
+            : 'To change your reply, use the private link you got when you replied.'}
+        </p>
+        {!closed && <p className="muted">Each device can send one reply, so anyone else invited should use their own.</p>}
+        <LinkRecovery slug={invitation.slug} />
+        {/* Not tied to the reply, as this browser doesn't keep the private link. The name still tells the couple who gave. */}
+        <GiftBasket invitation={invitation} names={names} guest={{ name: replied.name }} />
+      </section>
+    )
+  }
+
   return (
     <section id="rsvp" ref={sectionRef} className="inv-panel" aria-labelledby="rsvp-heading">
       <h2 id="rsvp-heading">Will you join us?</h2>
@@ -297,7 +404,7 @@ function RsvpPanel({ invitation, names, from, sectionRef }: RsvpPanelProps) {
             <p role="alert" className="alert">
               You’ve already replied with this email.{' '}
               {duplicate.emailSent
-                ? 'We’ve emailed you a new link to change your reply.'
+                ? 'We’ve emailed you a link to change your reply.'
                 : 'Use the private link you got when you replied to change it.'}
             </p>
           )}

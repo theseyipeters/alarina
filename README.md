@@ -1,75 +1,23 @@
-# React + TypeScript + Vite
+# Alárinà frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The app couples use, and the pages guests see: Vite, React and TypeScript. Setup, ports and deployment are in the [root README](../README.md). How it should look and read is in the [style guide](../docs/style-guide.md).
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+nvm use
+yarn install
+yarn dev     # http://localhost:5173
+yarn lint
+yarn build   # needs VITE_API_URL
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+| Folder | What's in it |
+|---|---|
+| `src/pages` | One component per route, plus their CSS |
+| `src/invite` | The invitation card and guest pages, styled by `invite.css` |
+| `src/studio` | Panels and canvas for the invitation editor at `/app/studio` |
+| `src/setup` | Setup wizard steps and the live preview |
+| `src/components` | Shared components (`Field`, `Select`, `DatePicker`, `Tour`, …) |
+| `src/auth` | Sign-in state and route protection |
+| `src/lib` | API client, formatting, types and hooks |
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
+Tokens and shared classes live in `src/index.css`. To see every component in light and dark, run `yarn dev` and open `/styleguide` (development only).
