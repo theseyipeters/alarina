@@ -19,6 +19,9 @@ const ENDPOINTS = { revoke: 'revoke-link', reject: 'reject', restore: 'restore' 
 
 const replyOf = (r: Response): Reply => (r.rejected ? 'rejected' : r.attending ? 'attending' : 'declined')
 
+/** The last 10 digits, so 0801… and +234 801… count as the same number. */
+const phoneKey = (phone: string) => phone.replace(/\D/g, '').slice(-10)
+
 const repliedOn = (iso: string) =>
   new Intl.DateTimeFormat('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(iso))
 
@@ -48,6 +51,19 @@ export default function Responses() {
         (!q || [r.name, r.email, r.phone].some((v) => v.toLowerCase().includes(q))),
     )
   }, [data, reply, side, query])
+
+  const byPhone = useMemo(() => {
+    const groups = new Map<string, Response[]>()
+    for (const r of data?.rsvps ?? []) groups.set(phoneKey(r.phone), [...(groups.get(phoneKey(r.phone)) ?? []), r])
+    return groups
+  }, [data])
+
+  /** A prompt to look closer, not a problem: families often share a phone. */
+  const samePhoneNote = (r: Response) => {
+    const others = (byPhone.get(phoneKey(r.phone)) ?? []).filter((other) => other.id !== r.id)
+    if (others.length === 0) return null
+    return `Same phone as ${others[0].name}${others.length > 1 ? ` and ${others.length - 1} more` : ''}`
+  }
 
   if (state.status === 'loading') return <p className="muted">Loading replies…</p>
   if (state.status === 'error') return <p role="alert" className="alert">Replies couldn’t be loaded. Refresh to try again.</p>
@@ -203,6 +219,7 @@ export default function Responses() {
                       {r.name}
                       <a href={`mailto:${r.email}`}>{r.email}</a>
                       <a href={`tel:${r.phone.replace(/[^\d+]/g, '')}`}>{r.phone}</a>
+                      {samePhoneNote(r) && <span className="hint">{samePhoneNote(r)}</span>}
                     </th>
                     <td data-label="Reply">
                       <span className={BADGES[replyOf(r)]}>{REPLY_LABELS[replyOf(r)]}</span>
