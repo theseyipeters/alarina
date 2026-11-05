@@ -179,7 +179,7 @@ function PlanYourDay({ invitation }: { invitation: PublicInvitation }) {
           <p className="plan-label">Add it to your calendar</p>
           <div className="actions plan-actions">
             <CalendarButtons invitation={invitation} />
-            {/* One button for one venue; "Ceremony directions" and "Reception directions" for two. */}
+            {/* One button for one venue; one per event, by the couple's name for it, for two. */}
             {venueStops(invitation).map((stop, _, stops) => (
               <a
                 key={stop.key}
@@ -188,8 +188,8 @@ function PlanYourDay({ invitation }: { invitation: PublicInvitation }) {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                {stops.length > 1 ? `${stop.key === 'ceremony' ? 'Ceremony' : 'Reception'} directions` : 'Directions'}
-                <span className="visually-hidden"> to {stop.name} (opens in a new tab)</span>
+                {stops.length > 1 && stop.label ? `Directions to ${stop.label}` : 'Directions'}
+                <span className="visually-hidden">, {stop.name} (opens in a new tab)</span>
               </a>
             ))}
           </div>

@@ -1848,8 +1848,9 @@ a.inv-map {
   align-content: start;
 }
 
-/* "CHURCH SERVICE · 10:00 AM" */
+/* The couple's name for the event, with its time on the line below. */
 .inv-stop-label {
+  display: grid;
   font-size: var(--text-xs);
   letter-spacing: 0.16em;
   line-height: 1.5;
@@ -1931,6 +1932,52 @@ a.inv-map {
 
 /* Minimal: quiet, in the text colour. */
 .n-details .inv-stop-label {
+  color: var(--text-muted);
+}
+
+/* ── Strictly by Invitation (all layouts): the card's last line ─────── */
+
+.inv-strict {
+  margin: 0;
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* Classic and Garden: soft italics, like their labels. */
+.c-strict,
+.g-strict {
+  font-family: var(--inv-display);
+  font-size: var(--text-base);
+  font-style: italic;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Deco: between two diamonds, like its hashtag label. */
+.d-strict::before,
+.d-strict::after {
+  content: '◆';
+  margin-inline: 0.75em;
+  font-size: 0.7em;
+}
+
+/* Modern, Editorial and Poster: closed off with a rule. */
+.m-strict,
+.e-strict,
+.p-strict {
+  padding-top: var(--space-3);
+  border-top: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.p-strict {
+  margin-inline: 4cqi;
+}
+
+/* Minimal: quiet, in the text colour. */
+.n-strict {
   color: var(--text-muted);
 }
 

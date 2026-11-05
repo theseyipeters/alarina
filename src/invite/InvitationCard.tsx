@@ -14,7 +14,8 @@ export type InvitationPart =
 	| "where"
 	| "dress"
 	| "message"
-	| "events";
+	| "events"
+	| "strict";
 
 type Props = {
 	invitation: InvitationContent;
@@ -166,8 +167,7 @@ const initials = (w: InvitationContent) =>
 
 /**
  * Where the day happens: the ceremony venue, and the reception's when it's somewhere else, each
- * with its label, time, address and a Maps link. A single venue reads as before, labelled only
- * when the couple said what kind of ceremony it is.
+ * with the couple's name for the event, its time, address and a Maps link.
  */
 function Venues({ w }: { w: InvitationContent }) {
 	const stops = venueStops(w);
@@ -176,9 +176,10 @@ function Venues({ w }: { w: InvitationContent }) {
 		<div className="inv-venues" data-stops={stops.length}>
 			{stops.map((stop) => (
 				<div key={stop.key} className="inv-stop">
-					{stop.label && (
+					{(stop.label || stop.time) && (
 						<span className="inv-stop-label">
-							{[stop.label, stop.time && formatTime(stop.time)].filter(Boolean).join(" · ")}
+							{stop.label && <span>{stop.label}</span>}
+							{stop.time && <span>{formatTime(stop.time)}</span>}
 						</span>
 					)}
 					<span className="inv-venue">{stop.name}</span>
@@ -382,6 +383,18 @@ function Hashtag({
 	);
 }
 
+/** The card's last line, on every layout, unless the couple turned it off. */
+function StrictlyByInvitation({ w, part, className }: Ctx & { className: string }) {
+	if (!w.strictlyByInvitation) return null;
+	return (
+		<p
+			className={`inv-strict ${className}`}
+			{...part("strict")}>
+			Strictly by Invitation
+		</p>
+	);
+}
+
 /* Thin ornaments, drawn in the palette's accent colour. Purely decorative. */
 
 function Sprig() {
@@ -526,6 +539,11 @@ function Classic(ctx: Ctx) {
 				className="c-hashtag"
 				label="Share the day with"
 			/>
+
+			<StrictlyByInvitation
+				{...ctx}
+				className="c-strict"
+			/>
 		</div>
 	);
 }
@@ -625,6 +643,11 @@ function Modern(ctx: Ctx) {
 				id={ctx.id}
 				title="Programme"
 			/>
+
+			<StrictlyByInvitation
+				{...ctx}
+				className="m-strict"
+			/>
 		</div>
 	);
 }
@@ -718,6 +741,11 @@ function Editorial(ctx: Ctx) {
 				part={part}
 				id={ctx.id}
 				title="Also in this issue"
+			/>
+
+			<StrictlyByInvitation
+				{...ctx}
+				className="e-strict"
 			/>
 		</div>
 	);
@@ -873,6 +901,11 @@ function Garden(ctx: Ctx) {
 				className="g-hashtag"
 				label="Share your photos with"
 			/>
+
+			<StrictlyByInvitation
+				{...ctx}
+				className="g-strict"
+			/>
 		</div>
 	);
 }
@@ -1008,6 +1041,11 @@ function Deco(ctx: Ctx) {
 				className="d-hashtag"
 				label="Share with"
 			/>
+
+			<StrictlyByInvitation
+				{...ctx}
+				className="d-strict"
+			/>
 		</div>
 	);
 }
@@ -1095,6 +1133,11 @@ function Adire(ctx: Ctx) {
 					part={part}
 					id={ctx.id}
 					title="The celebrations"
+				/>
+
+				<StrictlyByInvitation
+					{...ctx}
+					className="a-strict"
 				/>
 			</div>
 			<span
@@ -1203,6 +1246,11 @@ function Minimal(ctx: Ctx) {
 				id={ctx.id}
 				title="Also celebrating"
 			/>
+
+			<StrictlyByInvitation
+				{...ctx}
+				className="n-strict"
+			/>
 		</div>
 	);
 }
@@ -1297,6 +1345,11 @@ function Poster(ctx: Ctx) {
 				part={part}
 				id={ctx.id}
 				title="Programme"
+			/>
+
+			<StrictlyByInvitation
+				{...ctx}
+				className="p-strict"
 			/>
 		</div>
 	);
