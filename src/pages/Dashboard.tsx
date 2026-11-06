@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
+import ConfirmNames from '../components/ConfirmNames.tsx'
 import CopyLink from '../components/CopyLink.tsx'
 import UnlockCallout from '../components/UnlockCallout.tsx'
 import Tour, { type TourStep } from '../components/Tour.tsx'
@@ -162,6 +163,8 @@ function Hero({ wedding, onChange, onTour }: { wedding: Wedding; onChange: (w: W
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notReady, setNotReady] = useState(false)
+  const [checking, setChecking] = useState(false)
+  const navigate = useNavigate()
   const published = wedding.status === 'published'
   const link = wedding.slug ? `${window.location.origin}/invite/${wedding.slug}` : null
 
@@ -199,7 +202,7 @@ function Hero({ wedding, onChange, onTour }: { wedding: Wedding; onChange: (w: W
         )}
 
         <div className="actions">
-          <button className={published ? 'btn btn--secondary' : 'btn'} onClick={toggle} disabled={busy}>
+          <button className={published ? 'btn btn--secondary' : 'btn'} onClick={published ? toggle : () => setChecking(true)} disabled={busy}>
             {busy ? 'Saving…' : published ? 'Unpublish' : 'Publish invitation'}
           </button>
           <Link to="/app/setup/names" className="btn btn--secondary">Edit details</Link>
@@ -212,6 +215,16 @@ function Hero({ wedding, onChange, onTour }: { wedding: Wedding; onChange: (w: W
         </div>
       </div>
       <Countdown date={wedding.date} />
+      <ConfirmNames
+        open={checking}
+        names={wedding}
+        onClose={() => setChecking(false)}
+        onEdit={() => navigate('/app/setup/names')}
+        onPublish={() => {
+          setChecking(false)
+          toggle()
+        }}
+      />
     </section>
   )
 }

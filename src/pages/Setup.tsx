@@ -3,7 +3,9 @@ import DatePicker from '../components/DatePicker.tsx'
 import TimeSelect from '../components/TimeSelect.tsx'
 import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
+import ConfirmNames from '../components/ConfirmNames.tsx'
 import Field from '../components/Field.tsx'
+import NameInput from '../components/NameInput.tsx'
 import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { formatDate, formatTime, todayInLagos } from '../lib/format.ts'
@@ -184,10 +186,10 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
       body = (
         <>
           <Field label="First partner’s name">
-            {(p) => <input {...p} type="text" autoComplete="off" maxLength={60} placeholder="Ọláolúwa" value={text('partnerOneName')} onChange={(e) => set('partnerOneName', e.target.value)} />}
+            {(p) => <NameInput {...p} label="First partner’s name" maxLength={60} placeholder="Ọláolúwa" value={text('partnerOneName')} onChange={(name) => set('partnerOneName', name)} />}
           </Field>
           <Field label="Second partner’s name">
-            {(p) => <input {...p} type="text" autoComplete="off" maxLength={60} placeholder="Ẹniọlá" value={text('partnerTwoName')} onChange={(e) => set('partnerTwoName', e.target.value)} />}
+            {(p) => <NameInput {...p} label="Second partner’s name" maxLength={60} placeholder="Ẹniọlá" value={text('partnerTwoName')} onChange={(name) => set('partnerTwoName', name)} />}
           </Field>
           <Field label="Wedding hashtag" optional hint="Guests can tag their photos with it. Letters, numbers and apostrophes, no spaces.">
             {(p) => (
@@ -470,6 +472,7 @@ function Review({ values, flush, onEdit }: ReviewProps) {
   const [busy, setBusy] = useState<'publish' | 'draft' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [problems, setProblems] = useState<Record<string, string>>({})
+  const [checking, setChecking] = useState(false)
 
   const missing = REQUIRED.filter((r) => !String(values[r.field] ?? '').trim())
 
@@ -583,10 +586,22 @@ function Review({ values, flush, onEdit }: ReviewProps) {
         <button type="button" className="btn btn--secondary" onClick={() => finish(false)} disabled={busy !== null}>
           {busy === 'draft' ? 'Saving…' : 'Save as private draft'}
         </button>
-        <button type="button" className="btn" onClick={() => finish(true)} disabled={busy !== null}>
+        {/* With a required answer missing there are no names to check, so the server explains instead. */}
+        <button type="button" className="btn" onClick={() => (missing.length ? finish(true) : setChecking(true))} disabled={busy !== null}>
           {busy === 'publish' ? 'Publishing…' : 'Publish invitation'}
         </button>
       </div>
+
+      <ConfirmNames
+        open={checking}
+        names={values}
+        onClose={() => setChecking(false)}
+        onEdit={() => onEdit('names')}
+        onPublish={() => {
+          setChecking(false)
+          finish(true)
+        }}
+      />
     </>
   )
 }
@@ -611,13 +626,20 @@ function ParentInput({ label, of, placeholder, value, late, onName, onLate }: Pa
   return (
     <Field label={label} optional>
       {(p) => (
-        <div className="parent-input">
-          <input {...p} type="text" autoComplete="off" maxLength={80} placeholder={placeholder} value={value} onChange={(e) => onName(e.target.value)} />
-          <label className="check">
-            <input type="checkbox" checked={late} onChange={(e) => onLate(e.target.checked)} />
-            Late<span className="visually-hidden"> ({label.toLowerCase()} of {of})</span>
-          </label>
-        </div>
+        <NameInput
+          {...p}
+          label={`${label} of ${of}`}
+          maxLength={80}
+          placeholder={placeholder}
+          value={value}
+          onChange={onName}
+          aside={
+            <label className="check">
+              <input type="checkbox" checked={late} onChange={(e) => onLate(e.target.checked)} />
+              Late<span className="visually-hidden"> ({label.toLowerCase()} of {of})</span>
+            </label>
+          }
+        />
       )}
     </Field>
   )
