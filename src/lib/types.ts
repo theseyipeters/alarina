@@ -1,7 +1,17 @@
+import type { VendorCategory, VendorStatus } from './vendors.ts'
 import type { InvitationLook, Palette, Template } from '../invite/design.ts'
 import type { AsoEbiUnit } from './asoEbi.ts'
 
-export type User = { id: string; name: string; email: string; tourCompletedAt: string | null }
+export type User = {
+  id: string
+  name: string
+  email: string
+  kind: 'couple' | 'vendor'
+  tourCompletedAt: string | null
+  /** The tour version they last finished; below currentTourVersion, they're shown what's new. */
+  tourVersion: number
+  currentTourVersion: number
+}
 
 export type Couple = {
   id: string
@@ -9,7 +19,21 @@ export type Couple = {
   pendingInvite: { email: string | null; expiresAt: string } | null
 }
 
-export type Session = { user: User; couple: Couple }
+/** A vendor's own account, as every vendor page needs it. */
+export type VendorSummary = {
+  id: string
+  slug: string
+  businessName: string
+  category: VendorCategory
+  status: VendorStatus
+  reviewNote: string | null
+  hasPayout: boolean
+}
+
+export type CoupleSession = { user: User; couple: Couple; vendor: null }
+export type VendorSession = { user: User; couple: null; vendor: VendorSummary }
+/** What sign-in, sign-up and /auth/me return: a couple's or a vendor's session. */
+export type Session = CoupleSession | VendorSession
 
 export type WeddingEvent = {
   id: string
@@ -87,6 +111,10 @@ export type WishlistItem = {
   imageId: string | null
   price: number
   funded: number
+  /** From the gift shop: the shop that sells and delivers it (the couple's view only). */
+  vendorName?: string | null
+  /** From the gift shop (guests' view). */
+  fromShop?: boolean
 }
 
 export type AsoEbiItem = {
@@ -193,7 +221,8 @@ export type WishlistOverview = {
   enabled: boolean
   hasPayout: boolean
   items: WishlistItem[]
-  totals: { received: number; count: number }
+  /** `received` reached the couple's account; `toShops` was paid to gift shops for their items. */
+  totals: { received: number; toShops?: number; count: number }
   gifts: {
     id: string
     guestName: string
@@ -204,4 +233,27 @@ export type WishlistOverview = {
     createdAt: string
     paidAt: string | null
   }[]
+}
+
+/* ── Vendors ──────────────────────────────────────────────────────── */
+
+export type VendorPackage = { id: string; name: string; description: string; price: number }
+export type VendorProduct = { id: string; name: string; description: string; imageId: string | null; price: number; active: boolean }
+
+/** A vendor's whole listing, as they edit it. Prices are in kobo. */
+export type VendorListing = VendorSummary & {
+  description: string
+  city: string
+  phone: string
+  email: string
+  website: string
+  instagram: string
+  coverImageId: string | null
+  gallery: string[]
+  priceFrom: number | null
+  packages: VendorPackage[]
+  products: VendorProduct[]
+  submittedAt: string | null
+  reviewedAt: string | null
+  payout: { bankName: string; accountName: string; accountLast4: string } | null
 }

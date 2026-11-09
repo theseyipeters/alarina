@@ -3,10 +3,13 @@ import { api } from '../lib/api.ts'
 import type { Session } from '../lib/types.ts'
 import { AuthContext, type AuthContextValue, type AuthState } from './AuthContext.ts'
 
-type Me = Session | { user: null; couple: null }
+type Me = Session | { user: null; couple: null; vendor: null }
 
-const toState = (me: Me): AuthState =>
-  me.user ? { status: 'signedIn', user: me.user, couple: me.couple } : { status: 'signedOut' }
+const toState = (me: Me): AuthState => {
+  if (!me.user) return { status: 'signedOut' }
+  if (me.vendor) return { status: 'vendor', user: me.user, vendor: me.vendor }
+  return me.couple ? { status: 'signedIn', user: me.user, couple: me.couple } : { status: 'signedOut' }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: 'loading' })

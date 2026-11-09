@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router'
+import { homeFor } from '../auth/AuthContext.ts'
 import { useAuth } from '../auth/useAuth.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { safeNext, withNext } from '../lib/nav.ts'
@@ -17,7 +18,7 @@ export default function SignIn() {
   // Kept so "Forgot password?" can carry it over.
   const [email, setEmail] = useState('')
 
-  if (state.status === 'signedIn' && !busy) return <Navigate to={next ?? '/app'} replace />
+  if ((state.status === 'signedIn' || state.status === 'vendor') && !busy) return <Navigate to={next ?? homeFor(state)} replace />
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -26,7 +27,9 @@ export default function SignIn() {
     setError(null)
     try {
       await signIn({ email, password: String(form.get('password')) })
-      navigate(next ?? '/app', { replace: true })
+      // Without a destination, the redirect above sends each kind of account to its own dashboard.
+      if (next) navigate(next, { replace: true })
+      else setBusy(false)
     } catch (err) {
       setError(errorMessage(err))
       setBusy(false)
@@ -55,6 +58,8 @@ export default function SignIn() {
         </form>
         <p className="form-footer">
           New here? <Link to={withNext('/signup', next)}>Create an account</Link>
+          {' · '}
+          <Link to={withNext('/signup?as=vendor', next)}>Join as a vendor</Link>
         </p>
       </div>
     </AuthLayout>

@@ -26,6 +26,18 @@ const Wishlist = lazy(() => import('./pages/Wishlist.tsx'))
 const GiftResult = lazy(() => import('./pages/GiftResult.tsx'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword.tsx'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword.tsx'))
+const Marketplace = lazy(() => import('./pages/Marketplace.tsx'))
+const VendorPage = lazy(() => import('./pages/VendorPage.tsx'))
+const Vendors = lazy(() => import('./pages/Vendors.tsx'))
+const Budget = lazy(() => import('./pages/Budget.tsx'))
+const PlannerAccept = lazy(() => import('./pages/PlannerAccept.tsx'))
+const VendorLayout = lazy(() => import('./pages/vendor/VendorLayout.tsx'))
+const Listing = lazy(() => import('./pages/vendor/Listing.tsx'))
+const Enquiries = lazy(() => import('./pages/vendor/Enquiries.tsx'))
+const Orders = lazy(() => import('./pages/vendor/Orders.tsx'))
+const Weddings = lazy(() => import('./pages/vendor/Weddings.tsx'))
+const PlanWedding = lazy(() => import('./pages/vendor/PlanWedding.tsx'))
+const Payouts = lazy(() => import('./pages/vendor/Payouts.tsx'))
 
 // Development-only reference page; the condition is compiled away so production builds don't include it.
 const StyleGuide = import.meta.env.DEV ? lazy(() => import('./pages/StyleGuide.tsx')) : null
@@ -46,12 +58,17 @@ export default function App() {
             <Route path="/invite/:slug" element={<Invitation />} />
             <Route path="/invite/:slug/gift" element={<GiftResult />} />
             <Route path="/rsvp/:token" element={<EditRsvp />} />
+            <Route path="/marketplace" element={<Marketplace />} />
+            <Route path="/marketplace/:slug" element={<VendorPage />} />
+            <Route path="/planner/accept/:token" element={<PlannerAccept />} />
             <Route element={<RequireAuth />}>
               <Route path="/partner" element={<InvitePartner />} />
               <Route path="/app" element={<DashboardLayout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="responses" element={<Responses />} />
                 <Route path="share" element={<Share />} />
+                <Route path="vendors" element={<Vendors />} />
+                <Route path="budget" element={<Budget />} />
                 <Route path="gifts" element={<Gifts />}>
                   <Route index element={<CashGifts />} />
                   <Route path="aso-ebi" element={<AsoEbi />} />
@@ -61,6 +78,17 @@ export default function App() {
               <Route path="/app/setup/:step?" element={<Setup />} />
               <Route path="/app/design" element={<Design />} />
               <Route path="/app/studio" element={<Studio />} />
+            </Route>
+            <Route element={<RequireAuth kind="vendor" />}>
+              <Route path="/vendor" element={<VendorLayout />}>
+                <Route index element={<Listing />} />
+                <Route path="enquiries" element={<Enquiries />} />
+                <Route path="enquiries/:id" element={<Enquiries />} />
+                <Route path="orders" element={<Orders />} />
+                <Route path="weddings" element={<Weddings />} />
+                <Route path="weddings/:weddingId" element={<PlanWedding />} />
+                <Route path="payouts" element={<Payouts />} />
+              </Route>
             </Route>
             {StyleGuide && <Route path="/styleguide" element={<StyleGuide />} />}
             <Route path="*" element={<NotFound />} />

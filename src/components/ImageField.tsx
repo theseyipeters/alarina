@@ -7,10 +7,14 @@ type Props = {
   /** The uploaded photo's id, or null for none. */
   value: string | null
   onChange: (imageId: string | null) => void
+  label?: string
+  optional?: boolean
+  /** Where photos are uploaded: a couple's gift photos by default, or a vendor's listing photos. */
+  uploadPath?: string
 }
 
 /** A photo for an item: choose one, it's shrunk and uploaded straight away, and its id is handed back. */
-export default function ImageField({ value, onChange }: Props) {
+export default function ImageField({ value, onChange, label = 'Photo', optional = true, uploadPath = '/wedding/gifts/images' }: Props) {
   const inputId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
@@ -30,7 +34,7 @@ export default function ImageField({ value, onChange }: Props) {
         setError('We couldn’t read that photo. Try a JPG or PNG.')
         return
       }
-      const { id } = await api.post<{ id: string }>('/wedding/gifts/images', photo)
+      const { id } = await api.post<{ id: string }>(uploadPath, photo)
       onChange(id)
     } catch (err) {
       setError(errorMessage(err))
@@ -42,7 +46,7 @@ export default function ImageField({ value, onChange }: Props) {
   return (
     <div className="field image-field">
       <label htmlFor={inputId}>
-        Photo <span className="muted">(optional)</span>
+        {label} {optional && <span className="muted">(optional)</span>}
       </label>
       <div className="image-field-row">
         {value ? <img className="thumb thumb--lg" src={imageSrc(value)} alt="Photo of the item" /> : <span className="thumb thumb--lg thumb--empty" aria-hidden="true" />}

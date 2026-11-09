@@ -40,6 +40,9 @@ async function request<T>(path: string, { body, headers, ...init }: RequestOptio
   return data as T
 }
 
+/** The full address of an API path, for links the browser opens itself (such as file downloads). */
+export const apiUrl = (path: string) => `${API_BASE}${path}`
+
 /** Where an uploaded item photo is served from. */
 export const imageSrc = (imageId: string) => `${API_BASE}/public/images/${imageId}`
 

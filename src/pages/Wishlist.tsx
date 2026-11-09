@@ -99,7 +99,10 @@ function Items({ items, onChange }: { items: WishlistItem[]; onChange: () => voi
   return (
     <section className="card" aria-labelledby="wish-items-title">
       <h2 id="wish-items-title">What you’d love</h2>
-      <p className="muted">Add each item with its price. Guests can pay for it in full or chip in towards it.</p>
+      <p className="muted">
+        Add each item with its price. Guests can pay for it in full or chip in towards it. Or pick from the{' '}
+        <Link to="/marketplace?tab=gifts">gift shop</Link>: the shop is paid and delivers it to you.
+      </p>
       {error && <p role="alert" className="alert">{error}</p>}
 
       {items.length > 0 && (
@@ -129,12 +132,16 @@ function Items({ items, onChange }: { items: WishlistItem[]; onChange: () => voi
                   </span>
                   <progress className="meter" value={item.funded} max={item.price} aria-label={`${item.name} funded`} />
                   {item.description && <span className="hint">{item.description}</span>}
+                  {item.vendorName && <span className="hint">From {item.vendorName}, who delivers it to you</span>}
                 </span>
                 </span>
                 <span className="item-actions">
-                  <button type="button" className="link-button" onClick={() => setEditing(item.id)}>
-                    Edit<span className="visually-hidden"> {item.name}</span>
-                  </button>
+                  {/* The shop sets a gift-shop item's price and photo. */}
+                  {!item.vendorName && (
+                    <button type="button" className="link-button" onClick={() => setEditing(item.id)}>
+                      Edit<span className="visually-hidden"> {item.name}</span>
+                    </button>
+                  )}
                   <button type="button" className="link-button" onClick={(e) => askRemove(item, e.currentTarget)}>
                     Remove<span className="visually-hidden"> {item.name}</span>
                   </button>

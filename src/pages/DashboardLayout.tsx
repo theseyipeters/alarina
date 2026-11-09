@@ -10,6 +10,8 @@ const TABS = [
   { to: '/app/responses', label: 'Responses', end: false },
   { to: '/app/share', label: 'Share', end: false },
   { to: '/app/gifts', label: 'Gifts', end: false },
+  { to: '/app/vendors', label: 'Vendors', end: false },
+  { to: '/app/budget', label: 'Budget', end: false },
 ]
 
 /** Shell for the couple's dashboard. Each tab has its own URL, so it can be bookmarked and shared. */
@@ -22,15 +24,18 @@ export default function DashboardLayout() {
     <div className="page page--dashboard">
       <header className="row">
         <Link to="/app" className="brand"><Logo /></Link>
-        <button
-          className="btn btn--secondary"
-          onClick={async () => {
-            await signOut()
-            navigate('/', { replace: true })
-          }}
-        >
-          Sign out
-        </button>
+        <div className="row row--tight">
+          <Link to="/marketplace" className="link-button" data-tour="marketplace">Marketplace</Link>
+          <button
+            className="btn btn--secondary"
+            onClick={async () => {
+              await signOut()
+              navigate('/', { replace: true })
+            }}
+          >
+            Sign out
+          </button>
+        </div>
       </header>
       <nav className="tabs" aria-label="Dashboard">
         {TABS.map((t) => (
