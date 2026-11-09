@@ -140,6 +140,11 @@ const planningStops: TourStep[] = [
     text: 'Enquire, get a quote and pay in full or in instalments. Add vendors you found elsewhere too, and invite a planner to plan with you.',
   },
   {
+    target: '[data-tour="tab-seating"]',
+    title: 'Plan your tables',
+    text: 'Lay out the hall, seat your guests and see how full each table is. Share it and every guest sees their table before the day, and the way to it from the door.',
+  },
+  {
     target: '[data-tour="tab-budget"]',
     title: 'Every cost in one place',
     text: 'See what each part of the day costs, what’s paid and what’s left, whether you paid in the app or not. Export it to PDF or Excel.',

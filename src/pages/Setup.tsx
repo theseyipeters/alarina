@@ -48,6 +48,7 @@ const EMPTY: WeddingFields = {
   dressNote: null,
   message: null,
   rsvpDeadline: null,
+  maxPartySize: 1,
   contactPhoneOne: null,
   contactPhoneTwo: null,
   strictlyByInvitation: true,
@@ -328,6 +329,18 @@ function Wizard({ wedding, defaults, onSaved }: WizardProps) {
           >
             {(p) => <DatePicker {...p} clearable min={today} max={values.date ?? undefined} value={text('rsvpDeadline')} onChange={(date) => set('rsvpDeadline', date || null)} />}
           </Field>
+          <Field
+            label="How many people can each reply bring?"
+            hint="Including the guest. Choose 1 if everyone should reply for themselves. Each person gets a seat when you plan the tables."
+          >
+            {(p) => (
+              <select {...p} value={values.maxPartySize} onChange={(e) => set('maxPartySize', Number(e.target.value))}>
+                {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                  <option key={n} value={n}>{n === 1 ? '1 (just themselves)' : `Up to ${n}`}</option>
+                ))}
+              </select>
+            )}
+          </Field>
           <PhoneField
             label="Phone number"
             hint="For guests to call about directions or anything else. Anyone with your invitation link can see it."
@@ -520,6 +533,7 @@ function Review({ values, flush, onEdit }: ReviewProps) {
     { label: 'Dress code', value: values.dressNote, step: 'dress' },
     { label: 'Message', value: values.message, step: 'message' },
     { label: 'RSVP by', value: formatDate(values.rsvpDeadline), step: 'rsvp' },
+    { label: 'Each reply brings', value: values.maxPartySize === 1 ? 'Just the guest' : `Up to ${values.maxPartySize} people`, step: 'rsvp' },
     { label: 'Phone numbers', value: [values.contactPhoneOne, values.contactPhoneTwo].filter(Boolean).join(' · '), step: 'rsvp' },
     { label: 'Strictly by Invitation', value: values.strictlyByInvitation ? 'Shown on the invitation' : 'Not shown', step: 'rsvp' },
     {

@@ -80,6 +80,8 @@ export type WeddingFields = {
   dressNote: string | null
   message: string | null
   rsvpDeadline: string | null
+  /** How many people one reply can bring, the guest included. 1: everyone replies for themselves. */
+  maxPartySize: number
   /** Numbers guests can call, as the couple typed them. */
   contactPhoneOne: string | null
   contactPhoneTwo: string | null
@@ -131,6 +133,7 @@ export type Rsvp = {
   email: string
   phone: string
   attending: boolean
+  partySize: number
   rejected: boolean
   rejectionNote: string | null
   updatedAt: string
@@ -161,7 +164,8 @@ export type Response = {
   updatedAt: string
 }
 
-export type Counts = { total: number; attending: number; declined: number; rejected: number }
+/** `people` adds up party sizes: a reply can bring several. */
+export type Counts = { total: number; attending: number; declined: number; rejected: number; people?: number }
 
 export type Responses = {
   partners: { userId: string; name: string }[]

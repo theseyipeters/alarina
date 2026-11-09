@@ -1,0 +1,332 @@
+/* Seating: the floor plan, the planning team's editor, and a guest's table card. */
+
+.floor-plan {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+  user-select: none;
+}
+
+.fp-hall {
+  fill: var(--surface);
+  stroke: var(--border);
+  stroke-width: 0.08;
+}
+
+.fp-feature rect {
+  stroke: none;
+}
+
+.fp-feature text,
+.fp-table text {
+  font-family: inherit;
+  pointer-events: none;
+}
+
+.fp-feature text {
+  font-size: 0.55px;
+  fill: var(--text-muted);
+}
+
+.fp-stage rect {
+  fill: var(--text);
+}
+
+.fp-stage text {
+  fill: var(--surface);
+}
+
+.fp-high rect {
+  fill: var(--bg);
+  stroke: var(--text-muted);
+  stroke-width: 0.05;
+}
+
+.fp-dance rect {
+  fill: color-mix(in srgb, var(--accent) 10%, transparent);
+  stroke: var(--accent);
+  stroke-width: 0.05;
+  stroke-dasharray: 0.25 0.15;
+}
+
+.fp-entrance rect {
+  fill: var(--accent);
+}
+
+.fp-entrance text {
+  fill: var(--surface);
+}
+
+.fp-extra rect {
+  fill: var(--border);
+}
+
+.fp-top {
+  fill: var(--bg);
+  stroke: var(--text-muted);
+  stroke-width: 0.05;
+}
+
+.fp-seat {
+  fill: var(--surface);
+  stroke: var(--text-muted);
+  stroke-width: 0.04;
+}
+
+.fp-seat.is-taken {
+  fill: var(--text-muted);
+}
+
+.fp-name {
+  font-size: 0.5px;
+  font-weight: 600;
+  fill: var(--text);
+}
+
+.fp-count {
+  font-size: 0.4px;
+  fill: var(--text-muted);
+}
+
+.fp-table.is-full .fp-top {
+  stroke: #b7791f;
+  stroke-width: 0.09;
+}
+
+.fp-table.is-over .fp-top {
+  stroke: var(--danger);
+  stroke-width: 0.12;
+}
+
+.fp-table.is-selected .fp-top,
+.fp-table.is-drop .fp-top {
+  stroke: var(--accent);
+  stroke-width: 0.12;
+}
+
+.fp-table.is-drop .fp-top {
+  fill: color-mix(in srgb, var(--accent) 15%, var(--bg));
+}
+
+.fp-table.is-mine .fp-top {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+
+.fp-table.is-mine .fp-name {
+  fill: var(--surface);
+}
+
+.fp-seat.is-mine {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+
+.fp-route {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 0.12;
+  stroke-dasharray: 0.35 0.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── Editor ─────────────────────────────────────────────────────────── */
+
+.seating {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.seating-totals {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-6);
+}
+
+.seating-stat {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.seating-stat strong {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  color: var(--text);
+}
+
+.seating-stat.is-warn strong {
+  color: var(--danger);
+}
+
+.seating-layout {
+  display: grid;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (min-width: 60rem) {
+  .seating-layout {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  }
+}
+
+.seating-plan .floor-plan {
+  max-height: 75vh;
+  margin: var(--space-3) 0;
+  border-radius: 0.5rem;
+}
+
+.seating-plan select,
+.party select {
+  width: auto;
+}
+
+.table-inspector {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.table-inspector h3 {
+  margin: 0;
+}
+
+.party-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.party {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+}
+
+.party[draggable='true'] {
+  cursor: grab;
+}
+
+.seating-preview {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+/* ── A guest's table ────────────────────────────────────────────────── */
+
+.table-card {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.table-card h2 {
+  margin: 0;
+}
+
+.table-card-spot {
+  margin: 0;
+  color: var(--accent);
+}
+
+.table-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.table-stats div {
+  padding: var(--space-3);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+}
+
+.table-stats dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+}
+
+.table-stats dt {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.table-stats div {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.floor-plan--guest {
+  max-height: 60vh;
+}
+
+/* The tilted hall. The plane holds the floor plan; the camera "moves" by moving the plane. */
+.perspective {
+  position: relative;
+  overflow: hidden;
+  height: min(60vh, 26rem);
+  background: linear-gradient(var(--bg), var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  perspective: 900px;
+  perspective-origin: 50% 20%;
+}
+
+.perspective-plane {
+  /* Its top-left corner sits at the middle of the view; the transform moves the camera's focus there. */
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  width: 80%;
+  transition: transform 2.4s cubic-bezier(0.22, 0.8, 0.2, 1), transform-origin 2.4s cubic-bezier(0.22, 0.8, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.perspective-plane .floor-plan {
+  height: 100%;
+}
+
+.perspective-replay {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+}
+
+.hall3d {
+  position: relative;
+}
+
+.hall3d-canvas {
+  height: min(60vh, 26rem);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .perspective-plane {
+    transition: none;
+  }
+}
+
+@media (max-width: 30rem) {
+  .table-stats dd {
+    font-size: 1.1rem;
+  }
+}

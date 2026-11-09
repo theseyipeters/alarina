@@ -10,8 +10,10 @@ import { errorMessage } from '../lib/errors.ts'
 import { coupleNames, formatDate } from '../lib/format.ts'
 import type { PublicInvitation, Rsvp } from '../lib/types.ts'
 import { useTitle } from '../lib/useTitle.ts'
+import GuestTableCard from '../seating/GuestTableCard.tsx'
+import type { GuestSeating } from '../seating/types.ts'
 
-type Loaded = { rsvp: Rsvp; invitation: PublicInvitation; editExpiresAt: string }
+type Loaded = { rsvp: Rsvp; invitation: PublicInvitation; editExpiresAt: string; seating: GuestSeating | null }
 type State = { status: 'loading' } | { status: 'invalid'; message: string } | ({ status: 'ready' } & Loaded)
 
 /** A guest's private page for changing their reply, themed like the invitation it belongs to. */
@@ -46,14 +48,14 @@ export default function EditRsvp() {
     )
   }
 
-  const { rsvp, invitation, editExpiresAt } = state
+  const { rsvp, invitation, editExpiresAt, seating } = state
   const names = coupleNames(...namesInOrder(invitation))
 
-  async function save(values: { name: string; phone: string; attending: boolean }) {
+  async function save(values: { name: string; phone: string; attending: boolean; partySize: number }) {
     setSaved(false)
     setError(null)
     try {
-      const updated = await api.patch<Loaded>(path, { name: values.name, phone: values.phone, attending: values.attending })
+      const updated = await api.patch<Loaded>(path, { name: values.name, phone: values.phone, attending: values.attending, partySize: values.partySize })
       setState({ status: 'ready', ...updated })
       setSaved(true)
     } catch (err) {
@@ -95,10 +97,13 @@ export default function EditRsvp() {
             You’ve {rsvp.attending ? 'accepted' : 'declined'}. You can change your reply until{' '}
             {formatDate(editExpiresAt.slice(0, 10))}.
           </p>
+          {rsvp.attending && rsvp.partySize > 1 && <p className="muted">{rsvp.partySize} of you are coming.</p>}
           {saved && <p role="status" className="alert alert--success">Your reply has been updated.</p>}
           {error && <p role="alert" className="alert">{error}</p>}
-          <RsvpForm initial={rsvp} emailLocked submitLabel="Save changes" busyLabel="Saving…" onSubmit={save} />
+          <RsvpForm initial={rsvp} maxParty={invitation.maxPartySize} emailLocked submitLabel="Save changes" busyLabel="Saving…" onSubmit={save} />
         </section>
+        {/* Once the couple shares their seating, a guest who's coming sees their table here before the day. */}
+        {seating && <GuestTableCard seating={seating} />}
         {/* Guests who replied before the couple unlocked Gifts can still give from here. */}
         <section className="inv-panel">
           <GiftBasket invitation={invitation} names={names} guest={{ name: rsvp.name, email: rsvp.email, phone: rsvp.phone }} rsvpToken={token} />

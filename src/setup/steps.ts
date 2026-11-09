@@ -46,7 +46,7 @@ export const STEP_FIELDS: Record<StepId, (keyof WeddingFields)[]> = {
   reception: ['receptionSeparate', 'receptionName', 'receptionVenueName', 'receptionVenueAddress', 'receptionTime'],
   dress: ['dressNote'],
   message: ['message'],
-  rsvp: ['rsvpDeadline', 'contactPhoneOne', 'contactPhoneTwo', 'strictlyByInvitation'],
+  rsvp: ['rsvpDeadline', 'maxPartySize', 'contactPhoneOne', 'contactPhoneTwo', 'strictlyByInvitation'],
   events: ['events'],
   finish: [],
 }

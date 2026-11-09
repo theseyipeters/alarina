@@ -107,7 +107,7 @@ export type Summary = {
     receptionVenueName: string | null
     events: { name: string; date: string | null; venueName: string | null }[]
   }
-  guests: { attending: number; declined: number; total: number }
+  guests: { attending: number; people?: number; declined: number; total: number }
 }
 
 export const ROLE_LABELS: Record<PlanningRole, string> = { couple: 'Couple', main: 'Main planner', co: 'Co-planner' }

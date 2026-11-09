@@ -143,7 +143,7 @@ export default function Responses() {
         )}
       </div>
       <p className="muted">
-        {summary.total} {summary.total === 1 ? 'reply' : 'replies'} · {summary.attending} attending · {summary.declined}{' '}
+        {summary.total} {summary.total === 1 ? 'reply' : 'replies'} · {summary.attending} attending{summary.people !== undefined && summary.people !== summary.attending && ` (${summary.people} people)`} · {summary.declined}{' '}
         declined{summary.rejected > 0 && ` · ${summary.rejected} rejected`}
       </p>
 

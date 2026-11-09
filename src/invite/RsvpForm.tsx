@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import Field from '../components/Field.tsx'
 
-export type RsvpValues = { name: string; email: string; phone: string; attending: boolean | null }
+export type RsvpValues = { name: string; email: string; phone: string; attending: boolean | null; partySize: number }
 
 type Props = {
   initial?: Partial<RsvpValues>
@@ -10,15 +10,18 @@ type Props = {
   submitLabel: string
   busyLabel: string
   disabled?: boolean
+  /** How many people a reply can bring. Above 1, guests choose how many of them are coming. */
+  maxParty?: number
   onSubmit: (values: RsvpValues & { attending: boolean }) => Promise<void>
 }
 
-export default function RsvpForm({ initial, emailLocked, submitLabel, busyLabel, disabled, onSubmit }: Props) {
+export default function RsvpForm({ initial, emailLocked, submitLabel, busyLabel, disabled, maxParty = 1, onSubmit }: Props) {
   const [values, setValues] = useState<RsvpValues>({
     name: initial?.name ?? '',
     email: initial?.email ?? '',
     phone: initial?.phone ?? '',
     attending: initial?.attending ?? null,
+    partySize: Math.min(initial?.partySize ?? 1, Math.max(maxParty, initial?.partySize ?? 1)),
   })
   const [choiceError, setChoiceError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -33,7 +36,8 @@ export default function RsvpForm({ initial, emailLocked, submitLabel, busyLabel,
     }
     setBusy(true)
     try {
-      await onSubmit({ ...values, attending: values.attending })
+      // Someone who can't come brings nobody.
+      await onSubmit({ ...values, attending: values.attending, partySize: values.attending ? values.partySize : 1 })
     } finally {
       setBusy(false)
     }
@@ -71,6 +75,18 @@ export default function RsvpForm({ initial, emailLocked, submitLabel, busyLabel,
         </label>
         {choiceError && <span id="attending-error" role="alert" className="field-error">{choiceError}</span>}
       </fieldset>
+
+      {values.attending === true && (maxParty > 1 || values.partySize > 1) && (
+        <Field label="How many of you are coming?" hint={`Including you. Up to ${Math.max(maxParty, values.partySize)}. Each person gets a seat.`}>
+          {(p) => (
+            <select {...p} value={values.partySize} onChange={(e) => set('partySize', Number(e.target.value))} disabled={disabled}>
+              {Array.from({ length: Math.max(maxParty, values.partySize) }, (_, i) => i + 1).map((n) => (
+                <option key={n} value={n}>{n === 1 ? 'Just me' : `${n} people`}</option>
+              ))}
+            </select>
+          )}
+        </Field>
+      )}
 
       <Field label="Your name">
         {(p) => (

@@ -297,7 +297,7 @@ function RsvpPanel({ invitation, names, from, sectionRef }: RsvpPanelProps) {
   const [closed, setClosed] = useState(!invitation.rsvpOpen)
   const [error, setError] = useState<string | null>(null)
 
-  async function submit(values: { name: string; email: string; phone: string; attending: boolean }) {
+  async function submit(values: { name: string; email: string; phone: string; attending: boolean; partySize: number }) {
     // Checked again here: the form may have been open in another tab when the reply was sent.
     const already = readReplied(invitation.slug)
     if (already) {
@@ -409,7 +409,7 @@ function RsvpPanel({ invitation, names, from, sectionRef }: RsvpPanelProps) {
             </p>
           )}
           {error && <p role="alert" className="alert">{error}</p>}
-          <RsvpForm submitLabel="Send reply" busyLabel="Sending…" onSubmit={submit} />
+          <RsvpForm submitLabel="Send reply" busyLabel="Sending…" maxParty={invitation.maxPartySize} onSubmit={submit} />
         </>
       )}
     </section>

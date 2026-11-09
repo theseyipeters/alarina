@@ -30,6 +30,7 @@ const Marketplace = lazy(() => import('./pages/Marketplace.tsx'))
 const VendorPage = lazy(() => import('./pages/VendorPage.tsx'))
 const Vendors = lazy(() => import('./pages/Vendors.tsx'))
 const Budget = lazy(() => import('./pages/Budget.tsx'))
+const Seating = lazy(() => import('./pages/Seating.tsx'))
 const PlannerAccept = lazy(() => import('./pages/PlannerAccept.tsx'))
 const VendorLayout = lazy(() => import('./pages/vendor/VendorLayout.tsx'))
 const Listing = lazy(() => import('./pages/vendor/Listing.tsx'))
@@ -69,6 +70,7 @@ export default function App() {
                 <Route path="share" element={<Share />} />
                 <Route path="vendors" element={<Vendors />} />
                 <Route path="budget" element={<Budget />} />
+                <Route path="seating" element={<Seating />} />
                 <Route path="gifts" element={<Gifts />}>
                   <Route index element={<CashGifts />} />
                   <Route path="aso-ebi" element={<AsoEbi />} />
