@@ -1,10 +1,15 @@
+import { lazy, Suspense } from 'react'
 import { Link } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
-import HeroInvitation from '../components/HeroInvitation.tsx'
+import HeroDemo from '../components/HeroDemo.tsx'
+import { useDemo } from '../lib/heroDemo.ts'
 import SeeItInAction from '../components/SeeItInAction.tsx'
 import { useTitle } from '../lib/useTitle.ts'
 import './Home.css'
 import Logo from '../components/Logo.tsx'
+
+// The live invitation pulls in the invitation fonts and styles, so it loads after the first paint.
+const DemoCard = lazy(() => import('../components/DemoCard.tsx'))
 
 const STEPS = [
   {
@@ -52,6 +57,7 @@ export default function Home() {
   useTitle('Wedding invitations and RSVPs')
   const { state } = useAuth()
   const signedIn = state.status === 'signedIn'
+  const demo = useDemo()
 
   const primaryCta = signedIn ? (
     <Link to="/app" className="btn">Go to your wedding</Link>
@@ -84,6 +90,7 @@ export default function Home() {
               Design your wedding invitation together, share it anywhere, and see who’s coming. Guests reply from their
               phone in under a minute, with no account.
             </p>
+            <HeroDemo demo={demo} />
             <div className="actions">
               {primaryCta}
               <a href="#how" className="btn btn--secondary">See how it works</a>
@@ -91,8 +98,10 @@ export default function Home() {
             <p className="hero-note">Your invitation stays private until you choose to publish it.</p>
           </div>
 
-          <div className="hero-figure">
-            <HeroInvitation />
+          <div className="hero-figure demo-stage">
+            <Suspense fallback={<div className="demo-stage-fallback" />}>
+              <DemoCard values={demo.values} />
+            </Suspense>
           </div>
         </section>
 
