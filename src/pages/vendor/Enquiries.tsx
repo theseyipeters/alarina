@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router'
+import DatePicker from '../../components/DatePicker.tsx'
 import Field from '../../components/Field.tsx'
 import { api } from '../../lib/api.ts'
 import { errorMessage } from '../../lib/errors.ts'
-import { formatDate } from '../../lib/format.ts'
+import { formatDate, todayInLagos } from '../../lib/format.ts'
 import { formatNaira } from '../../lib/money.ts'
 import { useTitle } from '../../lib/useTitle.ts'
 import { Thread } from '../../planning/BookingDetail.tsx'
@@ -173,7 +174,7 @@ function QuoteForm({ booking, busy, onSend }: { booking: Booking; busy: boolean;
             {(p) => <input {...p} type="number" inputMode="numeric" min={1} value={deposit} onChange={(e) => setDeposit(e.target.value)} />}
           </Field>
           <Field label="Valid until" optional>
-            {(p) => <input {...p} type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />}
+            {(p) => <DatePicker {...p} clearable min={todayInLagos()} value={validUntil} onChange={setValidUntil} />}
           </Field>
         </div>
         <Field label="Note" optional>

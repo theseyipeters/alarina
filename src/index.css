@@ -426,11 +426,15 @@ a {
   gap: 0 var(--space-3);
 }
 
+/* `input:not([type])` is a plain text input: React fields that leave out `type` still match. */
+input:not([type]),
 input[type='text'],
 input[type='email'],
 input[type='password'],
 input[type='tel'],
 input[type='search'],
+input[type='number'],
+input[type='url'],
 input[type='date'],
 input[type='time'],
 textarea,

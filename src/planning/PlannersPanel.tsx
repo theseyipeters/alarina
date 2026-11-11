@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import CopyLink from '../components/CopyLink.tsx'
 import Field from '../components/Field.tsx'
+import Select from '../components/Select.tsx'
 import { api } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { ROLE_LABELS, type Planner, type PlanningRole } from './types.ts'
@@ -113,10 +114,15 @@ function InviteForm({ weddingId, canInviteMain, onInvited }: { weddingId: string
       {canInviteMain && (
         <Field label="Role">
           {(p) => (
-            <select {...p} value={role} onChange={(e) => setRole(e.target.value as 'main' | 'co')}>
-              <option value="main">Main planner</option>
-              <option value="co">Co-planner</option>
-            </select>
+            <Select
+              {...p}
+              value={role}
+              onChange={(r) => setRole(r as 'main' | 'co')}
+              options={[
+                { value: 'main', label: 'Main planner' },
+                { value: 'co', label: 'Co-planner' },
+              ]}
+            />
           )}
         </Field>
       )}

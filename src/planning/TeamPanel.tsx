@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import Field from '../components/Field.tsx'
+import Select from '../components/Select.tsx'
 import { api } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { CATEGORY_IDS, VENDOR_CATEGORIES, type VendorCategory } from '../lib/vendors.ts'
@@ -67,15 +68,12 @@ export default function TeamPanel({ weddingId, role }: { weddingId: string; role
                     </span>
                   </span>
                   {canEdit ? (
-                    <select
+                    <Select
                       aria-label={`Status for ${m.name}`}
                       value={m.status}
-                      onChange={(e) => run(() => api.patch(`/planning/${weddingId}/team/${m.id}`, { status: e.target.value as TeamStatus }))}
-                    >
-                      {(Object.keys(TEAM_STATUS_LABELS) as TeamStatus[]).map((s) => (
-                        <option key={s} value={s}>{TEAM_STATUS_LABELS[s]}</option>
-                      ))}
-                    </select>
+                      onChange={(status) => run(() => api.patch(`/planning/${weddingId}/team/${m.id}`, { status: status as TeamStatus }))}
+                      options={(Object.keys(TEAM_STATUS_LABELS) as TeamStatus[]).map((s) => ({ value: s, label: TEAM_STATUS_LABELS[s] }))}
+                    />
                   ) : (
                     <span className="badge">{TEAM_STATUS_LABELS[m.status]}</span>
                   )}
@@ -195,11 +193,12 @@ function AddOffline({ onSave, onCancel }: { onSave: (body: OfflineDraft) => Prom
       <Field label="Name">{(p) => <input {...p} required maxLength={80} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />}</Field>
       <Field label="What they do">
         {(p) => (
-          <select {...p} value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value as VendorCategory })}>
-            {CATEGORY_IDS.map((id) => (
-              <option key={id} value={id}>{VENDOR_CATEGORIES[id].label}</option>
-            ))}
-          </select>
+          <Select
+            {...p}
+            value={draft.category}
+            onChange={(category) => setDraft({ ...draft, category: category as VendorCategory })}
+            options={CATEGORY_IDS.map((id) => ({ value: id, label: VENDOR_CATEGORIES[id].label }))}
+          />
         )}
       </Field>
       <div className="field-row">

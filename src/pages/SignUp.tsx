@@ -8,6 +8,7 @@ import { useTitle } from '../lib/useTitle.ts'
 import { CATEGORY_IDS, VENDOR_CATEGORIES, type VendorCategory } from '../lib/vendors.ts'
 import AuthLayout from '../components/AuthLayout.tsx'
 import Logo from '../components/Logo.tsx'
+import Select from '../components/Select.tsx'
 
 export default function SignUp() {
   const [params] = useSearchParams()
@@ -18,6 +19,7 @@ export default function SignUp() {
   const next = safeNext(params.get('next'))
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [category, setCategory] = useState('')
 
   if ((state.status === 'signedIn' || state.status === 'vendor') && !busy) return <Navigate to={next ?? homeFor(state)} replace />
 
@@ -33,7 +35,7 @@ export default function SignUp() {
           ...account,
           kind: 'vendor',
           businessName: String(form.get('businessName')),
-          category: String(form.get('category')) as VendorCategory,
+          category: category as VendorCategory,
         })
         // A planner arriving from a wedding's invite goes straight back to it.
         navigate(next ?? '/vendor', { replace: true })
@@ -68,12 +70,14 @@ export default function SignUp() {
               </div>
               <div className="field">
                 <label htmlFor="category">What you do</label>
-                <select id="category" name="category" required defaultValue="">
-                  <option value="" disabled>Choose one</option>
-                  {CATEGORY_IDS.map((id) => (
-                    <option key={id} value={id}>{VENDOR_CATEGORIES[id].label}</option>
-                  ))}
-                </select>
+                <Select
+                  id="category"
+                  required
+                  value={category}
+                  onChange={(c) => setCategory(c as VendorCategory)}
+                  placeholder="Choose one"
+                  options={CATEGORY_IDS.map((id) => ({ value: id, label: VENDOR_CATEGORIES[id].label }))}
+                />
               </div>
             </>
           )}

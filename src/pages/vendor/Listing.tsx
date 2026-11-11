@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '../../auth/useAuth.ts'
 import Field from '../../components/Field.tsx'
+import Select from '../../components/Select.tsx'
 import Tour, { type TourStep } from '../../components/Tour.tsx'
 import ImageField from '../../components/ImageField.tsx'
 import { api, ApiError, imageSrc } from '../../lib/api.ts'
@@ -224,11 +225,12 @@ function Profile({ vendor, onChange }: Props) {
         </Field>
         <Field label="What you do">
           {(p) => (
-            <select {...p} value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value as VendorCategory })}>
-              {CATEGORY_IDS.map((id) => (
-                <option key={id} value={id}>{VENDOR_CATEGORIES[id].label}</option>
-              ))}
-            </select>
+            <Select
+              {...p}
+              value={draft.category}
+              onChange={(category) => setDraft({ ...draft, category: category as VendorCategory })}
+              options={CATEGORY_IDS.map((id) => ({ value: id, label: VENDOR_CATEGORIES[id].label }))}
+            />
           )}
         </Field>
         <Field label="Description" hint="What you offer, your style and what couples can expect. At least a few sentences.">

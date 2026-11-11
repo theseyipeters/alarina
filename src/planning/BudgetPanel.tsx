@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react'
+import DatePicker from '../components/DatePicker.tsx'
 import Field from '../components/Field.tsx'
+import Select from '../components/Select.tsx'
 import { api, apiUrl } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { formatDate, todayInLagos } from '../lib/format.ts'
@@ -237,7 +239,7 @@ function RecordPayment({ outstanding, onSave }: { outstanding: number; onSave: (
       <p className="hint">For money paid outside Alárinà: cash, a transfer, a vendor who isn’t on the app.</p>
       <div className="field-row">
         <Field label="Amount (₦)">{(p) => <input {...p} type="number" inputMode="numeric" min={1} required value={amount} onChange={(e) => setAmount(e.target.value)} />}</Field>
-        <Field label="Date paid">{(p) => <input {...p} type="date" required value={date} onChange={(e) => setDate(e.target.value)} />}</Field>
+        <Field label="Date paid">{(p) => <DatePicker {...p} value={date} onChange={setDate} />}</Field>
       </div>
       <Field label="Note" optional>{(p) => <input {...p} maxLength={300} placeholder="Bank transfer, cash…" value={note} onChange={(e) => setNote(e.target.value)} />}</Field>
       <button className="btn btn--secondary" disabled={busy}>{busy ? 'Saving…' : 'Record payment'}</button>
@@ -283,12 +285,13 @@ function LineForm({ line, members, onSave, onCancel }: { line: BudgetLine | null
       {members.length > 0 && (
         <Field label="Vendor" optional>
           {(p) => (
-            <select {...p} value={draft.weddingVendorId} disabled={Boolean(line?.bookingId)} onChange={(e) => pickVendor(e.target.value)}>
-              <option value="">None</option>
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>{m.name}</option>
-              ))}
-            </select>
+            <Select
+              {...p}
+              value={draft.weddingVendorId}
+              disabled={Boolean(line?.bookingId)}
+              onChange={pickVendor}
+              options={[{ value: '', label: 'None' }, ...members.map((m) => ({ value: m.id, label: m.name }))]}
+            />
           )}
         </Field>
       )}
@@ -296,16 +299,17 @@ function LineForm({ line, members, onSave, onCancel }: { line: BudgetLine | null
       <div className="field-row">
         <Field label="Category">
           {(p) => (
-            <select {...p} value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value as BudgetCategory })}>
-              {BUDGET_CATEGORIES.map((id) => (
-                <option key={id} value={id}>{CATEGORY_LABELS[id]}</option>
-              ))}
-            </select>
+            <Select
+              {...p}
+              value={draft.category}
+              onChange={(category) => setDraft({ ...draft, category: category as BudgetCategory })}
+              options={BUDGET_CATEGORIES.map((id) => ({ value: id, label: CATEGORY_LABELS[id] }))}
+            />
           )}
         </Field>
         <Field label="Total cost (₦)">{(p) => <input {...p} type="number" inputMode="numeric" min={0} required value={draft.cost} onChange={(e) => setDraft({ ...draft, cost: e.target.value })} />}</Field>
       </div>
-      <Field label="Due date" optional>{(p) => <input {...p} type="date" value={draft.dueDate} onChange={(e) => setDraft({ ...draft, dueDate: e.target.value })} />}</Field>
+      <Field label="Due date" optional>{(p) => <DatePicker {...p} clearable value={draft.dueDate} onChange={(dueDate) => setDraft({ ...draft, dueDate })} />}</Field>
       <Field label="Notes" optional>{(p) => <textarea {...p} rows={2} maxLength={1000} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} />}</Field>
       <div className="actions">
         <button className="btn" disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>

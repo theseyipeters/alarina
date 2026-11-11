@@ -23,8 +23,9 @@
   gap: var(--space-3);
 }
 
-.team-member-head select {
+.team-member-head .select {
   width: auto;
+  min-width: 11rem;
 }
 
 .booking {
