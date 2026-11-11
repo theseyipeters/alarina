@@ -1,16 +1,111 @@
-/* Split screen for account pages. The art panel only appears on wide screens. */
+/*
+ * Account pages. An emerald panel (the landing finale's colours) beside the form: drifting
+ * glows and petals, a headline rising word by word, the scene for the audience, and chips
+ * popping in around it. On phones the panel is a short band above the form. Base styles are
+ * the finished scene; animations play from the start, so reduced motion shows it still.
+ */
 
 .auth-art {
+  /* The emerald "live" panel's tokens (see Celebration.css), so the logo, pills and text suit it. */
+  --text: #f6f0e1;
+  --text-muted: #c9d3c5;
+  --surface: #134636;
+  --border: #2a5b4a;
+  --accent: #e2c27d;
+  --success: #a8e2bc;
+  --emerald: #0e3a2d;
+  --glow-a: #2f7a5c;
+  --glow-b: #c9a45c;
+  --glow-c: #6f9f86;
+
+  position: relative;
+  display: grid;
+  gap: var(--space-4);
+  justify-items: start;
+  padding: var(--space-6) var(--space-4) calc(var(--space-16) + var(--space-6));
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--text);
+  background: var(--emerald);
+}
+
+.auth-art .petals {
+  inset: 0;
+  z-index: -1;
+  /* Faint in the short phone band, so they never crowd the logo and headline. */
+  opacity: 0.35;
+}
+
+.auth-brand {
+  display: inline-flex;
+  margin: 0;
+}
+
+.auth-glow {
+  position: absolute;
+  inset: -10%;
+  z-index: -2;
+  pointer-events: none;
+}
+
+.auth-glow span {
+  position: absolute;
+  width: 55%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.55;
+}
+
+.auth-glow span:nth-child(1) { top: 5%; left: 0; background: var(--glow-a); animation: auth-drift-a 16s ease-in-out infinite alternate; }
+.auth-glow span:nth-child(2) { right: 0; bottom: 0; background: var(--glow-b); opacity: 0.35; animation: auth-drift-b 19s ease-in-out infinite alternate; }
+.auth-glow span:nth-child(3) { top: 40%; left: 30%; width: 40%; background: var(--glow-c); opacity: 0.35; animation: auth-drift-c 22s ease-in-out infinite alternate; }
+
+.auth-art-scene {
+  display: grid;
+  gap: var(--space-8);
+  justify-items: center;
+  width: 100%;
+}
+
+.auth-art-title {
+  max-width: 22ch;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 6vw, 2.75rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.auth-word {
+  display: inline-block;
+  animation: auth-word 800ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.auth-art-title > span:nth-child(1) .auth-word { animation-delay: 100ms; }
+.auth-art-title > span:nth-child(2) .auth-word { animation-delay: 160ms; }
+.auth-art-title > span:nth-child(3) .auth-word { animation-delay: 220ms; }
+.auth-art-title > span:nth-child(4) .auth-word { animation-delay: 280ms; }
+.auth-art-title > span:nth-child(5) .auth-word { animation-delay: 340ms; }
+.auth-art-title > span:nth-child(6) .auth-word { animation-delay: 400ms; }
+.auth-art-title > span:nth-child(7) .auth-word { animation-delay: 460ms; }
+.auth-art-title > span:nth-child(n + 8) .auth-word { animation-delay: 520ms; }
+
+/* Phones: only the logo and headline, in a short band the form card overlaps. */
+.auth-art-figure,
+.auth-art-note {
   display: none;
+}
+
+.auth-art-scene {
+  justify-items: start;
 }
 
 .auth-main {
-  padding: var(--space-12) var(--space-4);
-}
-
-/* The logo: above the form on phones, at the top of the paper panel on wide screens. */
-.auth-brand--wide {
-  display: none;
+  position: relative;
+  z-index: 1;
+  margin-top: calc(var(--space-12) * -1);
+  padding: 0 var(--space-4) var(--space-12);
 }
 
 .auth-column {
@@ -19,6 +114,30 @@
   margin: 0 auto;
 }
 
+/* The form: calm, with a gentle entrance and a soft ring while it's in use. */
+.auth-column > .card {
+  box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.45);
+  transition: box-shadow 300ms ease, border-color 300ms ease;
+  animation: auth-rise 700ms cubic-bezier(0.2, 0.8, 0.2, 1) 150ms both;
+}
+
+.auth-column > .card:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent),
+    0 30px 60px -30px rgb(0 0 0 / 0.45);
+}
+
+.auth-column > .card > * {
+  animation: auth-rise 600ms ease both;
+}
+
+.auth-column > .card > :nth-child(1) { animation-delay: 300ms; }
+.auth-column > .card > :nth-child(2) { animation-delay: 380ms; }
+.auth-column > .card > :nth-child(3) { animation-delay: 460ms; }
+.auth-column > .card > :nth-child(4) { animation-delay: 540ms; }
+.auth-column > .card > :nth-child(n + 5) { animation-delay: 620ms; }
+
 @media (min-width: 60rem) {
   .auth {
     display: grid;
@@ -26,92 +145,155 @@
     min-height: 100vh;
   }
 
-  .auth-main {
-    display: grid;
-    align-items: center;
-    padding: var(--space-12) var(--space-8);
+  .auth-art .petals {
+    opacity: 1;
   }
 
-  /* A warm paper panel in both themes, so the emerald envelope stands out. It carries its
-     own tokens, so the reply pills inside suit it. Text pairs meet WCAG AA. */
   .auth-art {
-    --text: #1e1b18;
-    --text-muted: #5e574f;
-    --surface: #fffdf8;
-    --border: #e0d8c8;
-    --success: #1f6b3a;
-    --accent: #2e5a47;
-
     position: sticky;
     top: 0;
-    display: grid;
     grid-template-rows: auto minmax(0, 1fr) auto;
     gap: var(--space-8);
+    justify-items: stretch;
     height: 100vh;
     padding: var(--space-12);
-    overflow: hidden;
-    color: var(--text);
-    background: #efe9dd;
   }
 
-  .auth-brand--wide {
-    display: inline-flex;
+  .auth-brand {
     justify-self: start;
-    margin: 0;
   }
 
-  .auth-brand--narrow {
-    display: none;
-  }
-
-  .auth-art-title {
-    max-width: 22ch;
-    margin: 0;
-    text-align: center;
-    font-family: var(--font-display);
-    font-size: clamp(1.75rem, 2.6vw, 2.5rem);
-    line-height: 1.1;
-    letter-spacing: -0.025em;
-  }
-
-  /* The heading sits centred directly above the envelope, the two centred together in the panel. */
   .auth-art-scene {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-8);
+    align-content: center;
+    justify-items: center;
     min-height: 0;
   }
 
-  .auth-art-scene .hero-art,
-  .auth-art-scene .vendor-art {
+  .auth-art-title {
+    text-align: center;
+  }
+
+  .auth-art-figure {
+    position: relative;
+    display: flex;
+    justify-content: center;
     width: min(100%, 26rem, 52vh);
+    filter: drop-shadow(0 30px 40px rgb(0 0 0 / 0.35));
+    animation: auth-figure 1s cubic-bezier(0.2, 0.8, 0.2, 1) 300ms both;
+  }
+
+  /* A gold spotlight so the emerald envelope stands off the emerald panel. */
+  .auth-art-figure::before {
+    content: '';
+    position: absolute;
+    inset: -15%;
+    z-index: -1;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 28%, transparent), transparent);
+    filter: blur(20px);
+  }
+
+  .auth-art-figure .hero-art,
+  .auth-art-figure .vendor-art {
+    width: 100%;
   }
 
   .auth-art-note {
+    display: block;
     margin: 0;
     font-size: var(--text-sm);
     color: var(--text-muted);
+    animation: auth-fade 600ms ease 900ms both;
   }
 
-  /* Fades in on load and again when sign-up switches between couples and vendors. */
-  .auth-art-scene,
-  .auth-art-note {
-    animation: auth-art-in 0.35s ease-out both;
+  .auth-main {
+    display: grid;
+    align-items: center;
+    margin-top: 0;
+    padding: var(--space-12) var(--space-8);
+    background:
+      radial-gradient(circle, color-mix(in srgb, var(--text) 7%, transparent) 1px, transparent 1.5px) 0 0 / 18px 18px,
+      radial-gradient(60% 50% at 50% 100%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
+      var(--bg);
   }
 }
 
-@keyframes auth-art-in {
-  from {
-    opacity: 0;
-  }
+/* Chips popping in around the scene, on a shared 12s loop. */
+.auth-chips {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
 }
+
+.auth-chip {
+  position: absolute;
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: 0 14px 30px rgb(0 0 0 / 0.25);
+  backdrop-filter: blur(10px);
+  animation: auth-chip 12s cubic-bezier(0.2, 0.9, 0.3, 1.2) infinite both;
+}
+
+.auth-chip-icon {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: var(--text-xs);
+  color: var(--emerald);
+  background: var(--accent);
+  border-radius: 50%;
+}
+
+.auth-chip:nth-child(1) { top: 4%; left: -18%; animation-delay: 2s; }
+.auth-chip:nth-child(2) { top: 42%; right: -20%; animation-delay: 6s; }
+.auth-chip:nth-child(3) { bottom: 6%; left: -12%; animation-delay: 10s; }
+
+@keyframes auth-word {
+  from { opacity: 0; transform: translateY(0.45em) rotate(2deg); filter: blur(6px); }
+}
+
+@keyframes auth-rise {
+  from { opacity: 0; transform: translateY(14px); }
+}
+
+@keyframes auth-fade {
+  from { opacity: 0; }
+}
+
+@keyframes auth-figure {
+  from { opacity: 0; transform: translateY(30px) scale(0.94); }
+}
+
+@keyframes auth-chip {
+  0% { opacity: 0; transform: translateY(14px) scale(0.6); }
+  4%, 26% { opacity: 1; transform: none; }
+  31%, 100% { opacity: 0; transform: translateY(-10px) scale(0.95); }
+}
+
+@keyframes auth-drift-a { to { transform: translate(20%, 25%) scale(1.15); } }
+@keyframes auth-drift-b { to { transform: translate(-25%, -15%) scale(0.9); } }
+@keyframes auth-drift-c { to { transform: translate(-15%, 20%) scale(1.25); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .auth-art-scene,
-  .auth-art-note {
-    animation: none;
+  .auth *,
+  .auth-column > .card {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .auth-chip {
+    opacity: 1;
   }
 }
 

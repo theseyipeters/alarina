@@ -1,0 +1,228 @@
+/*
+ * "Try it as a guest". The real guest page parts in a usable phone (the frame reuses the
+ * .st-phone styles from SeeItStory.css). Inside, sizes the guest page takes from the window
+ * width are taken from the phone's screen instead.
+ */
+
+.gt-grid {
+  display: grid;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+@media (min-width: 56rem) {
+  .gt-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.gt-eyebrow {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.gt h2 {
+  margin-bottom: var(--space-4);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  letter-spacing: -0.025em;
+}
+
+.gt-lead {
+  max-width: 30rem;
+  margin: 0 0 var(--space-8);
+  font-size: var(--text-lg);
+}
+
+/* A checklist that ticks off as the visitor goes. */
+.gt-steps {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-6);
+  padding: 0;
+  list-style: none;
+}
+
+.gt-steps li {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  font-size: var(--text-lg);
+  color: var(--text-muted);
+  transition: color 300ms ease;
+}
+
+.gt-steps li.is-done {
+  color: var(--text);
+}
+
+.gt-tick {
+  position: relative;
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1.5px solid var(--field-border);
+  border-radius: 50%;
+  transition: background-color 300ms ease, border-color 300ms ease;
+}
+
+.gt-tick::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 7.5px;
+  width: 5px;
+  height: 10px;
+  border: solid var(--on-primary);
+  border-width: 0 2px 2px 0;
+  opacity: 0;
+  transform: rotate(45deg) scale(0.4);
+  transition: opacity 250ms ease, transform 350ms cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.is-done .gt-tick {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.is-done .gt-tick::after {
+  opacity: 1;
+  transform: rotate(45deg);
+}
+
+.gt-safe {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+/* ── The phone ─────────────────────────────────────────────────────── */
+
+.gt-device {
+  display: flex;
+  justify-content: center;
+}
+
+.gt-phone {
+  width: min(100%, 21rem);
+}
+
+/* Smaller on phones, so there is always page around it to scroll by. */
+@media (max-width: 55.99rem) {
+  .gt-phone {
+    width: min(82%, 17.5rem);
+  }
+}
+
+.gt-screen {
+  container-type: inline-size;
+}
+
+.gt-scroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.gt-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.inv.gt-inv {
+  min-height: 100%;
+  padding: 0 var(--space-3) var(--space-8);
+  font-size: var(--text-sm);
+}
+
+/* A status bar band in the invitation's own background, so the invitation scrolls under it
+   rather than under the camera. Sticky inside the phone's scroller, and it doubles as the top gap. */
+.gt-bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: block;
+  height: 2.75rem;
+  margin: 0 calc(var(--space-3) * -1) var(--space-2);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+/* The guest page sizes these from the window; in the phone they follow its screen. */
+.gt-inv .intro {
+  min-height: 34rem;
+}
+
+.gt-inv .intro-names {
+  font-size: calc(2.25rem * var(--font-fit, 1));
+}
+
+.gt-inv .intro-envelope {
+  width: 88%;
+  margin: calc(88cqi * 0.42) 0 var(--space-6);
+}
+
+.gt-inv .inv-monogram {
+  font-size: 95cqi;
+}
+
+.gt-inv .inv-column {
+  gap: var(--space-6);
+}
+
+.gt-inv .inv-panel {
+  padding: var(--space-6) var(--space-4);
+}
+
+.gt-inv .plan-actions {
+  justify-content: center;
+}
+
+.gt-rsvp-title,
+.gt-done-title {
+  margin: 0 0 var(--space-3);
+  font-family: var(--inv-display);
+  font-size: var(--text-xl);
+}
+
+.gt-done-more {
+  margin-top: var(--space-4);
+  font-size: var(--text-xs);
+}
+
+.gt-note {
+  max-width: 16rem;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+/* A pulsing hint on the sealed envelope. */
+.gt-tap {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  z-index: 3;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--on-primary);
+  background: var(--primary);
+  border-radius: 999px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: gt-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes gt-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 50%, transparent); }
+  60% { box-shadow: 0 0 0 12px transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Link } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
 import HeroDemo from '../components/HeroDemo.tsx'
@@ -6,16 +7,22 @@ import FeaturesBento from '../components/FeaturesBento.tsx'
 import HeroStage from '../components/HeroStage.tsx'
 import HowItWorks from '../components/HowItWorks.tsx'
 import { useDemo } from '../lib/heroDemo.ts'
+import { useRememberDemoNames } from '../lib/demoNames.ts'
 import SeeItStory from '../components/SeeItStory.tsx'
 import { useTitle } from '../lib/useTitle.ts'
 import './Home.css'
 import Logo from '../components/Logo.tsx'
+
+// Eight invitations and their fonts: loaded on their own, after the first paint.
+const DesignGallery = lazy(() => import('../components/DesignGallery.tsx'))
+const GuestTry = lazy(() => import('../components/GuestTry.tsx'))
 
 export default function Home() {
   useTitle('Wedding invitations and RSVPs')
   const { state } = useAuth()
   const signedIn = state.status === 'signedIn'
   const demo = useDemo()
+  useRememberDemoNames(demo.values)
 
   const primaryCta = signedIn ? (
     <Link to="/app" className="btn">Go to your wedding</Link>
@@ -71,6 +78,14 @@ export default function Home() {
         <HowItWorks values={demo.values} />
 
         <SeeItStory values={demo.values} />
+
+        <Suspense fallback={<div className="gal-fallback" />}>
+          <DesignGallery demo={demo} />
+        </Suspense>
+
+        <Suspense fallback={<div className="gt-fallback" />}>
+          <GuestTry values={demo.values} />
+        </Suspense>
 
         <FeaturesBento values={demo.values} />
 

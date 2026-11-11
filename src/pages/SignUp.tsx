@@ -77,7 +77,7 @@ export default function SignUp() {
   }
 
   return (
-    <AuthLayout audience={asVendor ? 'vendor' : 'couple'}>
+    <AuthLayout audience={asVendor ? 'vendor' : 'couple'} personal>
       <div className="card">
         <fieldset className="auth-switch">
           <legend className="visually-hidden">What brings you to Alárinà?</legend>

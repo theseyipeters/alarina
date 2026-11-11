@@ -163,3 +163,12 @@
 .landing-footer .brand {
   margin: 0;
 }
+
+/* Holds the gallery's place while it loads. */
+.gal-fallback {
+  min-height: 60rem;
+}
+
+.gt-fallback {
+  min-height: 48rem;
+}

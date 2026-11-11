@@ -13,6 +13,9 @@ const CHIPS = [
 
 const AUTO_MS = 3800
 
+const designKey = (v: { look: number; design: { template: string; palette: string } | null }) =>
+  v.design ? `${v.design.template}-${v.design.palette}` : `look-${v.look}`
+
 /**
  * The hero's live invitation: it flips in, floats over a drifting glow, leans towards the mouse,
  * and flips again each time the design changes. Until the visitor touches the form it steps
@@ -67,7 +70,7 @@ export default function HeroStage({ demo }: { demo: ReturnType<typeof useDemo> }
       <div className="hero-float">
         <div className="hero-lean">
           {/* Remounts on each new design, so the card flips in again. */}
-          <div key={demo.values.look} className="hero-flip">
+          <div key={designKey(demo.values)} className="hero-flip">
             <Suspense fallback={<div className="demo-stage-fallback" />}>
               <DemoCard values={demo.values} />
             </Suspense>
