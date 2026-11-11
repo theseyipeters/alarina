@@ -8,6 +8,11 @@
   padding: var(--space-12) var(--space-4);
 }
 
+/* The logo: above the form on phones, at the top of the paper panel on wide screens. */
+.auth-brand--wide {
+  display: none;
+}
+
 .auth-column {
   width: 100%;
   max-width: 28rem;
@@ -35,17 +40,28 @@
     --surface: #fffdf8;
     --border: #e0d8c8;
     --success: #1f6b3a;
+    --accent: #2e5a47;
 
     position: sticky;
     top: 0;
     display: grid;
-    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr) auto;
     gap: var(--space-8);
     height: 100vh;
     padding: var(--space-12);
     overflow: hidden;
     color: var(--text);
     background: #efe9dd;
+  }
+
+  .auth-brand--wide {
+    display: inline-flex;
+    justify-self: start;
+    margin: 0;
+  }
+
+  .auth-brand--narrow {
+    display: none;
   }
 
   .auth-art-title {
@@ -68,7 +84,8 @@
     min-height: 0;
   }
 
-  .auth-art-scene .hero-art {
+  .auth-art-scene .hero-art,
+  .auth-art-scene .vendor-art {
     width: min(100%, 26rem, 52vh);
   }
 
@@ -77,4 +94,43 @@
     font-size: var(--text-sm);
     color: var(--text-muted);
   }
+
+  /* Fades in on load and again when sign-up switches between couples and vendors. */
+  .auth-art-scene,
+  .auth-art-note {
+    animation: auth-art-in 0.35s ease-out both;
+  }
+}
+
+@keyframes auth-art-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-art-scene,
+  .auth-art-note {
+    animation: none;
+  }
+}
+
+/* Sign-up: who the account is for. Full width, the two choices sharing it evenly. */
+.auth-switch {
+  margin: 0 0 var(--space-6);
+  padding: 0;
+  border: 0;
+}
+
+.auth-switch .seg {
+  display: flex;
+  width: 100%;
+}
+
+.auth-switch .seg label {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: var(--control-height);
+  padding: 0 var(--space-2);
+  text-align: center;
 }

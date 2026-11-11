@@ -7,13 +7,26 @@ import { safeNext, withNext } from '../lib/nav.ts'
 import { useTitle } from '../lib/useTitle.ts'
 import { CATEGORY_IDS, VENDOR_CATEGORIES, type VendorCategory } from '../lib/vendors.ts'
 import AuthLayout from '../components/AuthLayout.tsx'
-import Logo from '../components/Logo.tsx'
 import Select from '../components/Select.tsx'
 
+const COPY = {
+  couple: {
+    title: 'Plan your wedding together',
+    intro: 'Invitations, replies and gifts in one space you share with your partner.',
+    submit: 'Create account',
+  },
+  vendor: {
+    title: 'List your business',
+    intro: 'Reach couples while they plan. For planners, venues, caterers, gift shops and more.',
+    submit: 'Create vendor account',
+  },
+}
+
 export default function SignUp() {
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const asVendor = params.get('as') === 'vendor'
-  useTitle(asVendor ? 'Join as a vendor' : 'Create your account')
+  const copy = COPY[asVendor ? 'vendor' : 'couple']
+  useTitle(copy.title)
   const { state, signUp } = useAuth()
   const navigate = useNavigate()
   const next = safeNext(params.get('next'))
@@ -50,16 +63,34 @@ export default function SignUp() {
     }
   }
 
+  // The choice lives in the address (?as=vendor), so links straight to either side keep working.
+  // Replacing the entry keeps Back leaving the page, and what's typed so far stays in the form.
+  function choose(vendor: boolean) {
+    const to = new URLSearchParams(params)
+    if (vendor) to.set('as', 'vendor')
+    else to.delete('as')
+    setError(null)
+    setParams(to, { replace: true })
+  }
+
   return (
-    <AuthLayout>
-      <Link to="/" className="brand"><Logo /></Link>
+    <AuthLayout audience={asVendor ? 'vendor' : 'couple'}>
       <div className="card">
-        <h1>{asVendor ? 'Join as a vendor' : 'Create your account'}</h1>
-        <p className="muted">
-          {asVendor
-            ? 'List your business where couples plan their weddings. Planners, venues, caterers, gift shops and more.'
-            : 'You and your partner will share one wedding space.'}
-        </p>
+        <fieldset className="auth-switch">
+          <legend className="visually-hidden">What brings you to Alárinà?</legend>
+          <div className="seg">
+            <label>
+              <input type="radio" className="visually-hidden" name="as" checked={!asVendor} onChange={() => choose(false)} />
+              Planning a wedding
+            </label>
+            <label>
+              <input type="radio" className="visually-hidden" name="as" checked={asVendor} onChange={() => choose(true)} />
+              Vendor or planner
+            </label>
+          </div>
+        </fieldset>
+        <h1>{copy.title}</h1>
+        <p className="muted">{copy.intro}</p>
         {error && <p role="alert" className="alert">{error}</p>}
         <form onSubmit={onSubmit}>
           {asVendor && (
@@ -94,16 +125,10 @@ export default function SignUp() {
             <input id="password" name="password" type="password" autoComplete="new-password" placeholder="Create a password" required minLength={8} maxLength={128} aria-describedby="password-hint" />
             <span id="password-hint" className="hint">At least 8 characters.</span>
           </div>
-          <button className="btn btn--block" disabled={busy}>{busy ? 'Creating account…' : 'Create account'}</button>
+          <button className="btn btn--block" disabled={busy}>{busy ? 'Creating account…' : copy.submit}</button>
         </form>
         <p className="form-footer">
           Already have an account? <Link to={withNext('/signin', next)}>Sign in</Link>
-          {' · '}
-          {asVendor ? (
-            <Link to={withNext('/signup', next)}>Planning your own wedding?</Link>
-          ) : (
-            <Link to={withNext('/signup?as=vendor', next)}>Join as a vendor</Link>
-          )}
         </p>
       </div>
     </AuthLayout>

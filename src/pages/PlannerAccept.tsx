@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
 import AuthLayout from '../components/AuthLayout.tsx'
-import Logo from '../components/Logo.tsx'
 import { api } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { formatDate } from '../lib/format.ts'
@@ -48,7 +47,6 @@ export default function PlannerAccept() {
 
   return (
     <AuthLayout>
-      <Link to="/" className="brand"><Logo /></Link>
       <div className="card">
         {invite === null || state.status === 'loading' ? (
           <p className="muted">Checking your invite…</p>

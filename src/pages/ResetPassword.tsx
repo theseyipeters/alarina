@@ -3,7 +3,6 @@ import { Link, useParams } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
 import AuthLayout from '../components/AuthLayout.tsx'
 import Field from '../components/Field.tsx'
-import Logo from '../components/Logo.tsx'
 import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import type { Session } from '../lib/types.ts'
@@ -59,7 +58,6 @@ export default function ResetPassword() {
 
   return (
     <AuthLayout>
-      <Link to="/" className="brand"><Logo /></Link>
       <div className="card">
         {status === 'checking' && <p className="muted">Checking your link…</p>}
 
