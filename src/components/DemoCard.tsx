@@ -44,11 +44,11 @@ function content(values: DemoValues): InvitationContent {
 }
 
 /** The real invitation, rebuilt as the visitor types. Loaded on its own so the page's first paint stays light. */
-export default function DemoCard({ values }: { values: DemoValues }) {
+export default function DemoCard({ values, idPrefix = 'hero-demo' }: { values: DemoValues; idPrefix?: string }) {
   const invitation = useMemo(() => content(values), [values])
   return (
     <div className="inv inv--preview" {...inviteAttrs(invitation)} inert>
-      <InvitationCard invitation={invitation} idPrefix="hero-demo" />
+      <InvitationCard invitation={invitation} idPrefix={idPrefix} />
     </div>
   )
 }
