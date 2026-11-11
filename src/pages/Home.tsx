@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
 import HeroInvitation from '../components/HeroInvitation.tsx'
+import SeeItInAction from '../components/SeeItInAction.tsx'
 import { useTitle } from '../lib/useTitle.ts'
 import './Home.css'
 import Logo from '../components/Logo.tsx'
@@ -110,6 +111,8 @@ export default function Home() {
             ))}
           </ol>
         </section>
+
+        <SeeItInAction />
 
         <section className="landing-section" aria-labelledby="features-title">
           <div className="section-head">
