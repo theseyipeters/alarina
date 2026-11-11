@@ -1,25 +1,31 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../auth/useAuth.ts'
 import { api } from './api.ts'
+import { errorMessage } from './errors.ts'
 import type { VendorListing } from './types.ts'
 
-type State = { status: 'loading' } | { status: 'error' } | { status: 'ready'; vendor: VendorListing }
+type State = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; vendor: VendorListing }
 
-/** The signed-in vendor's listing. Saving one refreshes the session too, so the header's status stays right. */
+/**
+ * The signed-in vendor's listing, with a retry for a failed load. Saving one refreshes the
+ * session too, so the header's status stays right.
+ */
 export function useVendor() {
   const { refresh } = useAuth()
   const [state, setState] = useState<State>({ status: 'loading' })
 
+  const load = useCallback(
+    () =>
+      api.get<{ vendor: VendorListing }>('/vendor').then(
+        ({ vendor }) => setState({ status: 'ready', vendor }),
+        (err: unknown) => setState({ status: 'error', message: errorMessage(err) }),
+      ),
+    [],
+  )
+
   useEffect(() => {
-    let cancelled = false
-    api.get<{ vendor: VendorListing }>('/vendor').then(
-      ({ vendor }) => !cancelled && setState({ status: 'ready', vendor }),
-      () => !cancelled && setState({ status: 'error' }),
-    )
-    return () => {
-      cancelled = true
-    }
-  }, [])
+    void load()
+  }, [load])
 
   const setVendor = useCallback(
     (vendor: VendorListing) => {
@@ -29,5 +35,5 @@ export function useVendor() {
     [refresh],
   )
 
-  return [state, setVendor] as const
+  return [state, setVendor, load] as const
 }

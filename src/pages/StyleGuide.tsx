@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react'
+import AmountInput from '../components/AmountInput.tsx'
+import { Petals } from '../components/Celebration.tsx'
 import DatePicker from '../components/DatePicker.tsx'
 import Field from '../components/Field.tsx'
+import ImageField from '../components/ImageField.tsx'
 import Select from '../components/Select.tsx'
 import TimeSelect from '../components/TimeSelect.tsx'
 import { useTitle } from '../lib/useTitle.ts'
 import '@fontsource/instrument-serif'
 import './StyleGuide.css'
 import Logo from '../components/Logo.tsx'
+import { EmptyState, Loading, LoadError } from '../components/States.tsx'
 
 const COLOURS = [
   ['--bg', 'Page background'],
@@ -30,6 +34,8 @@ export default function StyleGuide() {
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
   const [choice, setChoice] = useState('')
+  const [price, setPrice] = useState('1250000')
+  const [photo, setPhoto] = useState<string | null>(null)
 
   useEffect(() => {
     const root = document.documentElement
@@ -155,6 +161,10 @@ export default function StyleGuide() {
                 {(p) => <TimeSelect {...p} optional value={time} onChange={setTime} />}
               </Field>
             </div>
+            <Field label="Price" hint="From ₦500. Guests pay Paystack’s fee on top.">
+              {(p) => <AmountInput {...p} min={500} max={50000000} placeholder={85000} value={price} onChange={setPrice} />}
+            </Field>
+            <ImageField label="Cover photo" value={photo} onChange={setPhoto} />
             <Field label="Bank">
               {(p) => (
                 <Select
@@ -188,6 +198,35 @@ export default function StyleGuide() {
         <div className="actions">
           <span className="badge">Private draft</span>
           <span className="badge badge--live">Published</span>
+        </div>
+        <h3>Live panel</h3>
+        <section className="celebrate">
+          <Petals />
+          <div className="celebrate-body">
+            <p className="eyebrow">Approved</p>
+            <h2>Your listing is live</h2>
+            <p className="muted">Couples can find you in the marketplace now. Share your page so they can enquire and book.</p>
+            <div className="actions">
+              <button type="button" className="btn">Share on WhatsApp</button>
+              <button type="button" className="btn btn--secondary">See your page</button>
+            </div>
+          </div>
+        </section>
+        <h3>Empty, failed and loading</h3>
+        <div className="stack">
+          <EmptyState card icon="envelope" title="No replies yet" action={<button type="button" className="btn">Share your invitation</button>}>
+            Replies appear here as guests answer, marked with your side or your partner’s.
+          </EmptyState>
+          <EmptyState card compact icon="store" title="No vendors yet" action={<button type="button" className="btn btn--secondary">Add a vendor</button>}>
+            Add the ones you already know, or find them in the marketplace.
+          </EmptyState>
+          <LoadError title="Your budget didn’t load" message="Could not reach the server. Check your connection and try again." onRetry={() => new Promise((r) => setTimeout(r, 800))} />
+          <div className="card">
+            <LoadError compact title="This booking didn’t load" message="Could not reach the server. Check your connection and try again." onRetry={() => new Promise((r) => setTimeout(r, 800))} />
+          </div>
+          <div className="card">
+            <Loading label="Loading your vendors" />
+          </div>
         </div>
       </section>
 

@@ -5,6 +5,7 @@ import Logo from '../../components/Logo.tsx'
 import { STATUS_LABELS } from '../../lib/vendors.ts'
 import '../Dashboard.css'
 import './vendor.css'
+import { Loading } from '../../components/States.tsx'
 
 /** Shell for a vendor's dashboard. Planners also get Weddings, where they plan alongside couples. */
 export default function VendorLayout() {
@@ -50,7 +51,7 @@ export default function VendorLayout() {
         ))}
       </nav>
       <main id="main">
-        <Suspense fallback={<p className="muted">Loading…</p>}>
+        <Suspense fallback={<Loading />}>
           <Outlet />
         </Suspense>
       </main>

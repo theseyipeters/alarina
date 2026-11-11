@@ -30,6 +30,11 @@
   padding-bottom: var(--space-16);
 }
 
+/* The page's grid gap already spaces the tabs from what follows. */
+.market > .tabs {
+  margin-bottom: 0;
+}
+
 .market-intro h1 {
   margin: 0 0 var(--space-2);
 }
@@ -103,31 +108,4 @@
   display: grid;
   gap: var(--space-1);
   padding: var(--space-4);
-}
-
-.vendor-cover {
-  width: 100%;
-  max-height: 22rem;
-  object-fit: cover;
-  border-radius: 0.75rem;
-}
-
-.vendor-description {
-  white-space: pre-wrap;
-}
-
-.vendor-gallery-photo {
-  width: 9rem;
-  height: 9rem;
-  object-fit: cover;
-  border-radius: 0.5rem;
-}
-
-.contact-list {
-  display: grid;
-  gap: var(--space-2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  overflow-wrap: anywhere;
 }

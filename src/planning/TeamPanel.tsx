@@ -8,6 +8,7 @@ import { CATEGORY_IDS, VENDOR_CATEGORIES, type VendorCategory } from '../lib/ven
 import BookingDetail from './BookingDetail.tsx'
 import { TEAM_STATUS_LABELS, type Booking, type PlanningRole, type TeamMember, type TeamStatus } from './types.ts'
 import { useLoad } from './useLoad.ts'
+import { EmptyState, LoadError, Loading } from '../components/States.tsx'
 
 /**
  * A wedding's vendor team: marketplace vendors (who can be enquired with, booked and paid here)
@@ -33,8 +34,8 @@ export default function TeamPanel({ weddingId, role }: { weddingId: string; role
     }
   }
 
-  if (team.status === 'loading') return <p className="muted">Loading your vendors…</p>
-  if (team.status === 'error') return <p role="alert" className="alert">{team.message}</p>
+  if (team.status === 'loading') return <Loading label="Loading your vendors" />
+  if (team.status === 'error') return <LoadError title="Your vendors didn’t load" message={team.message} onRetry={reload} />
   const members = team.data.team
   const openBooking = (memberId: string) =>
     bookings.status === 'ready' ? bookings.data.bookings.find((b) => b.weddingVendorId === memberId && b.status !== 'cancelled') : undefined
@@ -42,7 +43,7 @@ export default function TeamPanel({ weddingId, role }: { weddingId: string; role
   return (
     <section className="card" aria-labelledby="team-title" data-tour="team">
       <div className="row">
-        <h2 id="team-title">Your vendors</h2>
+        <h2 id="team-title">{role === 'couple' ? 'Your vendors' : 'Vendors'}</h2>
         {canEdit && <Link to="/marketplace" className="btn btn--secondary">Find vendors</Link>}
       </div>
       <p className="muted">
@@ -51,7 +52,11 @@ export default function TeamPanel({ weddingId, role }: { weddingId: string; role
       {error && <p role="alert" className="alert">{error}</p>}
 
       {members.length === 0 ? (
-        <p className="board-empty">No vendors yet. Browse the marketplace, or add one you already know.</p>
+        <EmptyState compact icon="store" title="No vendors yet">
+          {canEdit
+            ? 'Find them in the marketplace, or add the ones you already know, so your bookings and budget sit in one place.'
+            : 'Vendors appear here as the couple or their main planner adds them.'}
+        </EmptyState>
       ) : (
         <ul className="team-list">
           {members.map((m) => {

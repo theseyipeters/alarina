@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
+import AmountInput from '../components/AmountInput.tsx'
 import Field from '../components/Field.tsx'
 import ImageField from '../components/ImageField.tsx'
 import Select from '../components/Select.tsx'
+import { EmptyState, LoadError, Loading } from '../components/States.tsx'
 import { api, ApiError, imageSrc } from '../lib/api.ts'
 import { MAX_PRICE_NAIRA, MIN_PRICE_NAIRA, quantityLabel, UNITS, type AsoEbiUnit } from '../lib/asoEbi.ts'
 import { errorMessage } from '../lib/errors.ts'
-import { formatNaira } from '../lib/money.ts'
+import { formatNaira, nairaInput } from '../lib/money.ts'
 import type { AsoEbiOverview } from '../lib/types.ts'
 import { useTitle } from '../lib/useTitle.ts'
 
-type State = { status: 'loading' } | { status: 'error' } | { status: 'none' } | { status: 'ready'; data: AsoEbiOverview }
+type State = { status: 'loading' } | { status: 'error'; message: string } | { status: 'none' } | { status: 'ready'; data: AsoEbiOverview }
 type Item = AsoEbiOverview['items'][number]
 
 /** Aso-ebi: the couple lists the material and sets the price; guests buy it through the invitation. */
@@ -22,7 +24,8 @@ export default function AsoEbi() {
     () =>
       api.get<AsoEbiOverview>('/wedding/gifts/aso-ebi').then(
         (data) => setState({ status: 'ready', data }),
-        (err) => setState({ status: err instanceof ApiError && err.code === 'no_wedding' ? 'none' : 'error' }),
+        (err: unknown) =>
+          setState(err instanceof ApiError && err.code === 'no_wedding' ? { status: 'none' } : { status: 'error', message: errorMessage(err) }),
       ),
     [],
   )
@@ -31,14 +34,13 @@ export default function AsoEbi() {
     load()
   }, [load])
 
-  if (state.status === 'loading') return <p className="muted">Loading aso-ebi…</p>
-  if (state.status === 'error') return <p role="alert" className="alert">Aso-ebi couldn’t be loaded. Refresh to try again.</p>
+  if (state.status === 'loading') return <Loading label="Loading aso-ebi" />
+  if (state.status === 'error') return <LoadError title="Aso-ebi didn’t load" message={state.message} onRetry={load} />
   if (state.status === 'none') {
     return (
-      <div className="card">
-        <h1>Aso-ebi</h1>
-        <p className="muted">Set up your wedding first, then come back to offer aso-ebi.</p>
-      </div>
+      <EmptyState card icon="list" title="Set up your wedding first" action={<Link to="/app/setup" className="btn">Set up your wedding</Link>}>
+        Aso-ebi needs your names, date and venue. Come back here once they’re in.
+      </EmptyState>
     )
   }
 
@@ -110,7 +112,7 @@ function Items({ items, onChange }: { items: Item[]; onChange: () => void }) {
             editing === item.id ? (
               <li key={item.id}>
                 <ItemForm
-                  initial={{ name: item.name, description: item.description, imageId: item.imageId, unit: item.unit, price: String(item.price / 100) }}
+                  initial={{ name: item.name, description: item.description, imageId: item.imageId, unit: item.unit, price: nairaInput(item.price) }}
                   itemId={item.id}
                   onDone={() => {
                     setEditing(null)
@@ -240,17 +242,9 @@ function ItemForm({ initial, itemId, onDone, onCancel }: FormProps) {
           />
         )}
       </Field>
-      <Field label={`Price per ${draft.unit} in naira`} hint={`From ${formatNaira(MIN_PRICE_NAIRA * 100)}. Guests pay Paystack’s fee on top.`}>
+      <Field label={`Price per ${draft.unit}`} hint={`From ${formatNaira(MIN_PRICE_NAIRA * 100)}. Guests pay Paystack’s fee on top.`}>
         {(p) => (
-          <input
-            {...p}
-            type="text"
-            inputMode="numeric"
-            required
-            placeholder="15000"
-            value={draft.price}
-            onChange={(e) => set('price', e.target.value.replace(/\D/g, ''))}
-          />
+          <AmountInput {...p} required placeholder={15000} value={draft.price} onChange={(price) => set('price', price)} />
         )}
       </Field>
       <Field label="Details" optional hint="Colour, how many yards in a set, anything guests should know.">

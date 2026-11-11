@@ -8,7 +8,10 @@ import type { VendorCategory } from '../lib/vendors.ts'
  */
 export type AuthState =
   | { status: 'loading' }
-  | { status: 'signedOut' }
+  /** The server couldn't be asked who this is, so they may well be signed in. */
+  | { status: 'unreachable'; message: string }
+  /** `expired`: they were signed in on this visit and the session ended under them. */
+  | { status: 'signedOut'; expired?: boolean }
   | ({ status: 'signedIn' } & Omit<CoupleSession, 'vendor'>)
   | ({ status: 'vendor' } & Omit<VendorSession, 'couple'>)
 

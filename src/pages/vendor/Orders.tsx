@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { api } from '../../lib/api.ts'
 import { errorMessage } from '../../lib/errors.ts'
 import { formatDate } from '../../lib/format.ts'
@@ -6,6 +7,7 @@ import { formatNaira } from '../../lib/money.ts'
 import { useTitle } from '../../lib/useTitle.ts'
 import { useLoad } from '../../planning/useLoad.ts'
 import '../Gifts.css'
+import { EmptyState, LoadError, Loading } from '../../components/States.tsx'
 
 type Order = {
   id: string
@@ -26,8 +28,8 @@ export default function Orders() {
   const [state, reload] = useLoad<{ orders: Order[]; totals: { received: number; count: number } }>('/vendor/orders')
   const [error, setError] = useState<string | null>(null)
 
-  if (state.status === 'loading') return <p className="muted">Loading orders…</p>
-  if (state.status === 'error') return <p role="alert" className="alert">{state.message}</p>
+  if (state.status === 'loading') return <Loading label="Loading orders" />
+  if (state.status === 'error') return <LoadError title="Your orders didn’t load" message={state.message} onRetry={reload} />
   const { orders, totals } = state.data
 
   async function delivered(o: Order) {
@@ -53,7 +55,9 @@ export default function Orders() {
       <section className="card" aria-labelledby="orders-title">
         <h2 id="orders-title">Orders</h2>
         {orders.length === 0 ? (
-          <p className="board-empty">No orders yet. When a couple adds your products to their wishlist, guests can buy them.</p>
+          <EmptyState icon="box" title="No orders yet" action={<Link to="/vendor">Manage your products</Link>}>
+            Couples add your products to their wishlists, and their guests buy them. Each order appears here with who it’s for and where it goes.
+          </EmptyState>
         ) : (
           <ul className="item-list">
             {orders.map((o) => (

@@ -1,0 +1,75 @@
+/* Live panels (components/Celebration.tsx): an emerald panel with petals drifting clear of the text.
+   Used when a couple's invitation is live and when a vendor's listing is. */
+.celebrate {
+  position: relative;
+  overflow: hidden;
+  padding: var(--space-12) var(--space-8);
+  color: #f6f0e1;
+  background: #0e3a2d;
+  border-radius: var(--radius-lg);
+  --text: #f6f0e1;
+  --text-muted: #c9d3c5;
+  --surface: #134636;
+  --border: #2a5b4a;
+  --field-border: #7fa391;
+  --primary: #e2c27d;
+  --primary-hover: #eed39a;
+  --on-primary: #0e3a2d;
+  --accent: #e2c27d;
+  --focus: #e2c27d;
+  --bg: #0e3a2d;
+  /* The petals' layout follows the panel's own width, so it works in any page column. */
+  container: celebrate / inline-size;
+}
+
+.celebrate-body {
+  position: relative;
+  max-width: 34rem;
+}
+
+.celebrate h2 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  letter-spacing: -0.03em;
+}
+
+.petals {
+  position: absolute;
+  inset: 0 0 0 calc(var(--space-8) + 36rem);
+  pointer-events: none;
+  container-type: size;
+}
+
+/* Too narrow to drift beside the text: a band above it instead. */
+@container celebrate (max-width: 52rem) {
+  .celebrate-body {
+    margin-top: 4.5rem;
+  }
+
+  .petals {
+    inset: var(--space-4) var(--space-4) auto;
+    height: 5.5rem;
+  }
+}
+
+.petal {
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  width: var(--size);
+  height: calc(var(--size) * 1.4);
+  border-radius: 70% 0 70% 0;
+  opacity: 0.9;
+  transform: rotate(var(--angle));
+}
+
+.petal--0 {
+  background: #e2c27d;
+}
+
+.petal--1 {
+  background: #f4d9d0;
+}
+
+.petal--2 {
+  background: #8fc1a9;
+}

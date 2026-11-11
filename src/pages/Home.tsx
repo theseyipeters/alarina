@@ -137,7 +137,7 @@ export default function Home() {
 
       <footer className="landing-footer">
         <span className="brand"><Logo /></span>
-        <span>© {new Date().getFullYear()} Alárinà</span>
+        <span>© {new Date().getFullYear()} Alárinà · <Link to="/cookies">Cookie Policy</Link></span>
       </footer>
     </div>
   )

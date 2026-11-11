@@ -1,30 +1,35 @@
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router'
 import { useAuth } from '../../auth/useAuth.ts'
+import AmountInput from '../../components/AmountInput.tsx'
+import { Petals } from '../../components/Celebration.tsx'
+import CopyLink from '../../components/CopyLink.tsx'
 import Field from '../../components/Field.tsx'
 import Select from '../../components/Select.tsx'
 import Tour, { type TourStep } from '../../components/Tour.tsx'
 import ImageField from '../../components/ImageField.tsx'
 import { api, ApiError, imageSrc } from '../../lib/api.ts'
 import { errorMessage } from '../../lib/errors.ts'
-import { formatNaira } from '../../lib/money.ts'
+import { formatNaira, nairaInput } from '../../lib/money.ts'
 import type { Session, VendorListing, VendorPackage, VendorProduct } from '../../lib/types.ts'
 import { useTitle } from '../../lib/useTitle.ts'
 import { useVendor } from '../../lib/useVendor.ts'
 import { CATEGORY_IDS, MAX_PRICE_NAIRA, MIN_PRICE_NAIRA, VENDOR_CATEGORIES, type VendorCategory } from '../../lib/vendors.ts'
 import '../Gifts.css'
+import { LoadError, Loading } from '../../components/States.tsx'
 
 const UPLOAD = '/vendor/images'
 
 /** A vendor's listing: what couples see in the marketplace, and sending it for review. */
 export default function Listing() {
   useTitle('Your listing')
-  const [state, setVendor] = useVendor()
+  const [state, setVendor, retry] = useVendor()
   const { state: auth, refresh } = useAuth()
   // null: decide automatically; false once closed.
   const [tour, setTour] = useState<boolean | null>(null)
 
-  if (state.status === 'loading') return <p className="muted">Loading your listing…</p>
-  if (state.status === 'error') return <p role="alert" className="alert">Your listing couldn’t be loaded. Refresh to try again.</p>
+  if (state.status === 'loading') return <Loading label="Loading your listing" />
+  if (state.status === 'error') return <LoadError title="Your listing didn’t load" message={state.message} onRetry={retry} />
   const v = state.vendor
   const upToDate = auth.status === 'vendor' && auth.user.tourVersion >= auth.user.currentTourVersion
   // Once the listing is on screen, so the tour can point at it.
@@ -130,6 +135,8 @@ function ReviewBanner({ vendor, onChange }: Props) {
 
   const canSubmit = vendor.status === 'draft' || vendor.status === 'rejected'
 
+  if (vendor.status === 'approved') return <LiveListing vendor={vendor} />
+
   return (
     <section className="card" aria-labelledby="review-title" data-tour="vendor-review">
       <h2 id="review-title">
@@ -137,7 +144,6 @@ function ReviewBanner({ vendor, onChange }: Props) {
           {
             draft: 'Finish your listing, then send it for review',
             pending: 'Your listing is waiting for review',
-            approved: 'Your listing is live',
             rejected: 'Your listing needs a few changes',
             suspended: 'Your listing is suspended',
           }[vendor.status]
@@ -148,13 +154,12 @@ function ReviewBanner({ vendor, onChange }: Props) {
           {
             draft: 'Couples can’t see you yet. Our team checks every listing before it goes into the marketplace, usually within two working days.',
             pending: 'We’ll email you when it’s been checked. You can keep editing in the meantime.',
-            approved: `Couples can find you at /marketplace/${vendor.slug}. Changes you make show straight away.`,
             rejected: 'Make the changes below, then send it again.',
             suspended: 'Contact Alárinà support for help.',
           }[vendor.status]
         }
       </p>
-      {vendor.reviewNote && vendor.status !== 'approved' && (
+      {vendor.reviewNote && (
         <p className="alert alert--info">
           <strong>From our team:</strong> {vendor.reviewNote}
         </p>
@@ -191,7 +196,7 @@ function Profile({ vendor, onChange }: Props) {
     email: vendor.email,
     website: vendor.website,
     instagram: vendor.instagram,
-    priceFrom: vendor.priceFrom === null ? '' : String(vendor.priceFrom / 100),
+    priceFrom: nairaInput(vendor.priceFrom),
   })
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
@@ -238,9 +243,9 @@ function Profile({ vendor, onChange }: Props) {
         </Field>
         <div className="field-row">
           <Field label="City">{(p) => <input {...p} maxLength={80} placeholder="Lagos" value={draft.city} onChange={set('city')} />}</Field>
-          <Field label="Starting price (₦)" optional>
+          <Field label="Starting price" optional>
             {(p) => (
-              <input {...p} type="number" inputMode="numeric" min={MIN_PRICE_NAIRA} max={MAX_PRICE_NAIRA} value={draft.priceFrom} onChange={set('priceFrom')} />
+              <AmountInput {...p} min={MIN_PRICE_NAIRA} max={MAX_PRICE_NAIRA} placeholder={250000} value={draft.priceFrom} onChange={(priceFrom) => setDraft({ ...draft, priceFrom })} />
             )}
           </Field>
         </div>
@@ -365,7 +370,7 @@ function PricedItems({
     <ItemForm
       initial={
         item
-          ? { name: item.name, description: item.description, price: String(item.price / 100), imageId: item.imageId, active: item.active }
+          ? { name: item.name, description: item.description, price: nairaInput(item.price), imageId: item.imageId, active: item.active }
           : { name: '', description: '', price: '', imageId: null, active: true }
       }
       withPhoto={withPhoto}
@@ -468,18 +473,9 @@ function ItemForm({
       <Field label="Description" optional>
         {(p) => <textarea {...p} rows={3} maxLength={withPhoto ? 300 : 500} value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} />}
       </Field>
-      <Field label="Price (₦)">
+      <Field label="Price">
         {(p) => (
-          <input
-            {...p}
-            type="number"
-            inputMode="numeric"
-            required
-            min={MIN_PRICE_NAIRA}
-            max={MAX_PRICE_NAIRA}
-            value={draft.price}
-            onChange={(e) => setDraft({ ...draft, price: e.target.value })}
-          />
+          <AmountInput {...p} required min={MIN_PRICE_NAIRA} max={MAX_PRICE_NAIRA} value={draft.price} onChange={(price) => setDraft({ ...draft, price })} />
         )}
       </Field>
       {withPhoto && (
@@ -492,5 +488,30 @@ function ItemForm({
         <button type="button" className="btn btn--secondary" onClick={onCancel} disabled={busy}>Cancel</button>
       </div>
     </form>
+  )
+}
+
+/** Shown while the listing is live: petals drift across the panel, and the page is ready to share. */
+function LiveListing({ vendor }: { vendor: VendorListing }) {
+  const link = `${window.location.origin}/marketplace/${vendor.slug}`
+  const message = `${vendor.businessName} is on Alárinà. See what we offer and book us here: ${link}`
+  return (
+    <section className="celebrate" aria-labelledby="review-title" data-tour="vendor-review">
+      <Petals />
+      <div className="celebrate-body">
+        <p className="eyebrow">Approved</p>
+        <h2 id="review-title">Your listing is live</h2>
+        <p className="muted">Couples can find you in the marketplace now. Share your page so they can enquire and book. Changes you make show straight away.</p>
+        <CopyLink link={link} label="Your marketplace page" />
+        <div className="actions">
+          <a className="btn" href={`https://wa.me/?text=${encodeURIComponent(message)}`} target="_blank" rel="noopener noreferrer">
+            Share on WhatsApp<span className="visually-hidden"> (opens in a new tab)</span>
+          </a>
+          <Link to={`/marketplace/${vendor.slug}`} className="btn btn--secondary">
+            See your page
+          </Link>
+        </div>
+      </div>
+    </section>
   )
 }

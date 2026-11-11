@@ -455,6 +455,26 @@ textarea {
   line-height: 1.5;
 }
 
+/* Amount fields (components/AmountInput.tsx): ₦ sits inside the field, before the digits. */
+.amount {
+  position: relative;
+  display: block;
+}
+
+.amount-sign {
+  position: absolute;
+  top: 50%;
+  left: var(--space-3);
+  color: var(--text-muted);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+input.amount-input {
+  padding-left: calc(var(--space-3) + 1.25em);
+  font-variant-numeric: tabular-nums;
+}
+
 input::placeholder,
 textarea::placeholder {
   color: var(--text-muted);
@@ -1029,10 +1049,136 @@ input[readonly] {
   background: transparent;
 }
 
-.image-field-row {
+/* Photo field (components/ImageField.tsx): the box is the picker, and takes a dropped photo. */
+.photo-picker {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: flex-start;
   gap: var(--space-4);
+}
+
+.photo-drop {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 7.5rem;
+  height: 7.5rem;
+  padding: 0;
+  overflow: hidden;
+  font: inherit;
+  color: var(--text-muted);
+  cursor: pointer;
+  background: transparent;
+  border: 1px dashed var(--field-border);
+  border-radius: var(--radius);
+  transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+}
+
+.photo-drop:hover:not(:disabled),
+.photo-drop.is-over {
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 4%, transparent);
+  border-color: var(--text);
+}
+
+.photo-drop.is-over {
+  border-style: solid;
+}
+
+.photo-drop.has-photo {
+  border: 1px solid var(--border);
+}
+
+.photo-drop:disabled {
+  cursor: progress;
+}
+
+.photo-drop img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-drop-empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.photo-drop-empty svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Over a photo: a band that shows on hover or keyboard focus. */
+.photo-drop-change {
+  position: absolute;
+  inset: auto 0 0;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.photo-drop:hover .photo-drop-change,
+.photo-drop:focus-visible .photo-drop-change {
+  opacity: 1;
+}
+
+.photo-drop-busy {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: var(--text-sm);
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+}
+
+.photo-side {
+  display: grid;
+  flex: 1 1 14rem;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.photo-link {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.photo-link input {
+  flex: 1;
+}
+
+.photo-side .link-button {
+  justify-self: start;
+}
+
+@media (hover: none) {
+  .photo-drop-change {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-drop,
+  .photo-drop-change {
+    transition: none;
+  }
 }
 
 .item-main > :last-child {
@@ -1046,6 +1192,317 @@ input[readonly] {
   min-width: 0;
   align-items: flex-start;
   gap: var(--space-4);
+}
+
+/* Tabs: the dashboards, the vendor dashboard and the marketplace. Links or buttons. */
+
+.tabs {
+  display: flex;
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
+  overflow: auto hidden;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height);
+  margin-bottom: -1px;
+  color: var(--text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+}
+
+.tab:is(button) {
+  padding: 0;
+  font: inherit;
+  background: none;
+  border-width: 0 0 2px;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab-flag {
+  margin-left: var(--space-2);
+  padding: 0 var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.tab[aria-current='page'] {
+  color: var(--text);
+  border-bottom-color: var(--text);
+}
+
+/* A second row of tabs inside a dashboard tab, such as the kinds of gift. */
+.tabs--sub {
+  margin-bottom: var(--space-6);
+}
+
+/* Empty, failed and loading states (components/States.tsx). */
+.state {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+}
+
+.card.state {
+  padding: var(--space-12) var(--space-6);
+}
+
+.state-title {
+  margin: 0;
+  font-size: var(--text-lg);
+  line-height: 1.3;
+}
+
+.state-body {
+  max-width: 28rem;
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3) var(--space-4);
+  margin-top: var(--space-4);
+}
+
+/* The art: a small stack of cards that fans out once. The front card holds the icon and two
+   faint lines, a hint of what will fill the space. */
+.state-art {
+  --tint: var(--accent);
+  position: relative;
+  display: block;
+  width: 9rem;
+  height: 5.5rem;
+  margin-bottom: var(--space-4);
+}
+
+.state-art--error {
+  --tint: var(--danger);
+}
+
+.state-art-card {
+  position: absolute;
+  inset: 0.75rem 1rem 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.state-art-card--back {
+  background: color-mix(in srgb, var(--tint) 8%, var(--surface));
+  border-color: color-mix(in srgb, var(--tint) 25%, var(--border));
+  transform: translate(-1rem, -0.6rem) rotate(-9deg);
+  animation: state-fan-back 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.state-art-card--mid {
+  background: color-mix(in srgb, var(--tint) 4%, var(--surface));
+  border-color: color-mix(in srgb, var(--tint) 18%, var(--border));
+  transform: translate(0.9rem, -0.4rem) rotate(6deg);
+  animation: state-fan-mid 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.state-art--error .state-art-card--back,
+.state-art--error .state-art-card--mid {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--field-border);
+}
+
+.state-art-card--front {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-3);
+  border-color: color-mix(in srgb, var(--tint) 15%, var(--border));
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 6%, transparent);
+}
+
+.state-art-icon,
+.state-chip {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--tint, var(--accent));
+  background: color-mix(in srgb, var(--tint, var(--accent)) 12%, var(--surface));
+  border-radius: 50%;
+}
+
+.state-art-icon svg,
+.state-chip svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.state-art-lines {
+  display: grid;
+  flex: 1;
+  gap: 0.375rem;
+}
+
+.state-art-lines span {
+  height: 0.375rem;
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+  border-radius: 999px;
+}
+
+.state-art-lines span + span {
+  width: 60%;
+}
+
+@keyframes state-fan-back {
+  from {
+    opacity: 0;
+    transform: none;
+  }
+}
+
+@keyframes state-fan-mid {
+  from {
+    opacity: 0;
+    transform: none;
+  }
+}
+
+/* Compact: one row inside a panel, icon on the left, action on the right. */
+.state--compact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-items: start;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-4) 0;
+  text-align: left;
+}
+
+.card.state--compact {
+  padding: var(--space-4) var(--space-6);
+}
+
+.state--compact .state-text {
+  display: grid;
+  flex: 1 1 14rem;
+  gap: var(--space-1);
+}
+
+.state--compact .state-title {
+  font-size: var(--text-base);
+}
+
+.state--compact .state-body {
+  font-size: var(--text-sm);
+}
+
+.state--compact .state-actions {
+  margin-top: 0;
+}
+
+.state--error .state-chip {
+  --tint: var(--danger);
+}
+
+/* Loading: a list-shaped placeholder. It appears after a beat so quick loads don't flash. */
+.loading {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-2) 0;
+  animation: loading-in 0.2s ease-out 0.3s both;
+}
+
+.loading-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.loading-lines {
+  display: grid;
+  flex: 1;
+  gap: var(--space-2);
+}
+
+.loading-dot,
+.loading-line {
+  display: block;
+  background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--surface) 70%, transparent) 50%,
+      transparent 100%
+    )
+    0 0 / 200% 100% no-repeat,
+    color-mix(in srgb, var(--text) 8%, transparent);
+  animation: loading-shimmer 1.4s ease-in-out infinite;
+}
+
+.loading-dot {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+}
+
+.loading-line {
+  height: 0.625rem;
+  border-radius: 999px;
+}
+
+.loading-line--short {
+  width: 55%;
+}
+
+.loading-line--title {
+  width: 40%;
+  height: 1rem;
+  margin-bottom: var(--space-2);
+}
+
+@keyframes loading-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes loading-shimmer {
+  from {
+    background-position: 150% 0, 0 0;
+  }
+  to {
+    background-position: -50% 0, 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .state-art-card,
+  .loading-dot,
+  .loading-line {
+    animation: none;
+  }
 }
 
 /* Dropdown and date fields: the app's own, in place of the browser's. */

@@ -1,14 +1,16 @@
 import { useState, type FormEvent } from 'react'
 import DatePicker from '../components/DatePicker.tsx'
+import AmountInput from '../components/AmountInput.tsx'
 import Field from '../components/Field.tsx'
 import Select from '../components/Select.tsx'
 import { api, apiUrl } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { formatDate, todayInLagos } from '../lib/format.ts'
-import { formatNaira } from '../lib/money.ts'
+import { formatNaira, nairaInput } from '../lib/money.ts'
 import { CATEGORY_IDS, VENDOR_CATEGORIES } from '../lib/vendors.ts'
 import { LINE_STATUS_LABELS, type Budget, type BudgetCategory, type BudgetLine, type TeamMember } from './types.ts'
 import { useLoad } from './useLoad.ts'
+import { EmptyState, LoadError, Loading } from '../components/States.tsx'
 
 const CATEGORY_LABELS: Record<BudgetCategory, string> = {
   ...Object.fromEntries(CATEGORY_IDS.map((id) => [id, VENDOR_CATEGORIES[id].label])),
@@ -28,8 +30,8 @@ export default function BudgetPanel({ weddingId }: { weddingId: string }) {
   const [paying, setPaying] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  if (state.status === 'loading') return <p className="muted">Loading your budget…</p>
-  if (state.status === 'error') return <p role="alert" className="alert">{state.message}</p>
+  if (state.status === 'loading') return <Loading label="Loading your budget" />
+  if (state.status === 'error') return <LoadError title="The budget didn’t load" message={state.message} onRetry={reload} />
   const { lines, categories, overall, canEdit } = state.data
   const members = team.status === 'ready' ? team.data.team : []
 
@@ -68,9 +70,11 @@ export default function BudgetPanel({ weddingId }: { weddingId: string }) {
       {error && <p role="alert" className="alert">{error}</p>}
 
       {lines.length === 0 && editing !== 'new' && (
-        <p className="board-empty">
-          Nothing here yet. Add what each part of the day costs: vendors you book here appear on their own once you accept their quote.
-        </p>
+        <EmptyState card icon="wallet" title="Nothing in the budget yet">
+          {canEdit
+            ? 'Add what each part of the day costs. Vendors booked here appear on their own once a quote is accepted.'
+            : 'Costs appear here as the couple or their main planner adds them.'}
+        </EmptyState>
       )}
 
       {categories.map((c) => (
@@ -222,7 +226,7 @@ function LineRow({ line: l, canEdit, paying, onEdit, onPay, onRemove, onRecord, 
 }
 
 function RecordPayment({ outstanding, onSave }: { outstanding: number; onSave: (body: { amount: number; date: string; note?: string }) => Promise<void> }) {
-  const [amount, setAmount] = useState(outstanding > 0 ? String(outstanding / 100) : '')
+  const [amount, setAmount] = useState(outstanding > 0 ? nairaInput(outstanding) : '')
   const [date, setDate] = useState(todayInLagos())
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
@@ -238,7 +242,7 @@ function RecordPayment({ outstanding, onSave }: { outstanding: number; onSave: (
     <form className="item-form" onSubmit={submit}>
       <p className="hint">For money paid outside Alárinà: cash, a transfer, a vendor who isn’t on the app.</p>
       <div className="field-row">
-        <Field label="Amount (₦)">{(p) => <input {...p} type="number" inputMode="numeric" min={1} required value={amount} onChange={(e) => setAmount(e.target.value)} />}</Field>
+        <Field label="Amount">{(p) => <AmountInput {...p} min={1} required value={amount} onChange={setAmount} />}</Field>
         <Field label="Date paid">{(p) => <DatePicker {...p} value={date} onChange={setDate} />}</Field>
       </div>
       <Field label="Note" optional>{(p) => <input {...p} maxLength={300} placeholder="Bank transfer, cash…" value={note} onChange={(e) => setNote(e.target.value)} />}</Field>
@@ -253,7 +257,7 @@ function LineForm({ line, members, onSave, onCancel }: { line: BudgetLine | null
   const [draft, setDraft] = useState({
     name: line?.name ?? '',
     category: (line?.category ?? 'other') as BudgetCategory,
-    cost: line ? String(line.cost / 100) : '',
+    cost: line ? nairaInput(line.cost) : '',
     weddingVendorId: line?.weddingVendorId ?? '',
     dueDate: line?.dueDate ?? '',
     notes: line?.notes ?? '',
@@ -307,7 +311,7 @@ function LineForm({ line, members, onSave, onCancel }: { line: BudgetLine | null
             />
           )}
         </Field>
-        <Field label="Total cost (₦)">{(p) => <input {...p} type="number" inputMode="numeric" min={0} required value={draft.cost} onChange={(e) => setDraft({ ...draft, cost: e.target.value })} />}</Field>
+        <Field label="Total cost">{(p) => <AmountInput {...p} min={0} required value={draft.cost} onChange={(cost) => setDraft({ ...draft, cost })} />}</Field>
       </div>
       <Field label="Due date" optional>{(p) => <DatePicker {...p} clearable value={draft.dueDate} onChange={(dueDate) => setDraft({ ...draft, dueDate })} />}</Field>
       <Field label="Notes" optional>{(p) => <textarea {...p} rows={2} maxLength={1000} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} />}</Field>

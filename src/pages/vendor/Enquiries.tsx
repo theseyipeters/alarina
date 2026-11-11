@@ -1,17 +1,19 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router'
 import DatePicker from '../../components/DatePicker.tsx'
+import AmountInput from '../../components/AmountInput.tsx'
 import Field from '../../components/Field.tsx'
 import { api } from '../../lib/api.ts'
 import { errorMessage } from '../../lib/errors.ts'
 import { formatDate, todayInLagos } from '../../lib/format.ts'
-import { formatNaira } from '../../lib/money.ts'
+import { formatNaira, nairaInput } from '../../lib/money.ts'
 import { useTitle } from '../../lib/useTitle.ts'
 import { Thread } from '../../planning/BookingDetail.tsx'
 import type { Booking, BookingStatus } from '../../planning/types.ts'
 import { useLoad } from '../../planning/useLoad.ts'
 import '../../planning/planning.css'
 import '../Gifts.css'
+import { EmptyState, LoadError, Loading } from '../../components/States.tsx'
 
 const STATUS: Record<BookingStatus, string> = { enquiry: 'New enquiry', quoted: 'Quoted', accepted: 'Booked', cancelled: 'Cancelled' }
 
@@ -22,15 +24,17 @@ export default function Enquiries() {
   const [state, reload] = useLoad<{ bookings: Booking[] }>('/vendor/bookings')
 
   if (id) return <EnquiryDetail id={id} onChange={reload} />
-  if (state.status === 'loading') return <p className="muted">Loading enquiries…</p>
-  if (state.status === 'error') return <p role="alert" className="alert">{state.message}</p>
+  if (state.status === 'loading') return <Loading label="Loading enquiries" />
+  if (state.status === 'error') return <LoadError title="Your enquiries didn’t load" message={state.message} onRetry={reload} />
   const bookings = state.data.bookings
 
   return (
     <section className="card" aria-labelledby="enquiries-title" data-tour="vendor-enquiries">
       <h2 id="enquiries-title">Enquiries and bookings</h2>
       {bookings.length === 0 ? (
-        <p className="board-empty">No enquiries yet. Couples who add you to their wedding can write to you here.</p>
+        <EmptyState icon="envelope" title="No enquiries yet" action={<Link to="/vendor">Check your listing</Link>}>
+          When a couple adds you to their wedding and writes to you, the conversation starts here. A complete listing with packages and photos gets more of them.
+        </EmptyState>
       ) : (
         <ul className="item-list">
           {bookings.map((b) => (
@@ -61,8 +65,18 @@ function EnquiryDetail({ id, onChange }: { id: string; onChange: () => void }) {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  if (state.status === 'loading') return <p className="muted">Loading…</p>
-  if (state.status === 'error') return <p role="alert" className="alert">{state.message}</p>
+  if (state.status === 'loading') return <Loading />
+  if (state.status === 'error') {
+    return (
+      <LoadError
+        title={state.notFound ? 'This enquiry isn’t here' : 'This enquiry didn’t load'}
+        message={state.notFound ? 'It may have been removed, or the link is wrong.' : state.message}
+        onRetry={state.notFound ? undefined : reload}
+      >
+        <Link to="/vendor/enquiries">All enquiries</Link>
+      </LoadError>
+    )
+  }
   const b = state.data.booking
 
   async function act(path: string, body?: unknown) {
@@ -120,9 +134,9 @@ type QuoteLine = { name: string; amount: string }
 
 function QuoteForm({ booking, busy, onSend }: { booking: Booking; busy: boolean; onSend: (body: unknown) => Promise<void> }) {
   const [lines, setLines] = useState<QuoteLine[]>(
-    booking.quote?.lines.map((l) => ({ name: l.name, amount: String(l.amount / 100) })) ?? [{ name: booking.packageName ?? '', amount: '' }],
+    booking.quote?.lines.map((l) => ({ name: l.name, amount: nairaInput(l.amount) })) ?? [{ name: booking.packageName ?? '', amount: '' }],
   )
-  const [deposit, setDeposit] = useState(booking.quote?.deposit ? String(booking.quote.deposit / 100) : '')
+  const [deposit, setDeposit] = useState(nairaInput(booking.quote?.deposit))
   const [validUntil, setValidUntil] = useState(booking.quote?.validUntil ?? '')
   const [note, setNote] = useState(booking.quote?.note ?? '')
   const total = lines.reduce((sum, l) => sum + (Number(l.amount) || 0), 0)
@@ -149,8 +163,8 @@ function QuoteForm({ booking, busy, onSend }: { booking: Booking; busy: boolean;
             <Field label={i === 0 ? 'What’s included' : 'And'}>
               {(p) => <input {...p} required maxLength={120} value={l.name} onChange={(e) => setLine(i, { name: e.target.value })} />}
             </Field>
-            <Field label="Price (₦)">
-              {(p) => <input {...p} type="number" inputMode="numeric" min={1} required value={l.amount} onChange={(e) => setLine(i, { amount: e.target.value })} />}
+            <Field label="Price">
+              {(p) => <AmountInput {...p} min={1} required value={l.amount} onChange={(amount) => setLine(i, { amount })} />}
             </Field>
           </div>
         ))}
@@ -170,8 +184,8 @@ function QuoteForm({ booking, busy, onSend }: { booking: Booking; busy: boolean;
           Total: <strong>{formatNaira(total * 100)}</strong>
         </p>
         <div className="field-row">
-          <Field label="Deposit (₦)" optional hint="The least they pay first to secure the date.">
-            {(p) => <input {...p} type="number" inputMode="numeric" min={1} value={deposit} onChange={(e) => setDeposit(e.target.value)} />}
+          <Field label="Deposit" optional hint="The least they pay first to secure the date.">
+            {(p) => <AmountInput {...p} min={1} max={total || undefined} value={deposit} onChange={setDeposit} />}
           </Field>
           <Field label="Valid until" optional>
             {(p) => <DatePicker {...p} clearable min={todayInLagos()} value={validUntil} onChange={setValidUntil} />}

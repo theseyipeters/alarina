@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router'
 import PayoutAccount from '../components/PayoutAccount.tsx'
+import { EmptyState, LoadError, Loading } from '../components/States.tsx'
 import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { formatNaira } from '../lib/money.ts'
 import type { GiftsOverview } from '../lib/types.ts'
 import { useTitle } from '../lib/useTitle.ts'
 
-type State = { status: 'loading' } | { status: 'error' } | { status: 'none' } | { status: 'ready'; data: GiftsOverview }
+type State = { status: 'loading' } | { status: 'error'; message: string } | { status: 'none' } | { status: 'ready'; data: GiftsOverview }
 
 /** Cash gifts: where the money goes, whether guests are offered it, and what has come in. */
 export default function CashGifts() {
@@ -17,7 +19,8 @@ export default function CashGifts() {
     () =>
       api.get<GiftsOverview>('/wedding/gifts').then(
         (data) => setState({ status: 'ready', data }),
-        (err) => setState({ status: err instanceof ApiError && err.code === 'no_wedding' ? 'none' : 'error' }),
+        (err: unknown) =>
+          setState(err instanceof ApiError && err.code === 'no_wedding' ? { status: 'none' } : { status: 'error', message: errorMessage(err) }),
       ),
     [],
   )
@@ -26,14 +29,13 @@ export default function CashGifts() {
     load()
   }, [load])
 
-  if (state.status === 'loading') return <p className="muted">Loading cash gifts…</p>
-  if (state.status === 'error') return <p role="alert" className="alert">Cash gifts couldn’t be loaded. Refresh to try again.</p>
+  if (state.status === 'loading') return <Loading label="Loading cash gifts" />
+  if (state.status === 'error') return <LoadError title="Cash gifts didn’t load" message={state.message} onRetry={load} />
   if (state.status === 'none') {
     return (
-      <div className="card">
-        <h1>Cash gifts</h1>
-        <p className="muted">Set up your wedding first, then come back to receive cash gifts.</p>
-      </div>
+      <EmptyState card icon="list" title="Set up your wedding first" action={<Link to="/app/setup" className="btn">Set up your wedding</Link>}>
+        Cash gifts need your names, date and venue. Come back here once they’re in.
+      </EmptyState>
     )
   }
 

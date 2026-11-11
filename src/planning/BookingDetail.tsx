@@ -1,11 +1,13 @@
 import { useState, type FormEvent } from 'react'
+import AmountInput from '../components/AmountInput.tsx'
 import Field from '../components/Field.tsx'
 import { api } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { formatDate } from '../lib/format.ts'
-import { formatNaira } from '../lib/money.ts'
+import { formatNaira, nairaInput } from '../lib/money.ts'
 import type { Booking, PlanningRole } from './types.ts'
 import { useLoad } from './useLoad.ts'
+import { LoadError, Loading } from '../components/States.tsx'
 
 type Props = { weddingId: string; bookingId: string; role: PlanningRole; onChange: () => void }
 
@@ -19,8 +21,8 @@ export default function BookingDetail({ weddingId, bookingId, role, onChange }: 
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  if (state.status === 'loading') return <p className="muted">Loading the booking…</p>
-  if (state.status === 'error') return <p role="alert" className="alert">{state.message}</p>
+  if (state.status === 'loading') return <Loading label="Loading the booking" />
+  if (state.status === 'error') return <LoadError compact title="This booking didn’t load" message={state.message} onRetry={state.notFound ? undefined : reload} />
   const b = state.data.booking
   const canWrite = role !== 'co' && b.status !== 'cancelled'
 
@@ -125,7 +127,7 @@ export function Thread({ booking, canWrite, onSend, busy }: { booking: Booking; 
 function Payments({ booking, weddingId, canPay }: { booking: Booking; weddingId: string; canPay: boolean }) {
   // The first payment suggests the deposit, then whatever is left.
   const suggested = booking.paid === 0 && booking.quote?.deposit ? booking.quote.deposit : booking.balance
-  const [amount, setAmount] = useState(String(suggested / 100))
+  const [amount, setAmount] = useState(nairaInput(suggested))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -166,8 +168,8 @@ function Payments({ booking, weddingId, canPay }: { booking: Booking; weddingId:
         (canPay ? (
           booking.payable ? (
             <form onSubmit={pay} className="row row--tight">
-              <Field label="Pay now (₦)" hint="Paystack’s fee is added on top, so the vendor receives the full amount.">
-                {(p) => <input {...p} type="number" inputMode="numeric" min={1} max={booking.balance / 100} required value={amount} onChange={(e) => setAmount(e.target.value)} />}
+              <Field label="Pay now" hint={`Up to ${formatNaira(booking.balance)}. Paystack’s fee is added on top, so the vendor receives the full amount.`}>
+                {(p) => <AmountInput {...p} min={1} max={Math.floor(booking.balance / 100)} required value={amount} onChange={setAmount} />}
               </Field>
               <button className="btn" disabled={busy}>{busy ? 'Opening Paystack…' : 'Pay'}</button>
             </form>

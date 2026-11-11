@@ -4,14 +4,15 @@ import type { VendorListing } from '../../lib/types.ts'
 import { useTitle } from '../../lib/useTitle.ts'
 import { useVendor } from '../../lib/useVendor.ts'
 import '../Gifts.css'
+import { LoadError, Loading } from '../../components/States.tsx'
 
 /** Where couples' and guests' payments to the vendor are paid. */
 export default function Payouts() {
   useTitle('Payouts')
-  const [state, setVendor] = useVendor()
+  const [state, setVendor, retry] = useVendor()
 
-  if (state.status === 'loading') return <p className="muted">Loading…</p>
-  if (state.status === 'error') return <p role="alert" className="alert">Your payout account couldn’t be loaded. Refresh to try again.</p>
+  if (state.status === 'loading') return <Loading />
+  if (state.status === 'error') return <LoadError title="Your payout account didn’t load" message={state.message} onRetry={retry} />
 
   return (
     <div className="gifts">

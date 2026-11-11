@@ -7,6 +7,7 @@ import { useTitle } from '../../lib/useTitle.ts'
 import { ROLE_LABELS } from '../../planning/types.ts'
 import { useLoad } from '../../planning/useLoad.ts'
 import '../Gifts.css'
+import { EmptyState, LoadError, Loading } from '../../components/States.tsx'
 
 type Row = { id: string; weddingId: string; names: string; date: string | null; venueName: string | null; role: 'main' | 'co' }
 
@@ -17,8 +18,8 @@ export default function Weddings() {
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
 
-  if (state.status === 'loading') return <p className="muted">Loading weddings…</p>
-  if (state.status === 'error') return <p role="alert" className="alert">{state.message}</p>
+  if (state.status === 'loading') return <Loading label="Loading weddings" />
+  if (state.status === 'error') return <LoadError title="Your weddings didn’t load" message={state.message} onRetry={reload} />
   const { weddings, invites } = state.data
 
   async function answer(invite: Row, accept: boolean) {
@@ -63,7 +64,9 @@ export default function Weddings() {
       <section className="card" aria-labelledby="weddings-title" data-tour="vendor-weddings">
         <h2 id="weddings-title">Weddings you’re planning</h2>
         {weddings.length === 0 ? (
-          <p className="board-empty">None yet. Couples can invite you from your marketplace page, or send you a link.</p>
+          <EmptyState icon="calendar" title="No weddings yet">
+            Couples invite you to plan with them from your marketplace page, or by sending you a link. Each wedding you accept opens here with its vendors, budget and notes.
+          </EmptyState>
         ) : (
           <ul className="item-list">
             {weddings.map((w) => (

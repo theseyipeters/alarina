@@ -4,6 +4,7 @@ import { useAuth } from '../auth/useAuth.ts'
 import './Dashboard.css'
 import Logo from '../components/Logo.tsx'
 import { useGiftsAccess } from '../lib/useGiftsAccess.ts'
+import { Loading } from '../components/States.tsx'
 
 const TABS = [
   { to: '/app', label: 'Overview', end: true },
@@ -47,7 +48,7 @@ export default function DashboardLayout() {
       </nav>
       <main id="main">
         {/* Tabs load on demand; keep the header and tabs on screen while they do. */}
-        <Suspense fallback={<p className="muted">Loading…</p>}>
+        <Suspense fallback={<Loading />}>
           <Outlet />
         </Suspense>
       </main>

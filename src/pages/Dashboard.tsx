@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
 import ConfirmNames from '../components/ConfirmNames.tsx'
+import { Petals } from '../components/Celebration.tsx'
 import CopyLink from '../components/CopyLink.tsx'
 import UnlockCallout from '../components/UnlockCallout.tsx'
 import Tour, { type TourStep } from '../components/Tour.tsx'
@@ -17,6 +18,8 @@ import { useResponses } from '../lib/useResponses.ts'
 import { useTitle } from '../lib/useTitle.ts'
 import { useWedding } from '../lib/useWedding.ts'
 import { STEPS } from '../setup/steps.ts'
+import { LoadError, Loading } from '../components/States.tsx'
+import { track } from '../lib/analytics.ts'
 
 /** Dashboard overview: a countdown to the day, replies at a glance, and quick ways to share. */
 export default function Dashboard() {
@@ -24,7 +27,7 @@ export default function Dashboard() {
   const { state, refresh } = useAuth()
   // null: decide automatically; true/false: opened from "Show me around", or just closed.
   const [tour, setTour] = useState<boolean | null>(null)
-  const [wedding, setWedding] = useWedding()
+  const [wedding, setWedding, retryWedding] = useWedding()
   const [responses] = useResponses()
   const navigate = useNavigate()
   const location = useLocation()
@@ -37,9 +40,9 @@ export default function Dashboard() {
   }, [location, navigate])
 
   if (state.status !== 'signedIn') return null
-  if (wedding.status === 'loading') return <p className="muted">Loading your wedding…</p>
+  if (wedding.status === 'loading') return <Loading label="Loading your wedding" />
   if (wedding.status === 'error') {
-    return <p role="alert" className="alert">Your wedding couldn’t be loaded. Refresh to try again.</p>
+    return <LoadError title="Your wedding didn’t load" message={wedding.message} onRetry={retryWedding} />
   }
 
   const w = wedding.wedding
@@ -206,7 +209,9 @@ function Hero({ wedding, onChange, onTour }: { wedding: Wedding; onChange: (w: W
     setError(null)
     setNotReady(false)
     try {
-      onChange((await api.post<{ wedding: Wedding }>(published ? '/wedding/unpublish' : '/wedding/publish')).wedding)
+      const { wedding: updated } = await api.post<{ wedding: Wedding }>(published ? '/wedding/unpublish' : '/wedding/publish')
+      if (!published) track('invite_published', { from: 'dashboard' })
+      onChange(updated)
     } catch (err) {
       if (err instanceof ApiError && err.code === 'not_ready') setNotReady(true)
       else setError(errorMessage(err))
@@ -262,82 +267,6 @@ function Hero({ wedding, onChange, onTour }: { wedding: Wedding; onChange: (w: W
   )
 }
 
-// As far across and down their area as a petal goes, in %, so it never reaches the text.
-const PETAL_MAX_X = 95
-const PETAL_MAX_Y = 80
-
-// Deterministic "random" spread so the petals start scattered and render the same every time.
-const PETALS = Array.from({ length: 22 }, (_, i) => ({
-  x: (i * 37) % PETAL_MAX_X,
-  y: (i * 61) % PETAL_MAX_Y,
-  angle: (i * 47) % 360,
-  size: 8 + ((i * 17) % 9),
-  tone: i % 3,
-}))
-
-const between = (min: number, max: number) => min + Math.random() * (max - min)
-const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
-
-/** Keeps a petal drifting in small random hops until the returned function stops it. */
-function wander(petal: Element, { x, y, angle }: (typeof PETALS)[number]) {
-  const transform = (s: { x: number; y: number; angle: number }) =>
-    `translate(${s.x - x}cqw, ${s.y - y}cqh) rotate(${s.angle}deg)`
-  let from = { x, y, angle }
-  let animation: Animation
-
-  function hop() {
-    const to = {
-      x: clamp(from.x + between(-14, 14), 0, PETAL_MAX_X),
-      y: clamp(from.y + between(-22, 22), 0, PETAL_MAX_Y),
-      angle: from.angle + between(-120, 120),
-    }
-    animation = petal.animate([{ transform: transform(from) }, { transform: transform(to) }], {
-      duration: between(3000, 7000),
-      easing: 'ease-in-out',
-      fill: 'forwards',
-    })
-    animation.onfinish = hop
-    from = to
-  }
-
-  hop()
-  return () => {
-    animation.onfinish = null
-    animation.cancel()
-  }
-}
-
-/** Petals drifting at random for as long as they're on screen; still for anyone who prefers less motion. */
-function Petals() {
-  const ref = useRef<HTMLDivElement>(null)
-  const still = useMediaQuery('(prefers-reduced-motion: reduce)')
-
-  useEffect(() => {
-    if (still || !ref.current) return
-    const stops = Array.from(ref.current.children, (petal, i) => wander(petal, PETALS[i]))
-    return () => stops.forEach((stop) => stop())
-  }, [still])
-
-  return (
-    <div className="petals" aria-hidden="true" ref={ref}>
-      {PETALS.map((p, i) => (
-        <span
-          key={i}
-          className={`petal petal--${p.tone}`}
-          style={
-            {
-              '--x': `${p.x}%`,
-              '--y': `${p.y}%`,
-              '--angle': `${p.angle}deg`,
-              '--size': `${p.size}px`,
-            } as CSSProperties
-          }
-        />
-      ))}
-    </div>
-  )
-}
-
 /** Shown while the invitation is live: petals drift across the panel, and the link is ready to share. */
 function Celebration({ link }: { link: string }) {
   return (
@@ -347,7 +276,7 @@ function Celebration({ link }: { link: string }) {
         <p className="eyebrow">Published</p>
         <h2 id="celebrate-title">Your invitation is live</h2>
         <p className="muted">Send it to your guests. Their replies will appear here as they come in.</p>
-        <CopyLink link={link} label="Invitation link" />
+        <CopyLink link={link} label="Invitation link" event="invite_link_copied" />
         <div className="actions">
           <a className="btn" href={whatsapp(link)} target="_blank" rel="noopener noreferrer">
             Share on WhatsApp<span className="visually-hidden"> (opens in a new tab)</span>
@@ -457,7 +386,7 @@ function ShareCard({ link }: { link: string }) {
     <section className="card" aria-labelledby="share-title">
       <h2 id="share-title">Share</h2>
       <p className="muted">One link for everyone, or use your personal links to track each side.</p>
-      <CopyLink link={link} label="Invitation link" />
+      <CopyLink link={link} label="Invitation link" event="invite_link_copied" />
       <div className="actions">
         <a className="btn btn--secondary" href={whatsapp(link)} target="_blank" rel="noopener noreferrer">
           WhatsApp<span className="visually-hidden"> (opens in a new tab)</span>

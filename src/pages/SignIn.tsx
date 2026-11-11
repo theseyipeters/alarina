@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router'
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { homeFor } from '../auth/AuthContext.ts'
 import { useAuth } from '../auth/useAuth.ts'
 import { errorMessage } from '../lib/errors.ts'
@@ -12,6 +12,8 @@ export default function SignIn() {
   const { state, signIn } = useAuth()
   const navigate = useNavigate()
   const next = safeNext(useSearchParams()[0].get('next'))
+  // Sent here because the session ended mid-visit, rather than arriving to sign in.
+  const expired = (useLocation().state as { expired?: boolean } | null)?.expired === true
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   // Kept so "Forgot password?" can carry it over.
@@ -39,6 +41,9 @@ export default function SignIn() {
     <AuthLayout>
       <div className="card">
         <h1>Sign in</h1>
+        {expired && !error && (
+          <p role="status" className="alert alert--info">You were signed out. Sign in to carry on where you were.</p>
+        )}
         {error && <p role="alert" className="alert">{error}</p>}
         <form onSubmit={onSubmit}>
           <div className="field">

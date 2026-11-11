@@ -9,8 +9,8 @@ import { ROLE_LABELS, type Planner, type PlanningRole } from './types.ts'
 import { useLoad } from './useLoad.ts'
 
 /**
- * Who's planning this wedding. The couple invites planners and chooses the main one; the main
- * planner invites co-planners. A planner can be invited from their marketplace page, or by link.
+ * Who's planning this wedding. Only the couple invites planners, chooses the main one and removes
+ * them; planners see who else is on it. A planner can be invited from their marketplace page, or by link.
  */
 export default function PlannersPanel({ weddingId, role }: { weddingId: string; role: PlanningRole }) {
   const [state, reload] = useLoad<{ planners: Planner[] }>(`/planning/${weddingId}/planners`)
@@ -34,8 +34,9 @@ export default function PlannersPanel({ weddingId, role }: { weddingId: string; 
     <section className="card" aria-labelledby="planners-title" data-tour="planners">
       <h2 id="planners-title">Planners</h2>
       <p className="muted">
-        A main planner looks after your vendors and budget alongside you, and can bring in co-planners, who can see everything and add notes.
-        You stay in charge: you can change roles or remove a planner at any time.
+        {role === 'couple'
+          ? 'A main planner looks after your vendors and budget alongside you. Co-planners can see everything and add notes. Only you invite planners, and you can change their roles or remove them at any time.'
+          : 'Who’s planning this wedding with the couple. Only the couple can invite or remove planners.'}
       </p>
       {error && <p role="alert" className="alert">{error}</p>}
       {planners.length > 0 && (
@@ -55,7 +56,7 @@ export default function PlannersPanel({ weddingId, role }: { weddingId: string; 
                     Make main planner
                   </button>
                 )}
-                {(role === 'couple' || (role === 'main' && p.role === 'co')) && (
+                {role === 'couple' && (
                   <button type="button" className="link-button" onClick={() => run(() => api.delete(`/planning/${weddingId}/planners/${p.id}`))}>
                     {p.status === 'invited' ? 'Cancel invite' : 'Remove'}
                   </button>
@@ -65,7 +66,7 @@ export default function PlannersPanel({ weddingId, role }: { weddingId: string; 
           ))}
         </ul>
       )}
-      {role !== 'co' && <InviteForm weddingId={weddingId} canInviteMain={role === 'couple' && !hasMain} onInvited={reload} />}
+      {role === 'couple' && <InviteForm weddingId={weddingId} canInviteMain={!hasMain} onInvited={reload} />}
       {role === 'couple' && (
         <p className="hint">
           Looking for a planner? <Link to="/marketplace?category=planner">Browse planners</Link> and invite one from their page.

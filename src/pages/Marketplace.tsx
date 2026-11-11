@@ -9,6 +9,7 @@ import { useTitle } from '../lib/useTitle.ts'
 import { CATEGORY_IDS, VENDOR_CATEGORIES, type VendorCategory } from '../lib/vendors.ts'
 import { useLoad } from '../planning/useLoad.ts'
 import './vendor/vendor.css'
+import { EmptyState, LoadError, Loading } from '../components/States.tsx'
 
 type Card = {
   slug: string
@@ -81,7 +82,7 @@ function Vendors() {
   const q = params.get('q') ?? ''
   const city = params.get('city') ?? ''
   const query = new URLSearchParams({ ...(category && { category }), ...(q && { q }), ...(city && { city }) }).toString()
-  const [state] = useLoad<{ vendors: Card[]; total: number }>(`/public/marketplace/vendors${query ? `?${query}` : ''}`)
+  const [state, reload] = useLoad<{ vendors: Card[]; total: number }>(`/public/marketplace/vendors${query ? `?${query}` : ''}`)
 
   function search(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -117,11 +118,24 @@ function Vendors() {
           </button>
         ))}
       </div>
-      {state.status === 'loading' && <p className="muted">Loading vendors…</p>}
-      {state.status === 'error' && <p role="alert" className="alert">{state.message}</p>}
+      {state.status === 'loading' && <Loading label="Loading vendors" />}
+      {state.status === 'error' && <LoadError title="The vendors didn’t load" message={state.message} onRetry={reload} />}
       {state.status === 'ready' &&
         (state.data.vendors.length === 0 ? (
-          <p className="board-empty">No vendors match yet. Try another category or city.</p>
+          query ? (
+            <EmptyState
+              card
+              icon="search"
+              title="No vendors match"
+              action={<button type="button" className="btn btn--secondary" onClick={() => setParams({})}>Clear search</button>}
+            >
+              Nothing fits that search yet. Try another category or city, or a shorter name.
+            </EmptyState>
+          ) : (
+            <EmptyState card icon="store" title="No vendors here yet" action={<Link to="/signup?as=vendor">List your business</Link>}>
+              Listings appear here once our team has checked them. If you work on weddings, yours could be the first.
+            </EmptyState>
+          )
         ) : (
           <ul className="market-grid">
             {state.data.vendors.map((v) => (
@@ -145,7 +159,7 @@ function Vendors() {
 
 function GiftShop() {
   const { state: auth } = useAuth()
-  const [state] = useLoad<{ products: Product[] }>('/public/marketplace/gifts')
+  const [state, reload] = useLoad<{ products: Product[] }>('/public/marketplace/gifts')
   const [added, setAdded] = useState<Record<string, string>>({})
 
   async function add(p: Product) {
@@ -157,9 +171,15 @@ function GiftShop() {
     }
   }
 
-  if (state.status === 'loading') return <p className="muted">Loading gifts…</p>
-  if (state.status === 'error') return <p role="alert" className="alert">{state.message}</p>
-  if (state.data.products.length === 0) return <p className="board-empty">No gifts in the shop yet.</p>
+  if (state.status === 'loading') return <Loading label="Loading gifts" />
+  if (state.status === 'error') return <LoadError title="The gift shop didn’t load" message={state.message} onRetry={reload} />
+  if (state.data.products.length === 0) {
+    return (
+      <EmptyState card icon="gift" title="No gifts in the shop yet" action={<Link to="/signup?as=vendor">List your products</Link>}>
+        Gifts appear here as shops join. If you run one, couples can add your products to their wishlists.
+      </EmptyState>
+    )
+  }
 
   return (
     <ul className="market-grid">

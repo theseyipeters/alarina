@@ -8,6 +8,7 @@ import { useTitle } from '../lib/useTitle.ts'
 import { CATEGORY_IDS, VENDOR_CATEGORIES, type VendorCategory } from '../lib/vendors.ts'
 import AuthLayout from '../components/AuthLayout.tsx'
 import Select from '../components/Select.tsx'
+import { track } from '../lib/analytics.ts'
 
 const COPY = {
   couple: {
@@ -51,10 +52,12 @@ export default function SignUp() {
           category: category as VendorCategory,
         })
         // A planner arriving from a wedding's invite goes straight back to it.
+        track('signup', { audience: 'vendor' })
         navigate(next ?? '/vendor', { replace: true })
       } else {
         await signUp(account)
         // Someone arriving from a partner invite goes straight back to it; a new couple invites their partner first.
+        track('signup', { audience: 'couple' })
         navigate(next ?? '/partner', { replace: true })
       }
     } catch (err) {

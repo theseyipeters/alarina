@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { api } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { formatNaira } from '../lib/money.ts'
@@ -10,11 +10,12 @@ import PlannersPanel from '../planning/PlannersPanel.tsx'
 import TeamPanel from '../planning/TeamPanel.tsx'
 import '../planning/planning.css'
 import './Gifts.css'
+import { EmptyState, LoadError, Loading } from '../components/States.tsx'
 
 /** The couple's vendors: their team, bookings and payments, and the planners working with them. */
 export default function Vendors() {
   useTitle('Vendors')
-  const [wedding] = useWedding()
+  const [wedding, , retry] = useWedding()
   const [params, setParams] = useSearchParams()
   const reference = params.get('payment')
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
@@ -47,9 +48,15 @@ export default function Vendors() {
     }
   }, [reference, weddingId, setParams])
 
-  if (wedding.status === 'loading') return <p className="muted">Loading…</p>
-  if (wedding.status === 'error') return <p role="alert" className="alert">Your wedding couldn’t be loaded. Refresh to try again.</p>
-  if (!weddingId) return <p className="muted">Start your wedding setup first, then add your vendors here.</p>
+  if (wedding.status === 'loading') return <Loading />
+  if (wedding.status === 'error') return <LoadError title="Your wedding didn’t load" message={wedding.message} onRetry={retry} />
+  if (!weddingId) {
+    return (
+      <EmptyState card icon="store" title="Set up your wedding first" action={<Link to="/app/setup" className="btn">Set up your wedding</Link>}>
+        Once your names and date are in, this is where you keep your vendors, bookings and payments.
+      </EmptyState>
+    )
+  }
 
   return (
     <div className="gifts">

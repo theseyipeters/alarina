@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import AmountInput from '../components/AmountInput.tsx'
 import Field from '../components/Field.tsx'
 import { api, imageSrc } from '../lib/api.ts'
 import { MAX_QUANTITY, quantityLabel } from '../lib/asoEbi.ts'
@@ -142,16 +143,9 @@ export default function GiftBasket({ invitation, names, guest, rsvpToken }: Prop
               </button>
             </div>
             {cash === 'other' && (
-              <Field label="Amount in naira" hint={`From ${formatNaira(MIN_GIFT_NAIRA * 100)}.`}>
+              <Field label="Amount" hint={`From ${formatNaira(MIN_GIFT_NAIRA * 100)}.`}>
                 {(p) => (
-                  <input
-                    {...p}
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="15000"
-                    value={other}
-                    onChange={(e) => setOther(e.target.value.replace(/\D/g, ''))}
-                  />
+                  <AmountInput {...p} placeholder={15000} value={other} onChange={setOther} />
                 )}
               </Field>
             )}
@@ -247,18 +241,11 @@ export default function GiftBasket({ invitation, names, guest, rsvpToken }: Prop
                         </button>
                         {wish?.mode === 'part' && (
                           <Field
-                            label={`Amount towards ${w.name}, in naira`}
+                            label={`Amount towards ${w.name}`}
                             hint={`From ${formatNaira(Math.min(MIN_CONTRIBUTION, remaining))} to ${formatNaira(remaining)}.`}
                           >
                             {(p) => (
-                              <input
-                                {...p}
-                                type="text"
-                                inputMode="numeric"
-                                placeholder="5000"
-                                value={wish.part}
-                                onChange={(e) => setWish({ mode: 'part', part: e.target.value.replace(/\D/g, '') })}
-                              />
+                              <AmountInput {...p} placeholder={5000} value={wish.part} onChange={(part) => setWish({ mode: 'part', part })} />
                             )}
                           </Field>
                         )}

@@ -17,6 +17,7 @@ import TypePanel from '../studio/TypePanel.tsx'
 import type { PanelProps } from '../studio/types.ts'
 import { useStudioDesign } from '../studio/useStudioDesign.ts'
 import './Studio.css'
+import { EmptyState, LoadError, Loading } from '../components/States.tsx'
 
 const TOOLS = [
   { id: 'designs', label: 'Designs', title: 'Designs', Icon: LayoutsIcon, Panel: DesignsPanel },
@@ -34,18 +35,25 @@ type ToolId = (typeof TOOLS)[number]['id']
 export default function Studio() {
   useTitle('Studio')
   const large = useMediaQuery(STUDIO_QUERY)
-  const [state, setWedding] = useWedding()
+  const [state, setWedding, retry] = useWedding()
 
   if (!large) return <NeedsLargeScreen />
-  if (state.status === 'loading') return <p className="page muted">Loading…</p>
-  if (state.status === 'error' || !state.wedding) {
+  if (state.status === 'loading') return <Loading page />
+  if (state.status === 'error') {
     return (
       <main id="main" className="page">
-        <div className="card">
-          <h1>Set up your wedding first</h1>
-          <p className="muted">Your invitation needs your names, date and venue before you can design it.</p>
-          <Link to="/app/setup" className="btn">Go to setup</Link>
-        </div>
+        <LoadError title="Your invitation didn’t load" message={state.message} onRetry={retry}>
+          <Link to="/app">Back to overview</Link>
+        </LoadError>
+      </main>
+    )
+  }
+  if (!state.wedding) {
+    return (
+      <main id="main" className="page">
+        <EmptyState card icon="list" title="Set up your wedding first" action={<Link to="/app/setup" className="btn">Go to setup</Link>}>
+          Your invitation needs your names, date and venue before you can design it.
+        </EmptyState>
       </main>
     )
   }

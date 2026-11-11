@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
 import AuthLayout from '../components/AuthLayout.tsx'
 import { api } from '../lib/api.ts'
-import { errorMessage } from '../lib/errors.ts'
+import { errorMessage, isOutage } from '../lib/errors.ts'
 import { formatDate } from '../lib/format.ts'
 import { withNext } from '../lib/nav.ts'
 import { useTitle } from '../lib/useTitle.ts'
@@ -16,7 +16,8 @@ export default function PlannerAccept() {
   const { token = '' } = useParams()
   const { state } = useAuth()
   const navigate = useNavigate()
-  const [invite, setInvite] = useState<Lookup | 'invalid' | null>(null)
+  const [invite, setInvite] = useState<Lookup | 'invalid' | { failed: string } | null>(null)
+  const [attempt, setAttempt] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -24,12 +25,12 @@ export default function PlannerAccept() {
     let cancelled = false
     api.get<Lookup>(`/planner-invites/${encodeURIComponent(token)}`).then(
       (data) => !cancelled && setInvite(data),
-      () => !cancelled && setInvite('invalid'),
+      (err: unknown) => !cancelled && setInvite(isOutage(err) ? { failed: errorMessage(err) } : 'invalid'),
     )
     return () => {
       cancelled = true
     }
-  }, [token])
+  }, [token, attempt])
 
   async function accept() {
     setBusy(true)
@@ -50,6 +51,21 @@ export default function PlannerAccept() {
       <div className="card">
         {invite === null || state.status === 'loading' ? (
           <p className="muted">Checking your invite…</p>
+        ) : invite !== 'invalid' && 'failed' in invite ? (
+          <>
+            <h1>We couldn’t check your invite</h1>
+            <p role="alert" className="muted">{invite.failed}</p>
+            <button
+              type="button"
+              className="btn btn--secondary"
+              onClick={() => {
+                setInvite(null)
+                setAttempt((n) => n + 1)
+              }}
+            >
+              Try again
+            </button>
+          </>
         ) : invite === 'invalid' ? (
           <>
             <h1>Invite not valid</h1>

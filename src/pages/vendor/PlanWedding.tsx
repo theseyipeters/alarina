@@ -10,16 +10,27 @@ import { ROLE_LABELS, type Summary } from '../../planning/types.ts'
 import { useLoad } from '../../planning/useLoad.ts'
 import '../../planning/planning.css'
 import '../Gifts.css'
+import { LoadError, Loading } from '../../components/States.tsx'
 
 /** A planner's board for one wedding: the day at a glance, vendors, budget, planners and notes. */
 export default function PlanWedding() {
   const { weddingId = '' } = useParams()
-  const [state] = useLoad<Summary>(`/planning/${weddingId}/summary`)
+  const [state, reload] = useLoad<Summary>(`/planning/${weddingId}/summary`)
   const [view, setView] = useState<'vendors' | 'budget'>('vendors')
   useTitle(state.status === 'ready' ? state.data.wedding.names : 'Wedding')
 
-  if (state.status === 'loading') return <p className="muted">Loading the wedding…</p>
-  if (state.status === 'error') return <p role="alert" className="alert">{state.message}</p>
+  if (state.status === 'loading') return <Loading label="Loading the wedding" />
+  if (state.status === 'error') {
+    return (
+      <LoadError
+        title={state.notFound ? 'This wedding isn’t here' : 'This wedding didn’t load'}
+        message={state.notFound ? 'You may no longer be planning it, or the link is wrong.' : state.message}
+        onRetry={state.notFound ? undefined : reload}
+      >
+        <Link to="/vendor/weddings">All weddings</Link>
+      </LoadError>
+    )
+  }
   const { role, wedding: w, guests } = state.data
 
   return (

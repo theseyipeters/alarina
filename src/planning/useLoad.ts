@@ -1,18 +1,29 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../lib/api.ts'
+import { errorMessage, isNotFound } from '../lib/errors.ts'
 
-export type Loaded<T> = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; data: T }
+export type Loaded<T> =
+  | { status: 'loading' }
+  | { status: 'error'; message: string; notFound: boolean }
+  | { status: 'ready'; data: T }
 
-/** Loads a GET endpoint, and gives back a reload for after changes. */
+const failed = (err: unknown) => ({ status: 'error' as const, message: errorMessage(err), notFound: isNotFound(err) })
+
+/**
+ * Loads a GET endpoint, and gives back a reload: for after changes, and for "Try again" when the
+ * first load failed. A reload that fails keeps what is already on screen rather than replacing
+ * the page with an error.
+ */
 export function useLoad<T>(path: string | null) {
   const [state, setState] = useState<Loaded<T>>({ status: 'loading' })
 
   const reload = useCallback(async () => {
     if (!path) return
     try {
-      setState({ status: 'ready', data: await api.get<T>(path) })
+      const data = await api.get<T>(path)
+      setState({ status: 'ready', data })
     } catch (err) {
-      setState({ status: 'error', message: err instanceof Error ? err.message : 'Couldn’t load this' })
+      setState((current) => (current.status === 'ready' ? current : failed(err)))
     }
   }, [path])
 
@@ -28,7 +39,7 @@ export function useLoad<T>(path: string | null) {
     if (!path) return
     api.get<T>(path).then(
       (data) => !cancelled && setState({ status: 'ready', data }),
-      (err: unknown) => !cancelled && setState({ status: 'error', message: err instanceof Error ? err.message : 'Couldn’t load this' }),
+      (err: unknown) => !cancelled && setState(failed(err)),
     )
     return () => {
       cancelled = true
