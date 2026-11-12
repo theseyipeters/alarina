@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import Field from '../components/Field.tsx'
-import Select from '../components/Select.tsx'
+import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router'
+import PayoutAccount from '../components/PayoutAccount.tsx'
+import { EmptyState, LoadError, Loading } from '../components/States.tsx'
 import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { formatNaira } from '../lib/money.ts'
 import type { GiftsOverview } from '../lib/types.ts'
 import { useTitle } from '../lib/useTitle.ts'
 
-type State = { status: 'loading' } | { status: 'error' } | { status: 'none' } | { status: 'ready'; data: GiftsOverview }
+type State = { status: 'loading' } | { status: 'error'; message: string } | { status: 'none' } | { status: 'ready'; data: GiftsOverview }
 
 /** Cash gifts: where the money goes, whether guests are offered it, and what has come in. */
 export default function CashGifts() {
@@ -18,7 +19,8 @@ export default function CashGifts() {
     () =>
       api.get<GiftsOverview>('/wedding/gifts').then(
         (data) => setState({ status: 'ready', data }),
-        (err) => setState({ status: err instanceof ApiError && err.code === 'no_wedding' ? 'none' : 'error' }),
+        (err: unknown) =>
+          setState(err instanceof ApiError && err.code === 'no_wedding' ? { status: 'none' } : { status: 'error', message: errorMessage(err) }),
       ),
     [],
   )
@@ -27,14 +29,13 @@ export default function CashGifts() {
     load()
   }, [load])
 
-  if (state.status === 'loading') return <p className="muted">Loading cash gifts…</p>
-  if (state.status === 'error') return <p role="alert" className="alert">Cash gifts couldn’t be loaded. Refresh to try again.</p>
+  if (state.status === 'loading') return <Loading label="Loading cash gifts" />
+  if (state.status === 'error') return <LoadError title="Cash gifts didn’t load" message={state.message} onRetry={load} />
   if (state.status === 'none') {
     return (
-      <div className="card">
-        <h1>Cash gifts</h1>
-        <p className="muted">Set up your wedding first, then come back to receive cash gifts.</p>
-      </div>
+      <EmptyState card icon="list" title="Set up your wedding first" action={<Link to="/app/setup" className="btn">Set up your wedding</Link>}>
+        Cash gifts need your names, date and venue. Come back here once they’re in.
+      </EmptyState>
     )
   }
 
@@ -68,161 +69,19 @@ export default function CashGifts() {
       </header>
 
       <div className="gifts-grid">
-        <PayoutAccount payout={data.payout} onSaved={load} />
+        <PayoutAccount
+          payout={data.payout}
+          onSaved={load}
+          paths={{ banks: '/wedding/gifts/banks', resolve: '/wedding/gifts/account/resolve', save: '/wedding/gifts/account' }}
+          title="Where gifts go"
+          intro="Gifts are paid into a Nigerian bank account. We check the name on it before saving."
+          passwordHint="To keep gifts safe, we check it’s you. We’ll email everyone in your wedding space about this change."
+        />
         <GiftSwitch data={data} onChange={load} />
       </div>
 
       <GiftList data={data} />
     </div>
-  )
-}
-
-type Bank = { name: string; code: string }
-type Resolved = { bankName: string; accountName: string }
-
-function PayoutAccount({ payout, onSaved }: { payout: GiftsOverview['payout']; onSaved: () => void }) {
-  const [editing, setEditing] = useState(!payout)
-  const [banks, setBanks] = useState<Bank[] | null>(null)
-  const [bankCode, setBankCode] = useState('')
-  const [accountNumber, setAccountNumber] = useState('')
-  const [resolved, setResolved] = useState<Resolved | null>(null)
-  const [password, setPassword] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!editing || banks) return
-    api.get<{ banks: Bank[] }>('/wedding/gifts/banks').then(
-      ({ banks }) => setBanks([...banks].sort((a, b) => a.name.localeCompare(b.name))),
-      (err) => setError(errorMessage(err)),
-    )
-  }, [editing, banks])
-
-  async function check(e: FormEvent) {
-    e.preventDefault()
-    setBusy(true)
-    setError(null)
-    try {
-      setResolved(await api.post<Resolved>('/wedding/gifts/account/resolve', { bankCode, accountNumber }))
-    } catch (err) {
-      setError(errorMessage(err))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function save(e: FormEvent) {
-    e.preventDefault()
-    setBusy(true)
-    setError(null)
-    try {
-      await api.put('/wedding/gifts/account', { bankCode, accountNumber, password })
-      setEditing(false)
-      setResolved(null)
-      setAccountNumber('')
-      onSaved()
-    } catch (err) {
-      setError(errorMessage(err))
-    } finally {
-      setPassword('')
-      setBusy(false)
-    }
-  }
-
-  function useDifferentAccount() {
-    setResolved(null)
-    setPassword('')
-    setError(null)
-  }
-
-  return (
-    <section className="card" aria-labelledby="payout-title">
-      <h2 id="payout-title">Where gifts go</h2>
-
-      {payout && !editing && (
-        <>
-          {/* Shown like a bank card: only the name, bank and last four digits are ever stored. */}
-          <div className="bank-card" aria-label={`${payout.accountName}, ${payout.bankName}, account ending ${payout.accountLast4}`}>
-            <span className="bank-card-bank">{payout.bankName}</span>
-            <span className="bank-card-number" aria-hidden="true">•••• •••• {payout.accountLast4}</span>
-            <span className="bank-card-name">{payout.accountName}</span>
-          </div>
-          <button type="button" className="btn btn--secondary" onClick={() => setEditing(true)}>Change account</button>
-        </>
-      )}
-
-      {editing && (
-        <>
-          <p className="muted">Gifts are paid into a Nigerian bank account. We check the name on it before saving.</p>
-          {error && <p role="alert" className="alert">{error}</p>}
-          {resolved ? (
-            <form className="resolved" onSubmit={save}>
-              <p className="resolved-name">{resolved.accountName}</p>
-              <p className="muted">
-                {resolved.bankName} · ending {accountNumber.slice(-4)}
-              </p>
-              <p>Is this the right account?</p>
-              <Field label="Your password" hint="To keep gifts safe, we check it’s you. We’ll email everyone in your wedding space about this change.">
-                {(p) => (
-                  <input
-                    {...p}
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                )}
-              </Field>
-              <div className="actions">
-                <button className="btn" disabled={busy}>{busy ? 'Saving…' : 'Yes, save account'}</button>
-                <button type="button" className="btn btn--secondary" onClick={useDifferentAccount} disabled={busy}>
-                  Use a different account
-                </button>
-              </div>
-            </form>
-          ) : (
-            <form onSubmit={check}>
-              <Field label="Bank">
-                {(p) => (
-                  <Select
-                    {...p}
-                    required
-                    value={bankCode}
-                    onChange={setBankCode}
-                    disabled={!banks}
-                    placeholder={banks ? 'Choose your bank' : 'Loading banks…'}
-                    options={(banks ?? []).map((b) => ({ value: b.code, label: b.name }))}
-                  />
-                )}
-              </Field>
-              <Field label="Account number" hint="10 digits (NUBAN).">
-                {(p) => (
-                  <input
-                    {...p}
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="off"
-                    required
-                    pattern="\d{10}"
-                    maxLength={10}
-                    placeholder="0123456789"
-                    value={accountNumber}
-                    onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
-                  />
-                )}
-              </Field>
-              <div className="actions">
-                <button className="btn" disabled={busy}>{busy ? 'Checking…' : 'Check account'}</button>
-                {payout && (
-                  <button type="button" className="btn btn--secondary" onClick={() => setEditing(false)}>Cancel</button>
-                )}
-              </div>
-            </form>
-          )}
-        </>
-      )}
-    </section>
   )
 }
 

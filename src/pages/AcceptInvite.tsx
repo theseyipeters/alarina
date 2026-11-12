@@ -2,12 +2,11 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
 import { api, ApiError } from '../lib/api.ts'
-import { errorMessage } from '../lib/errors.ts'
+import { errorMessage, isOutage } from '../lib/errors.ts'
 import { withNext } from '../lib/nav.ts'
 import type { Session } from '../lib/types.ts'
 import { useTitle } from '../lib/useTitle.ts'
 import AuthLayout from '../components/AuthLayout.tsx'
-import Logo from '../components/Logo.tsx'
 
 type Lookup = { inviterName: string | null; expiresAt: string }
 
@@ -16,7 +15,8 @@ export default function AcceptInvite() {
   const { token = '' } = useParams()
   const { state, refresh } = useAuth()
   const navigate = useNavigate()
-  const [invite, setInvite] = useState<Lookup | 'invalid' | null>(null)
+  const [invite, setInvite] = useState<Lookup | 'invalid' | { failed: string } | null>(null)
+  const [attempt, setAttempt] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
@@ -25,12 +25,12 @@ export default function AcceptInvite() {
     let cancelled = false
     api.get<Lookup>(`/invites/${encodeURIComponent(token)}`).then(
       (data) => !cancelled && setInvite(data),
-      () => !cancelled && setInvite('invalid'),
+      (err: unknown) => !cancelled && setInvite(isOutage(err) ? { failed: errorMessage(err) } : 'invalid'),
     )
     return () => {
       cancelled = true
     }
-  }, [token])
+  }, [token, attempt])
 
   async function accept(discardOwnWedding = false) {
     setBusy(true)
@@ -51,10 +51,24 @@ export default function AcceptInvite() {
 
   return (
     <AuthLayout>
-      <Link to="/" className="brand"><Logo /></Link>
       <div className="card">
         {invite === null || state.status === 'loading' ? (
           <p className="muted">Checking your invite…</p>
+        ) : invite !== 'invalid' && 'failed' in invite ? (
+          <>
+            <h1>We couldn’t check your invite</h1>
+            <p role="alert" className="muted">{invite.failed}</p>
+            <button
+              type="button"
+              className="btn btn--secondary"
+              onClick={() => {
+                setInvite(null)
+                setAttempt((n) => n + 1)
+              }}
+            >
+              Try again
+            </button>
+          </>
         ) : invite === 'invalid' ? (
           <>
             <h1>Invite not valid</h1>

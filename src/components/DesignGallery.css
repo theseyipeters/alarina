@@ -1,0 +1,305 @@
+/*
+ * "Find your look" gallery. Eight real invitations on a 3D carousel: each card is placed from
+ * its offset to the active one (--o, and --a for its distance). Picking a palette remounts the
+ * cards' contents so they repaint in a wave out from the centre, and the glow behind them takes
+ * the palette's own colours (it sits inside .inv[data-palette], which re-maps the tokens).
+ */
+
+.gal {
+  --card-w: 21rem;
+  --stage-h: 42rem;
+}
+
+@media (max-width: 47.99rem) {
+  .gal {
+    --card-w: 15rem;
+    --stage-h: 31rem;
+  }
+}
+
+.gal-stage {
+  position: relative;
+  /* Replaced by the tallest nearby card's height once the cards have laid out. */
+  height: var(--stage-h);
+  perspective: 1800px;
+  transition: height 500ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  touch-action: pan-y;
+  user-select: none;
+  cursor: grab;
+  border-radius: var(--radius-lg);
+}
+
+.gal-stage:active {
+  cursor: grabbing;
+}
+
+.gal-stage:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+}
+
+/* The glow takes the palette's accent and background colours. */
+.inv.gal-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(90%, 44rem);
+  min-height: 0;
+  aspect-ratio: 1.4;
+  padding: 0;
+  background:
+    radial-gradient(closest-side, color-mix(in srgb, var(--accent) 55%, transparent), transparent 70%),
+    radial-gradient(closest-side at 30% 60%, color-mix(in srgb, var(--bg) 70%, transparent), transparent 70%);
+  filter: blur(50px);
+  opacity: 0.75;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: gal-glow-in 900ms ease both;
+}
+
+.gal-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: calc(20 - var(--a));
+  width: var(--card-w);
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transform:
+    translate(-50%, -50%)
+    translateX(calc(var(--o) * var(--card-w) * 0.62))
+    translateZ(calc(var(--a) * -220px))
+    rotateY(calc(var(--o) * -34deg));
+  opacity: calc(1 - var(--a) * 0.28);
+  filter: saturate(calc(1 - var(--a) * 0.25));
+  transition:
+    transform 800ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 600ms ease,
+    filter 600ms ease;
+}
+
+.gal-card.is-active {
+  cursor: grab;
+}
+
+.gal-card.is-far {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gal-card .inv--preview {
+  padding: 0;
+  background: none;
+}
+
+.gal-card .inv-card {
+  box-shadow: 0 40px 70px -30px rgb(0 0 0 / 0.55);
+}
+
+.gal-card.is-active .inv-card {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent),
+    0 50px 90px -30px rgb(0 0 0 / 0.6);
+}
+
+/* Before the gallery is first seen, every card waits stacked in the middle, then fans out. */
+.gal:not(.is-on) .gal-card {
+  opacity: 0;
+  transform: translate(-50%, -50%) translateY(60px) scale(0.85);
+}
+
+.gal.is-on .gal-card {
+  transition-delay: calc(var(--a) * 70ms);
+}
+
+/* A new palette repaints the cards in a wave from the centre. */
+.gal-repaint {
+  animation: gal-repaint 700ms cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--a) * 90ms) both;
+}
+
+.gal-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  padding: 0 0 0.15rem;
+  font: inherit;
+  font-size: 1.75rem;
+  line-height: 1;
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  box-shadow: 0 12px 30px -12px rgb(0 0 0 / 0.5);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: transform 200ms ease, opacity 200ms ease;
+}
+
+.gal-arrow:hover:not(:disabled) {
+  transform: translateY(-50%) scale(1.08);
+}
+
+.gal-arrow:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.gal-arrow--prev { left: 0; }
+.gal-arrow--next { right: 0; }
+
+/* ── Info and controls ─────────────────────────────────────────────── */
+
+.gal-info {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: center;
+  margin-top: var(--space-6);
+  text-align: center;
+}
+
+.gal-count {
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.gal-name {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+}
+
+.gal-desc {
+  max-width: 28rem;
+  color: var(--text-muted);
+}
+
+.gal-controls {
+  display: grid;
+  gap: var(--space-6);
+  justify-items: center;
+  margin-top: var(--space-8);
+}
+
+.gal-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: center;
+}
+
+.gal-chip {
+  min-height: 2.5rem;
+  padding: 0 var(--space-4);
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 200ms ease, background-color 200ms ease, border-color 200ms ease;
+}
+
+.gal-chip:hover {
+  color: var(--text);
+  border-color: var(--field-border);
+}
+
+.gal-chip.is-on {
+  color: var(--on-primary);
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.gal-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: center;
+}
+
+.gal-swatch {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 200ms cubic-bezier(0.3, 1.5, 0.5, 1), border-color 200ms ease;
+}
+
+.gal-swatch:hover {
+  transform: scale(1.1);
+}
+
+.gal-swatch.is-on {
+  border-color: var(--text);
+  transform: scale(1.12);
+}
+
+.inv.gal-swatch-paint {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  min-height: 0;
+  padding: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+}
+
+.gal-swatch-paint i {
+  width: 0.8rem;
+  height: 0.8rem;
+  background: var(--accent);
+  border-radius: 50%;
+}
+
+.gal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: center;
+  min-height: var(--control-height);
+}
+
+.gal-applied {
+  color: var(--success);
+  animation: gal-pop 450ms cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+
+@keyframes gal-glow-in {
+  from { opacity: 0; }
+}
+
+@keyframes gal-repaint {
+  0% { opacity: 0.35; transform: scale(0.94) rotateY(-12deg); filter: blur(4px); }
+  100% { opacity: 1; transform: none; filter: none; }
+}
+
+@keyframes gal-pop {
+  from { opacity: 0; transform: scale(0.6); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gal *,
+  .gal-card {
+    animation: none !important;
+    transition: none !important;
+  }
+}

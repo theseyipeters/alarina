@@ -1,0 +1,1132 @@
+/*
+ * "See it in action" scroll story. Steps scroll on the left; on wide screens one phone stays in
+ * view, tilting and swapping its screen as each step reaches the middle of the window. Each
+ * screen plays a short sequence when it comes on (.st-phone.is-on).
+ *
+ * As in the hero art, base styles describe each finished screen and animations play *from* the
+ * start, so reduced motion simply shows the end result.
+ *
+ * The phone always looks like a phone running Alárinà in light mode, whatever the page theme,
+ * so it carries its own copy of the light tokens. The glow and the illustration colours below
+ * are this scene's own, like the hero envelope's.
+ */
+
+.story {
+  --glow-1: #2e5a47;
+  --glow-2: #c9a45c;
+  --glow-3: #6f9f86;
+  --glow-4: #b8643f;
+  --progress: 0;
+  display: grid;
+  gap: var(--space-12);
+}
+
+/* ── Steps ─────────────────────────────────────────────────────────── */
+
+.story-steps {
+  display: grid;
+  gap: var(--space-16);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.story-number {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--accent);
+  transition: color 500ms ease;
+}
+
+.story-step.is-active .story-number {
+  color: var(--accent);
+}
+
+.story-step h3 {
+  margin: var(--space-4) 0 var(--space-3);
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+}
+
+.story-step p {
+  max-width: 28rem;
+  margin: 0;
+  font-size: var(--text-lg);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.story-inline {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-8);
+}
+
+.story-inline .st-phone {
+  width: min(100%, 18rem);
+}
+
+@media (min-width: 56rem) {
+  .story {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-8);
+    align-items: start;
+  }
+
+  /* A rail beside the steps that fills as the reader scrolls through them. */
+  .story-steps {
+    position: relative;
+    gap: 0;
+    padding-left: var(--space-8);
+  }
+
+  .story-steps::before,
+  .story-steps::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 2px;
+    border-radius: 999px;
+    background: var(--border);
+  }
+
+  .story-steps::after {
+    background: var(--accent);
+    transform: scaleY(var(--progress));
+    transform-origin: top;
+  }
+
+  .story-step {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 90vh;
+    opacity: 0.28;
+    transform: translateY(var(--space-6));
+    transition: opacity 500ms ease, transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .story-step.is-active {
+    opacity: 1;
+    transform: none;
+  }
+
+  .story-stage {
+    align-self: stretch;
+  }
+
+  .story-sticky {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+}
+
+/* ── Stage: glow, tilting phone, flying chips ───────────────────────── */
+
+.story-glow {
+  position: absolute;
+  inset: 5% -10%;
+  pointer-events: none;
+}
+
+.story-glow span {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  filter: blur(48px);
+  transition: opacity 900ms ease;
+}
+
+.story-glow span:nth-child(1) { background: radial-gradient(closest-side, color-mix(in srgb, var(--glow-1) 55%, transparent), transparent); }
+.story-glow span:nth-child(2) { background: radial-gradient(closest-side, color-mix(in srgb, var(--glow-2) 50%, transparent), transparent); }
+.story-glow span:nth-child(3) { background: radial-gradient(closest-side, color-mix(in srgb, var(--glow-3) 55%, transparent), transparent); }
+.story-glow span:nth-child(4) { background: radial-gradient(closest-side, color-mix(in srgb, var(--glow-4) 45%, transparent), transparent); }
+
+.story-glow span.is-on {
+  opacity: 1;
+}
+
+.story-device {
+  position: relative;
+  width: min(100%, 18.5rem);
+  transform: perspective(1400px) rotateY(var(--tilt-y, 0deg)) rotateX(var(--tilt-x, 0deg));
+  transition: transform 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: story-bob 6s ease-in-out infinite;
+}
+
+.story[data-step='0'] .story-device { --tilt-y: -12deg; --tilt-x: 4deg; }
+.story[data-step='1'] .story-device { --tilt-y: 10deg; --tilt-x: 2deg; }
+.story[data-step='2'] .story-device { --tilt-y: -8deg; --tilt-x: -2deg; }
+.story[data-step='3'] .story-device { --tilt-y: 12deg; --tilt-x: 3deg; }
+
+.story-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: translateY(var(--space-6)) scale(0.96);
+  filter: blur(6px);
+  transition: opacity 500ms ease, transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1), filter 500ms ease;
+  pointer-events: none;
+}
+
+/* The first layer sizes the device; the others sit on top of it. */
+.story-layer:first-child {
+  position: relative;
+}
+
+.story-layer.is-active {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+.story-chips {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.story-chip {
+  position: absolute;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.14);
+  backdrop-filter: blur(10px);
+}
+
+.story-chip:nth-child(1) { top: 14%; right: 92%; }
+.story-chip:nth-child(2) { top: 42%; left: 94%; }
+.story-chip:nth-child(3) { top: 72%; right: 90%; }
+
+.story-layer.is-active .story-chip {
+  animation:
+    chip-in-left 700ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both,
+    chip-float 5s ease-in-out 1s infinite;
+}
+
+.story-layer.is-active .story-chip:nth-child(1) { animation-delay: 900ms, 1.6s; }
+.story-layer.is-active .story-chip:nth-child(2) { animation-name: chip-in-right, chip-float; animation-delay: 1500ms, 2.2s; }
+.story-layer.is-active .story-chip:nth-child(3) { animation-delay: 2100ms, 2.8s; }
+
+/* ── The phone ──────────────────────────────────────────────────────── */
+
+.st-phone {
+  --bg: #fafaf7;
+  --surface: #ffffff;
+  --text: #18181b;
+  --text-muted: #5c5c63;
+  --border: #e6e5e0;
+  --primary: #18181b;
+  --on-primary: #ffffff;
+  --accent: #2e5a47;
+  --accent-soft: #e3eee8;
+  --success: #1f6b3a;
+  --danger: #a3261a;
+  --danger-soft: #f6e4e1;
+  --gold: #c9a45c;
+  --emerald: #134636;
+  --paper: #fbf8f1;
+  --chat-bg: #efe9dd;
+  --bubble-out: #d9ecdf;
+  --bezel: #0d0d0f;
+  --bezel-edge: #3a3a40;
+
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9 / 19.5;
+  padding: 0.6rem;
+  font-size: 0.8125rem;
+  color: var(--text);
+  background: linear-gradient(150deg, var(--bezel-edge), var(--bezel) 30%);
+  border-radius: 3rem;
+  box-shadow:
+    inset 0 0 0 1px var(--bezel-edge),
+    0 50px 100px -30px rgb(0 0 0 / 0.5),
+    0 20px 40px -20px rgb(0 0 0 / 0.4);
+}
+
+.st-island {
+  position: absolute;
+  top: 1.15rem;
+  left: 50%;
+  z-index: 3;
+  width: 30%;
+  height: 1.35rem;
+  background: var(--bezel);
+  border-radius: 999px;
+  transform: translateX(-50%);
+}
+
+.st-status {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.9rem;
+  left: 2.1rem;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+}
+
+.st-status-icons {
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+}
+
+.st-status-icons i {
+  width: 3px;
+  background: var(--text);
+  border-radius: 1px;
+}
+
+.st-status-icons i:nth-child(1) { height: 5px; }
+.st-status-icons i:nth-child(2) { height: 8px; }
+.st-status-icons i:nth-child(3) { width: 18px; height: 9px; margin-left: 4px; border-radius: 3px; }
+
+.st-screen {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  border-radius: 2.45rem;
+}
+
+.st-app {
+  position: absolute;
+  inset: 0;
+  padding-top: 2.9rem;
+}
+
+.st-phone p {
+  margin: 0;
+}
+
+.st-avatar {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.6875rem;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 50%;
+}
+
+.st-avatar--group {
+  color: var(--on-primary);
+  background: var(--accent);
+}
+
+.st-avatar--no {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.st-feed-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.st-feed-sub {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.st-btn {
+  position: relative;
+  overflow: hidden;
+  padding: 0.65rem;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+
+.st-ripple {
+  position: absolute;
+  top: 50%;
+  left: 35%;
+  width: 18rem;
+  aspect-ratio: 1;
+  background: var(--accent);
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0);
+  pointer-events: none;
+}
+
+.st-check {
+  width: 3rem;
+  height: 3rem;
+  fill: none;
+  stroke: var(--accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.st-check circle {
+  stroke-width: 2.5;
+  stroke-dasharray: 151;
+}
+
+.st-check path {
+  stroke-width: 3.5;
+  stroke-dasharray: 40;
+}
+
+/* ── Screen 1: the family group chat ───────────────────────────────── */
+
+.st-chat {
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(circle, rgb(0 0 0 / 0.04) 1px, transparent 1.5px) 0 0 / 14px 14px,
+    var(--chat-bg);
+}
+
+.st-chat-head {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.5rem 0.9rem 0.7rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.st-chat-head > span:last-child {
+  display: grid;
+}
+
+.st-chat-sub {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.st-chat-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  padding: 0.8rem 0.7rem 1.4rem;
+}
+
+.st-msg {
+  position: relative;
+  max-width: 84%;
+  padding: 0.5rem 0.65rem;
+  line-height: 1.35;
+  border-radius: 0.9rem;
+  box-shadow: 0 1px 1px rgb(0 0 0 / 0.06);
+}
+
+.st-msg b {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: var(--weight-regular);
+  color: var(--accent);
+}
+
+.st-msg--in {
+  align-self: flex-start;
+  background: var(--surface);
+  border-top-left-radius: 0.25rem;
+}
+
+.st-msg--out {
+  align-self: flex-end;
+  padding: 0.3rem 0.3rem 0.45rem;
+  background: var(--bubble-out);
+  border-top-right-radius: 0.25rem;
+}
+
+.st-preview {
+  display: grid;
+  gap: 2px;
+  padding-bottom: 0.15rem;
+}
+
+.st-preview-card {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.2rem;
+  height: 7.5rem;
+  margin-bottom: 0.35rem;
+  padding: 0.6rem;
+  text-align: center;
+  color: var(--gold);
+  background:
+    radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--gold) 22%, transparent), transparent 60%),
+    var(--emerald);
+  border-radius: 0.6rem;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 45%, transparent);
+}
+
+.st-preview-eyebrow {
+  font-size: 0.5rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.st-preview-names {
+  display: grid;
+  font-family: var(--font-invite);
+  font-size: 1.15rem;
+  line-height: 1.05;
+  color: var(--paper);
+}
+
+.st-preview-names em {
+  font-size: 0.8rem;
+  color: var(--gold);
+}
+
+.st-preview-rule {
+  width: 2.5rem;
+  height: 1px;
+  margin-top: 0.2rem;
+  background: var(--gold);
+}
+
+.st-preview-title,
+.st-preview-sub,
+.st-preview-link {
+  padding: 0 0.35rem;
+}
+
+.st-preview-sub {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.st-preview-link {
+  font-size: 0.6875rem;
+  color: var(--accent);
+  overflow-wrap: anywhere;
+}
+
+.st-ticks {
+  display: block;
+  padding-right: 0.35rem;
+  font-size: 0.625rem;
+  text-align: right;
+  color: var(--accent);
+}
+
+.st-reaction {
+  position: absolute;
+  bottom: -0.8rem;
+  left: 0.6rem;
+  padding: 0.05rem 0.4rem;
+  font-size: 0.6875rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+/* Shown only while someone is typing, so hidden in the finished scene. */
+.st-typing {
+  display: flex;
+  gap: 3px;
+  align-self: flex-start;
+  height: 0;
+  padding: 0 0.7rem;
+  overflow: hidden;
+  background: var(--surface);
+  border-radius: 0.9rem;
+  opacity: 0;
+}
+
+.st-typing i {
+  width: 6px;
+  height: 6px;
+  margin-top: 0.75rem;
+  background: var(--text-muted);
+  border-radius: 50%;
+}
+
+.is-on .st-msg--out { animation: st-rise 600ms cubic-bezier(0.2, 0.9, 0.3, 1.1) 300ms both; }
+.is-on .st-ticks { animation: st-fade 300ms ease 1.1s both; }
+.is-on .st-typing { animation: st-typing 1.2s ease 1.4s both; }
+.is-on .st-typing i { animation: st-dot 900ms ease-in-out infinite; }
+.is-on .st-typing i:nth-child(2) { animation-delay: 150ms; }
+.is-on .st-typing i:nth-child(3) { animation-delay: 300ms; }
+.is-on .st-pop--2 { animation: st-rise 500ms cubic-bezier(0.2, 0.9, 0.3, 1.1) 2.6s both; }
+.is-on .st-pop--3 { animation: st-rise 500ms cubic-bezier(0.2, 0.9, 0.3, 1.1) 3.4s both; }
+.is-on .st-reaction { animation: st-pop 450ms cubic-bezier(0.3, 1.6, 0.5, 1) 4.1s both; }
+
+/* ── Screen 2: a guest opens the invitation and replies ─────────────── */
+
+.st-guest {
+  padding-top: 0;
+  overflow: hidden;
+}
+
+.st-guest::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  height: 2.6rem;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.st-guest-scroll {
+  transform: translateY(-22%);
+}
+
+.st-guest-scroll .inv {
+  padding: 3rem 0.75rem 0.75rem;
+}
+
+.st-sheet {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem 1.6rem;
+  background: var(--surface);
+  border-radius: 1.4rem 1.4rem 0 0;
+  box-shadow: 0 -12px 30px rgb(0 0 0 / 0.14);
+}
+
+.st-sheet-grip {
+  justify-self: center;
+  width: 2.2rem;
+  height: 4px;
+  margin-bottom: 0.3rem;
+  background: var(--border);
+  border-radius: 999px;
+}
+
+.st-sheet-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+
+.st-input {
+  display: flex;
+  align-items: center;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--text-muted);
+  border-radius: 0.75rem;
+}
+
+.st-typed {
+  white-space: nowrap;
+}
+
+.st-caret {
+  width: 1.5px;
+  height: 1rem;
+  margin-left: 1px;
+  background: var(--accent);
+  opacity: 0;
+}
+
+.st-btn--accept {
+  color: var(--on-primary);
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.st-done {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.35rem;
+  text-align: center;
+  background: var(--surface);
+  border-radius: inherit;
+}
+
+.st-done p {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+}
+
+.st-done-sub {
+  max-width: 14rem;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.st-confetti {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  pointer-events: none;
+}
+
+.st-confetti i {
+  position: absolute;
+  width: 7px;
+  height: 11px;
+  background: var(--accent);
+  border-radius: 2px;
+  opacity: 0;
+}
+
+.st-confetti i:nth-child(3n) { background: var(--gold); }
+.st-confetti i:nth-child(3n + 1) { background: var(--glow-4, #b8643f); width: 6px; height: 6px; border-radius: 50%; }
+.st-confetti i:nth-child(1) { --x: -110px; --y: -90px; --r: 200deg; }
+.st-confetti i:nth-child(2) { --x: -70px; --y: -120px; --r: -140deg; }
+.st-confetti i:nth-child(3) { --x: -20px; --y: -130px; --r: 320deg; }
+.st-confetti i:nth-child(4) { --x: 30px; --y: -125px; --r: -260deg; }
+.st-confetti i:nth-child(5) { --x: 80px; --y: -110px; --r: 180deg; }
+.st-confetti i:nth-child(6) { --x: 115px; --y: -70px; --r: -200deg; }
+.st-confetti i:nth-child(7) { --x: -125px; --y: -30px; --r: 270deg; }
+.st-confetti i:nth-child(8) { --x: 125px; --y: -20px; --r: -300deg; }
+.st-confetti i:nth-child(9) { --x: -95px; --y: 25px; --r: 160deg; }
+.st-confetti i:nth-child(10) { --x: 100px; --y: 30px; --r: -160deg; }
+.st-confetti i:nth-child(11) { --x: -45px; --y: -150px; --r: 90deg; }
+.st-confetti i:nth-child(12) { --x: 55px; --y: -150px; --r: -90deg; }
+.st-confetti i:nth-child(13) { --x: -140px; --y: -110px; --r: 240deg; }
+.st-confetti i:nth-child(14) { --x: 140px; --y: -115px; --r: -240deg; }
+
+.is-on .st-guest-scroll { animation: st-scroll 2.4s cubic-bezier(0.45, 0, 0.25, 1) 500ms both; }
+.is-on .st-sheet { animation: st-sheet 650ms cubic-bezier(0.2, 0.9, 0.3, 1) 2.7s both; }
+.is-on .st-typed { animation: st-type 900ms steps(9, end) 3.5s both; }
+.is-on .st-caret { animation: st-caret 1.3s linear 3.4s both; }
+.is-on .st-btn--accept { animation: st-fill 300ms ease 4.75s both; }
+.is-on .st-btn--accept .st-ripple { animation: st-ripple 700ms ease-out 4.6s both; }
+.is-on .st-done { animation: st-fade 400ms ease 5.3s both; }
+.is-on .st-done .st-check circle { animation: st-draw-circle 600ms ease 5.4s both; }
+.is-on .st-done .st-check path { animation: st-draw-path 400ms ease 5.9s both; }
+.is-on .st-confetti i { animation: st-confetti 1.2s cubic-bezier(0.1, 0.7, 0.3, 1) 5.6s both; }
+
+/* ── Screen 3: the couple's replies board ──────────────────────────── */
+
+.st-board {
+  display: grid;
+  gap: 0.7rem;
+  align-content: start;
+  padding: 3.1rem 0.9rem 1rem;
+}
+
+.st-board-head {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.st-board-head > span:last-child {
+  display: grid;
+}
+
+.st-board-head .st-avatar {
+  font-family: var(--font-invite);
+  font-size: 0.875rem;
+  color: var(--gold);
+  background: var(--accent);
+}
+
+.st-board-sub {
+  font-size: 0.6875rem;
+  color: var(--accent);
+}
+
+.st-stats {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr;
+  gap: 0.4rem;
+}
+
+.st-stat {
+  display: grid;
+  padding: 0.55rem 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+}
+
+.st-stat > span:first-child {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.st-stat > span:last-child {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.st-stat--main {
+  color: var(--on-primary);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.st-stat--main > span:last-child {
+  color: color-mix(in srgb, var(--on-primary) 75%, transparent);
+}
+
+.st-split {
+  display: flex;
+  gap: 3px;
+  height: 0.5rem;
+}
+
+.st-split span {
+  border-radius: 999px;
+}
+
+.st-split-a { width: 61%; background: var(--accent); }
+.st-split-b { width: 39%; background: var(--gold); }
+
+.st-split-legend {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -0.3rem;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.st-feed-label {
+  margin-top: 0.2rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.st-feed {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.st-feed li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.5rem 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+}
+
+.st-feed-when {
+  margin-left: auto;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.is-on .st-board-head { animation: st-rise 500ms ease 100ms both; }
+.is-on .st-stat { animation: st-rise 500ms cubic-bezier(0.2, 0.9, 0.3, 1.1) 300ms both; }
+.is-on .st-stat:nth-child(2) { animation-delay: 400ms; }
+.is-on .st-stat:nth-child(3) { animation-delay: 500ms; }
+.is-on .st-split span { animation: st-grow 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) 700ms both; }
+.is-on .st-feed li { animation: st-arrive 900ms ease both; }
+.is-on .st-feed li:nth-child(3) { animation-delay: 1.4s; }
+.is-on .st-feed li:nth-child(2) { animation-delay: 2.3s; }
+.is-on .st-feed li:nth-child(1) { animation-delay: 3.2s; }
+
+/* ── Screen 4: a guest sends a gift ────────────────────────────────── */
+
+.st-gift {
+  display: grid;
+  gap: 0.7rem;
+  align-content: start;
+  padding: 3.4rem 1rem 1rem;
+}
+
+.st-gift-eyebrow {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.st-gift-names {
+  margin-top: -0.5rem !important;
+  font-family: var(--font-invite);
+  font-size: 1.6rem;
+  line-height: 1.15;
+}
+
+.st-amounts {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+.st-amounts span {
+  position: relative;
+  z-index: 1;
+  padding: 0.6rem 0;
+  font-size: 0.75rem;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+}
+
+.st-amount-pick {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc((100% - 0.8rem) / 3);
+  height: 100%;
+  background: var(--accent-soft);
+  border: 2px solid var(--accent);
+  border-radius: 0.7rem;
+  transform: translateX(calc(100% + 0.4rem));
+}
+
+.st-btn--pay {
+  color: var(--on-primary);
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.st-btn--pay .st-ripple {
+  background: var(--on-primary);
+}
+
+.st-gift-sent {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  color: var(--success);
+}
+
+.st-gift-sent .st-check {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.st-gift-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.55rem 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+}
+
+.st-gift-row .st-feed-text {
+  flex: 1;
+}
+
+.st-swatch,
+.st-kettle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0.5rem;
+}
+
+/* An adire-style indigo swatch for the aso-ebi row. */
+.st-swatch {
+  background:
+    radial-gradient(circle, #e8dcbc 28%, transparent 31%) 0 0 / 9px 9px,
+    radial-gradient(circle, #e8dcbc 14%, transparent 17%) 4.5px 4.5px / 9px 9px,
+    #2c3e6b;
+}
+
+.st-kettle {
+  background: var(--accent-soft);
+}
+
+.st-fund {
+  display: block;
+  height: 5px;
+  margin: 0.25rem 0 0.1rem;
+  overflow: hidden;
+  background: var(--border);
+  border-radius: 999px;
+}
+
+.st-fund i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--accent);
+  border-radius: inherit;
+}
+
+.st-funded {
+  color: var(--success);
+}
+
+.is-on .st-gift-eyebrow,
+.is-on .st-gift-names { animation: st-rise 500ms ease 100ms both; }
+.is-on .st-amounts span { animation: st-rise 400ms ease 300ms both; }
+.is-on .st-amounts span:nth-child(2) { animation-delay: 380ms; }
+.is-on .st-amounts span:nth-child(3) { animation-delay: 460ms; }
+.is-on .st-amount-pick { animation: st-pick 700ms cubic-bezier(0.3, 1.3, 0.5, 1) 1.1s both; }
+.is-on .st-btn--pay { animation: st-rise 400ms ease 600ms both; }
+.is-on .st-btn--pay .st-ripple { animation: st-ripple 700ms ease-out 2s both; }
+.is-on .st-gift-sent { animation: st-rise 400ms ease 2.5s both; }
+.is-on .st-gift-sent .st-check circle { animation: st-draw-circle 500ms ease 2.6s both; }
+.is-on .st-gift-sent .st-check path { animation: st-draw-path 300ms ease 3s both; }
+.is-on .st-gift-row { animation: st-rise 500ms ease 3.2s both; }
+.is-on .st-gift-row + .st-gift-row { animation-delay: 3.5s; }
+.is-on .st-fund i { animation: st-fund 1.3s cubic-bezier(0.2, 0.8, 0.2, 1) 3.9s both; }
+.is-on .st-funded { animation: st-fade 400ms ease 5.1s both; }
+.is-on .st-total { animation: st-rise 600ms cubic-bezier(0.2, 0.9, 0.3, 1.1) 4.2s both; }
+
+.st-total {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.8rem 0.9rem;
+  color: var(--on-primary);
+  background:
+    radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--gold) 35%, transparent), transparent 60%),
+    var(--accent);
+  border-radius: 0.9rem;
+}
+
+.st-total-label,
+.st-total-sub {
+  font-size: 0.6875rem;
+  color: color-mix(in srgb, var(--on-primary) 78%, transparent);
+}
+
+.st-total-amount {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Keyframes ─────────────────────────────────────────────────────── */
+
+@keyframes st-rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+}
+
+@keyframes st-fade {
+  from { opacity: 0; }
+}
+
+@keyframes st-pop {
+  from { opacity: 0; transform: scale(0.3); }
+}
+
+@keyframes st-typing {
+  0% { height: 0; padding-block: 0; opacity: 0; }
+  12%, 85% { height: 1.9rem; opacity: 1; }
+  100% { height: 0; opacity: 0; }
+}
+
+@keyframes st-dot {
+  0%, 60%, 100% { transform: none; opacity: 0.5; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+@keyframes st-scroll {
+  from { transform: none; }
+}
+
+@keyframes st-sheet {
+  from { transform: translateY(105%); }
+}
+
+@keyframes st-type {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes st-caret {
+  0%, 20%, 40%, 60%, 80% { opacity: 1; }
+  10%, 30%, 50%, 70%, 90%, 100% { opacity: 0; }
+}
+
+@keyframes st-ripple {
+  from { opacity: 0.35; transform: translate(-50%, -50%) scale(0); }
+  to { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes st-fill {
+  from { color: var(--text); background: var(--surface); border-color: var(--border); }
+}
+
+@keyframes st-draw-circle {
+  from { stroke-dashoffset: 151; }
+}
+
+@keyframes st-draw-path {
+  from { stroke-dashoffset: 40; }
+}
+
+@keyframes st-confetti {
+  0% { opacity: 1; transform: translate(0, 0) scale(0.4) rotate(0); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--x), calc(var(--y) + 40px)) scale(1) rotate(var(--r)); }
+}
+
+@keyframes st-grow {
+  from { width: 0; }
+}
+
+@keyframes st-arrive {
+  0% { opacity: 0; transform: translateY(-16px) scale(0.97); }
+  40% { opacity: 1; transform: none; background: var(--accent-soft); border-color: var(--accent); }
+}
+
+@keyframes st-pick {
+  from { transform: translateX(0); }
+}
+
+@keyframes st-fund {
+  from { width: 35%; }
+}
+
+@keyframes chip-in-left {
+  from { opacity: 0; transform: translateX(70px) scale(0.5); }
+}
+
+@keyframes chip-in-right {
+  from { opacity: 0; transform: translateX(-70px) scale(0.5); }
+}
+
+@keyframes chip-float {
+  50% { translate: 0 -8px; }
+}
+
+@keyframes story-bob {
+  50% { translate: 0 -12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-section *,
+  .story-section *::before,
+  .story-section *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

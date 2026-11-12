@@ -5,4 +5,4 @@ export function safeNext(value: string | null): string | null {
 }
 
 export const withNext = (path: string, next: string | null) =>
-  next ? `${path}?next=${encodeURIComponent(next)}` : path
+  next ? `${path}${path.includes('?') ? '&' : '?'}next=${encodeURIComponent(next)}` : path

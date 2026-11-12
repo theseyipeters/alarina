@@ -1,0 +1,246 @@
+/*
+ * The hero's live invitation. Base styles are the resting scene; animations play from the start,
+ * so reduced motion shows the card still, with the chips in place.
+ */
+
+.hero-stage {
+  --glow-a: #2e5a47;
+  --glow-b: #c9a45c;
+  --glow-c: #6f9f86;
+  --lean-x: 0deg;
+  --lean-y: 0deg;
+  position: relative;
+  isolation: isolate;
+}
+
+/* Three soft blobs drifting behind the card. */
+.hero-glow {
+  position: absolute;
+  inset: -8% -12%;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.hero-glow span {
+  position: absolute;
+  width: 60%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.55;
+}
+
+.hero-glow span:nth-child(1) {
+  top: 0;
+  left: 5%;
+  background: var(--glow-a);
+  animation: hero-drift-a 14s ease-in-out infinite alternate;
+}
+
+.hero-glow span:nth-child(2) {
+  right: 0;
+  bottom: 5%;
+  background: var(--glow-b);
+  opacity: 0.4;
+  animation: hero-drift-b 17s ease-in-out infinite alternate;
+}
+
+.hero-glow span:nth-child(3) {
+  top: 35%;
+  left: 30%;
+  width: 45%;
+  background: var(--glow-c);
+  opacity: 0.35;
+  animation: hero-drift-c 20s ease-in-out infinite alternate;
+}
+
+.hero-float {
+  animation: hero-bob 7s ease-in-out infinite;
+}
+
+.hero-lean {
+  transform: perspective(1400px) rotateX(var(--lean-x)) rotateY(var(--lean-y));
+  transition: transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.hero-flip {
+  animation: hero-flip 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  transform-origin: 50% 50%;
+}
+
+.hero-stage .inv--preview {
+  box-shadow:
+    0 40px 80px -30px rgb(0 0 0 / 0.45),
+    0 18px 36px -18px rgb(0 0 0 / 0.3);
+}
+
+/* Replies and a gift popping in around the card, on a shared 12s loop. */
+.hero-chips {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+
+.hero-chip {
+  position: absolute;
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-2);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: 0 14px 34px rgb(0 0 0 / 0.16);
+  backdrop-filter: blur(10px);
+  animation: hero-chip 12s cubic-bezier(0.2, 0.9, 0.3, 1.2) infinite both;
+}
+
+.hero-chip-icon {
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  font-size: var(--text-xs);
+  color: var(--on-primary);
+  background: var(--accent);
+  border-radius: 50%;
+}
+
+.hero-chip--gift .hero-chip-icon {
+  color: var(--text);
+  background: var(--glow-b);
+}
+
+.hero-chip--no .hero-chip-icon {
+  color: var(--text-muted);
+  background: var(--border);
+}
+
+.hero-chip:nth-child(1) { top: 12%; left: -14%; animation-delay: 1.2s; }
+.hero-chip:nth-child(2) { top: 46%; right: -3%; animation-delay: 5.2s; }
+.hero-chip:nth-child(3) { bottom: 14%; left: -10%; animation-delay: 9.2s; }
+
+.hero-hint {
+  margin: var(--space-4) 0 0;
+  font-size: var(--text-xs);
+  text-align: center;
+  color: var(--text-muted);
+  animation: hero-fade 600ms ease 1.6s both;
+}
+
+@media (max-width: 55.99rem) {
+  .hero-chip { font-size: var(--text-xs); }
+  .hero-chip:nth-child(1) { left: -2%; }
+  .hero-chip:nth-child(2) { right: -2%; }
+  .hero-chip:nth-child(3) { left: 0; }
+}
+
+/* ── Headline and copy reveal ──────────────────────────────────────── */
+
+.hero h1 .hw {
+  display: inline-block;
+  animation: hero-word 800ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.hero-mark .hw:nth-child(1) { animation-delay: 80ms; }
+.hero-mark .hw:nth-child(2) { animation-delay: 140ms; }
+.hero h1 > .hw:nth-child(2) { animation-delay: 200ms; }
+.hero h1 > .hw:nth-child(3) { animation-delay: 260ms; }
+.hero h1 > .hw:nth-child(4) { animation-delay: 320ms; }
+.hero h1 > .hw:nth-child(5) { animation-delay: 380ms; }
+.hero h1 > .hw:nth-child(6) { animation-delay: 440ms; }
+.hero h1 > .hw:nth-child(7) { animation-delay: 500ms; }
+
+/* A hand-drawn stroke under "One link". */
+.hero-mark {
+  position: relative;
+  display: inline-block;
+}
+
+.hero-mark svg {
+  position: absolute;
+  left: -2%;
+  bottom: -0.12em;
+  width: 104%;
+  height: 0.28em;
+  overflow: visible;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 320;
+}
+
+.hero-mark svg path {
+  animation: hero-draw 900ms cubic-bezier(0.6, 0, 0.2, 1) 900ms both;
+}
+
+.hero .eyebrow { animation: hero-rise 600ms ease both; }
+.hero .hero-lead { animation: hero-rise 700ms ease 550ms both; }
+.hero .demo-form { animation: hero-rise 700ms ease 700ms both; }
+.hero .actions { animation: hero-rise 700ms ease 850ms both; }
+.hero .hero-note { animation: hero-rise 700ms ease 950ms both; }
+
+/* ── Keyframes ─────────────────────────────────────────────────────── */
+
+@keyframes hero-word {
+  from { opacity: 0; transform: translateY(0.45em) rotate(2deg); filter: blur(6px); }
+}
+
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(16px); }
+}
+
+@keyframes hero-fade {
+  from { opacity: 0; }
+}
+
+@keyframes hero-draw {
+  from { stroke-dashoffset: 320; }
+}
+
+@keyframes hero-flip {
+  from { opacity: 0; transform: perspective(1400px) rotateY(-70deg) translateY(24px) scale(0.94); }
+}
+
+@keyframes hero-bob {
+  50% { translate: 0 -10px; }
+}
+
+@keyframes hero-chip {
+  0% { opacity: 0; transform: translateY(14px) scale(0.6); }
+  4%, 26% { opacity: 1; transform: none; }
+  31%, 100% { opacity: 0; transform: translateY(-10px) scale(0.95); }
+}
+
+@keyframes hero-drift-a {
+  to { transform: translate(18%, 20%) scale(1.15); }
+}
+
+@keyframes hero-drift-b {
+  to { transform: translate(-22%, -16%) scale(0.9); }
+}
+
+@keyframes hero-drift-c {
+  to { transform: translate(-15%, 18%) scale(1.25); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero *,
+  .hero-stage * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Still, the chips sit in place rather than vanishing. */
+  .hero-chip {
+    opacity: 1;
+  }
+}

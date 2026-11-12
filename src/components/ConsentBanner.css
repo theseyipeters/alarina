@@ -1,0 +1,30 @@
+.consent {
+  position: fixed;
+  left: var(--space-4);
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: 60;
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-6);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.12);
+}
+
+.consent p {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.consent a {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.consent__actions {
+  display: flex;
+  gap: var(--space-2);
+}

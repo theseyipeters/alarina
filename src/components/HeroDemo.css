@@ -1,0 +1,104 @@
+.demo-form {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 34rem;
+  margin: 0 0 var(--space-8);
+  padding: var(--space-6);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.demo-form-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.demo-form-row {
+  display: grid;
+  align-items: start;
+  gap: var(--space-4);
+}
+
+@media (min-width: 36rem) {
+  .demo-form-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.demo-form .field {
+  margin: 0;
+}
+
+.demo-form-shuffle {
+  display: flex;
+  align-items: flex-end;
+}
+
+.demo-form-shuffle .btn {
+  width: 100%;
+}
+
+/* On wide screens the invitation gets the larger share of the hero, so it reads as the main event. */
+@media (min-width: 56rem) {
+  .landing .hero {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: var(--space-12);
+  }
+}
+
+/* The live invitation beside the form. */
+.hero-figure.demo-stage {
+  display: block;
+  width: 100%;
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.demo-stage .inv--preview {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.18);
+  transition: background-color 300ms ease;
+}
+
+.demo-stage-fallback {
+  min-height: 28rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+/* On phones the invitation comes straight after the headline, so it sits right above the fields it responds to. */
+@media (max-width: 55.99rem) {
+  .landing .hero {
+    gap: 0;
+  }
+
+  .hero > div:first-child {
+    display: contents;
+  }
+
+  .hero .hero-figure {
+    order: 1;
+    margin-bottom: var(--space-6);
+  }
+
+  .hero .demo-form {
+    order: 2;
+    max-width: none;
+  }
+
+  .hero .actions {
+    order: 3;
+  }
+
+  .hero .hero-note {
+    order: 4;
+  }
+
+  .hero-figure.demo-stage {
+    max-width: none;
+  }
+}

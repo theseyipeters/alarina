@@ -1,23 +1,25 @@
 import { useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router'
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router'
+import { homeFor } from '../auth/AuthContext.ts'
 import { useAuth } from '../auth/useAuth.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { safeNext, withNext } from '../lib/nav.ts'
 import { useTitle } from '../lib/useTitle.ts'
 import AuthLayout from '../components/AuthLayout.tsx'
-import Logo from '../components/Logo.tsx'
 
 export default function SignIn() {
   useTitle('Sign in')
   const { state, signIn } = useAuth()
   const navigate = useNavigate()
   const next = safeNext(useSearchParams()[0].get('next'))
+  // Sent here because the session ended mid-visit, rather than arriving to sign in.
+  const expired = (useLocation().state as { expired?: boolean } | null)?.expired === true
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   // Kept so "Forgot password?" can carry it over.
   const [email, setEmail] = useState('')
 
-  if (state.status === 'signedIn' && !busy) return <Navigate to={next ?? '/app'} replace />
+  if ((state.status === 'signedIn' || state.status === 'vendor') && !busy) return <Navigate to={next ?? homeFor(state)} replace />
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -26,7 +28,9 @@ export default function SignIn() {
     setError(null)
     try {
       await signIn({ email, password: String(form.get('password')) })
-      navigate(next ?? '/app', { replace: true })
+      // Without a destination, the redirect above sends each kind of account to its own dashboard.
+      if (next) navigate(next, { replace: true })
+      else setBusy(false)
     } catch (err) {
       setError(errorMessage(err))
       setBusy(false)
@@ -35,9 +39,11 @@ export default function SignIn() {
 
   return (
     <AuthLayout>
-      <Link to="/" className="brand"><Logo /></Link>
       <div className="card">
         <h1>Sign in</h1>
+        {expired && !error && (
+          <p role="status" className="alert alert--info">You were signed out. Sign in to carry on where you were.</p>
+        )}
         {error && <p role="alert" className="alert">{error}</p>}
         <form onSubmit={onSubmit}>
           <div className="field">
@@ -55,6 +61,8 @@ export default function SignIn() {
         </form>
         <p className="form-footer">
           New here? <Link to={withNext('/signup', next)}>Create an account</Link>
+          {' · '}
+          <Link to={withNext('/signup?as=vendor', next)}>Join as a vendor</Link>
         </p>
       </div>
     </AuthLayout>

@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import CopyLink from '../components/CopyLink.tsx'
 import UnlockCallout from '../components/UnlockCallout.tsx'
 import { api, ApiError } from '../lib/api.ts'
+import { errorMessage } from '../lib/errors.ts'
 import type { ShareLinks } from '../lib/types.ts'
 import { useTitle } from '../lib/useTitle.ts'
+import { EmptyState, LoadError, Loading } from '../components/States.tsx'
 
-type State = { status: 'loading' } | { status: 'error' } | { status: 'none' } | { status: 'ready'; data: ShareLinks }
+type State = { status: 'loading' } | { status: 'error'; message: string } | { status: 'none' } | { status: 'ready'; data: ShareLinks }
 
 const whatsapp = (link: string) =>
   `https://wa.me/?text=${encodeURIComponent(`You're invited to our wedding. Please reply here: ${link}`)}`
@@ -16,29 +18,34 @@ export default function Share() {
   useTitle('Share your invitation')
   const [state, setState] = useState<State>({ status: 'loading' })
 
-  useEffect(() => {
-    let cancelled = false
-    api.get<ShareLinks>('/wedding/share-links').then(
-      (data) => !cancelled && setState({ status: 'ready', data }),
-      (err) =>
-        !cancelled && setState({ status: err instanceof ApiError && err.code === 'no_wedding' ? 'none' : 'error' }),
-    )
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  const load = useCallback(
+    () =>
+      api.get<ShareLinks>('/wedding/share-links').then(
+        (data) => setState({ status: 'ready', data }),
+        (err: unknown) =>
+          setState(err instanceof ApiError && err.code === 'no_wedding' ? { status: 'none' } : { status: 'error', message: errorMessage(err) }),
+      ),
+    [],
+  )
 
-  if (state.status === 'loading') return <p className="muted">Loading your links…</p>
-  if (state.status === 'error') return <p role="alert" className="alert">Your links couldn’t be loaded. Refresh to try again.</p>
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  if (state.status === 'loading') return <Loading label="Loading your links" />
+  if (state.status === 'error') return <LoadError title="Your links didn’t load" message={state.message} onRetry={load} />
 
   const data = state.status === 'ready' ? state.data : null
   if (!data?.generalLink) {
     return (
-      <div className="card">
-        <h1>Share your invitation</h1>
-        <p className="muted">Your links appear here once your invitation is published.</p>
-        <Link to={data ? '/app' : '/app/setup'} className="btn">{data ? 'Go to overview' : 'Set up your wedding'}</Link>
-      </div>
+      <EmptyState
+        card
+        icon="envelope"
+        title="Nothing to share yet"
+        action={<Link to={data ? '/app' : '/app/setup'} className="btn">{data ? 'Go to overview' : 'Set up your wedding'}</Link>}
+      >
+        Your links appear here once your invitation is published: one for each of you, so replies are marked with the right side.
+      </EmptyState>
     )
   }
 
@@ -84,7 +91,7 @@ export default function Share() {
       <section className="card" aria-labelledby="general-link">
         <h2 id="general-link">General link</h2>
         <p className="muted">For anyone else. Replies through this link aren’t marked with a side; you can set it later.</p>
-        <CopyLink link={data.generalLink} label="General invitation link" />
+        <CopyLink link={data.generalLink} label="General invitation link" event="invite_link_copied" />
       </section>
     </div>
   )
