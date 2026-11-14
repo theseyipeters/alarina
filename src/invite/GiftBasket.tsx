@@ -122,7 +122,7 @@ export default function GiftBasket({ invitation, names, guest, rsvpToken }: Prop
           <fieldset className="basket-section">
             <legend>Cash gift</legend>
             <div className="amount-chips">
-              {PRESETS.map((p) => (
+              {(invitation.cashGiftSuggestions?.length >= 2 ? invitation.cashGiftSuggestions : PRESETS).map((p) => (
                 <button
                   key={p}
                   type="button"
