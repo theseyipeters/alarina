@@ -26,7 +26,7 @@ export default function DashboardLayout() {
       <header className="row">
         <Link to="/app" className="brand"><Logo /></Link>
         <div className="row row--tight">
-          <Link to="/marketplace" className="link-button" data-tour="marketplace">Marketplace</Link>
+          <Link to="/marketplace" className="link-button">Marketplace</Link>
           <button
             className="btn btn--secondary"
             onClick={async () => {
@@ -40,7 +40,13 @@ export default function DashboardLayout() {
       </header>
       <nav className="tabs" aria-label="Dashboard">
         {TABS.map((t) => (
-          <NavLink key={t.to} to={t.to} end={t.end} className="tab" data-tour={`tab-${t.label.toLowerCase()}`}>
+          <NavLink
+            key={t.to}
+            to={t.to}
+            end={t.end}
+            className="tab"
+            data-tour={t.label === 'Vendors' || t.label === 'Budget' ? undefined : `tab-${t.label.toLowerCase()}`}
+          >
             {t.label}
             {t.to === '/app/gifts' && access && !access.unlocked && !access.closed && <span className="tab-flag">Locked</span>}
           </NavLink>
