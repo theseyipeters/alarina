@@ -1,7 +1,5 @@
 import { ImageResponse } from '@vercel/og'
 
-export const config = { runtime: 'edge' }
-
 type Invitation = {
   partnerOneName?: string | null
   partnerTwoName?: string | null
@@ -50,7 +48,8 @@ export default async function handler(request: Request) {
   const two = invitation.partnerTwoName?.trim() || ''
   const names = [one, two].filter(Boolean).join(' & ')
   const title = `${names} · Wedding invitation`
-  const venue = invitation.venueName?.trim() || invitation.venueAddress?.split(',').at(-1)?.trim() || ''
+  const addressParts = invitation.venueAddress?.split(',') ?? []
+  const venue = invitation.venueName?.trim() || addressParts[addressParts.length - 1]?.trim() || ''
   const description = [dateLabel(invitation.date), venue].filter(Boolean).join(' · ')
   const imageUrl = `${url.origin}/api/invite-preview?slug=${encodeURIComponent(slug)}&image=1`
   const [page, card, ink, accent] = invitation.look?.colors
