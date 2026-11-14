@@ -1,42 +1,7 @@
-/* Couple's dashboard: tabs, overview stats, the responses table and the confirm dialog. */
+/* Couple's dashboard: overview stats, the responses table and the confirm dialog. */
 
 .page--dashboard {
   max-width: 72rem;
-}
-
-/* Tabs */
-
-.tabs {
-  display: flex;
-  gap: var(--space-6);
-  margin-bottom: var(--space-8);
-  overflow: auto hidden;
-  scrollbar-width: none;
-  border-bottom: 1px solid var(--border);
-}
-
-.tab {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--control-height);
-  margin-bottom: -1px;
-  color: var(--text-muted);
-  text-decoration: none;
-  white-space: nowrap;
-  border-bottom: 2px solid transparent;
-}
-
-.tab:hover {
-  color: var(--text);
-}
-
-.tab-flag {
-  margin-left: var(--space-2);
-  padding: 0 var(--space-2);
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-  border-radius: 999px;
 }
 
 .unlock-callout {
@@ -48,16 +13,6 @@
 .unlock-callout h2,
 .unlock-callout p {
   margin: 0;
-}
-
-.tab[aria-current='page'] {
-  color: var(--text);
-  border-bottom-color: var(--text);
-}
-
-/* A second row of tabs inside a dashboard tab, such as the kinds of gift. */
-.tabs--sub {
-  margin-bottom: var(--space-6);
 }
 
 /* Overview: a wedding "home" — countdown hero, replies board, share and partner cards. */
@@ -360,79 +315,6 @@
 
 .pair .avatar + .avatar {
   margin-left: -0.75rem;
-}
-
-/* Live panel: petals drift, clear of the text. Dashboard.tsx moves them. */
-.celebrate {
-  position: relative;
-  overflow: hidden;
-  padding: var(--space-12) var(--space-8);
-  color: #f6f0e1;
-  background: #0e3a2d;
-  border-radius: var(--radius-lg);
-  --text: #f6f0e1;
-  --text-muted: #c9d3c5;
-  --surface: #134636;
-  --border: #2a5b4a;
-  --field-border: #7fa391;
-  --primary: #e2c27d;
-  --primary-hover: #eed39a;
-  --on-primary: #0e3a2d;
-  --accent: #e2c27d;
-  --focus: #e2c27d;
-  --bg: #0e3a2d;
-}
-
-.celebrate-body {
-  position: relative;
-  max-width: 34rem;
-}
-
-.celebrate h2 {
-  font-size: clamp(2rem, 5vw, 3rem);
-  letter-spacing: -0.03em;
-}
-
-.petals {
-  position: absolute;
-  inset: 0 0 0 calc(var(--space-8) + 36rem);
-  pointer-events: none;
-  container-type: size;
-}
-
-/* Too narrow to drift beside the text: a band above it instead. */
-@media (max-width: 62rem) {
-  .celebrate {
-    padding-top: 7rem;
-  }
-
-  .petals {
-    inset: var(--space-4) var(--space-4) auto;
-    height: 5.5rem;
-  }
-}
-
-.petal {
-  position: absolute;
-  top: var(--y);
-  left: var(--x);
-  width: var(--size);
-  height: calc(var(--size) * 1.4);
-  border-radius: 70% 0 70% 0;
-  opacity: 0.9;
-  transform: rotate(var(--angle));
-}
-
-.petal--0 {
-  background: #e2c27d;
-}
-
-.petal--1 {
-  background: #f4d9d0;
-}
-
-.petal--2 {
-  background: #8fc1a9;
 }
 
 @media (prefers-reduced-motion: reduce) {

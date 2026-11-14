@@ -3,6 +3,7 @@ import { flushSync } from 'react-dom'
 import { Link } from 'react-router'
 import Field from '../components/Field.tsx'
 import Select from '../components/Select.tsx'
+import { EmptyState, LoadError, Loading } from '../components/States.tsx'
 import { api } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { sideLabel } from '../lib/sides.ts'
@@ -65,15 +66,13 @@ export default function Responses() {
     return `Same phone as ${others[0].name}${others.length > 1 ? ` and ${others.length - 1} more` : ''}`
   }
 
-  if (state.status === 'loading') return <p className="muted">Loading replies…</p>
-  if (state.status === 'error') return <p role="alert" className="alert">Replies couldn’t be loaded. Refresh to try again.</p>
+  if (state.status === 'loading') return <Loading label="Loading replies" />
+  if (state.status === 'error') return <LoadError title="Your replies didn’t load" message={state.message} onRetry={load} />
   if (state.status === 'none' || !data) {
     return (
-      <div className="card">
-        <h1>No replies yet</h1>
-        <p className="muted">Set up and publish your invitation to start collecting replies.</p>
-        <Link to="/app/setup" className="btn">Set up your wedding</Link>
-      </div>
+      <EmptyState card icon="envelope" title="No replies yet" action={<Link to="/app/setup" className="btn">Set up your wedding</Link>}>
+        Set up and publish your invitation, and guests’ replies will collect here.
+      </EmptyState>
     )
   }
 
@@ -150,12 +149,9 @@ export default function Responses() {
       {error && <p role="alert" className="alert">{error}</p>}
 
       {data.rsvps.length === 0 ? (
-        <div className="card">
-          <h2>No replies yet</h2>
-          <p className="muted">
-            Replies appear here as guests respond. <Link to="/app/share">Share your invitation</Link> to get started.
-          </p>
-        </div>
+        <EmptyState card icon="envelope" title="No replies yet" action={<Link to="/app/share" className="btn">Share your invitation</Link>}>
+          Replies appear here as guests respond, with who’s coming and how to reach them.
+        </EmptyState>
       ) : (
         <>
           <div className="filters">
@@ -198,7 +194,18 @@ export default function Responses() {
           </p>
 
           {visible.length === 0 ? (
-            <p className="muted">No replies match these filters.</p>
+            <EmptyState
+              card
+              icon="search"
+              title="No replies match"
+              action={
+                <button type="button" className="btn btn--secondary" onClick={() => { setReply('all'); setSide('all'); setQuery('') }}>
+                  Clear filters
+                </button>
+              }
+            >
+              Nobody fits this search and these filters. Clear them to see all {data.rsvps.length} replies.
+            </EmptyState>
           ) : (
             <table className="responses">
               <thead>

@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import Field from '../components/Field.tsx'
-import Select from '../components/Select.tsx'
+import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router'
+import PayoutAccount from '../components/PayoutAccount.tsx'
+import { EmptyState, LoadError, Loading } from '../components/States.tsx'
 import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
-import { formatNaira } from '../lib/money.ts'
+import { formatNaira, groupDigits } from '../lib/money.ts'
 import type { GiftsOverview } from '../lib/types.ts'
 import { useTitle } from '../lib/useTitle.ts'
 
-type State = { status: 'loading' } | { status: 'error' } | { status: 'none' } | { status: 'ready'; data: GiftsOverview }
+type State = { status: 'loading' } | { status: 'error'; message: string } | { status: 'none' } | { status: 'ready'; data: GiftsOverview }
 
 /** Cash gifts: where the money goes, whether guests are offered it, and what has come in. */
 export default function CashGifts() {
@@ -18,7 +19,8 @@ export default function CashGifts() {
     () =>
       api.get<GiftsOverview>('/wedding/gifts').then(
         (data) => setState({ status: 'ready', data }),
-        (err) => setState({ status: err instanceof ApiError && err.code === 'no_wedding' ? 'none' : 'error' }),
+        (err: unknown) =>
+          setState(err instanceof ApiError && err.code === 'no_wedding' ? { status: 'none' } : { status: 'error', message: errorMessage(err) }),
       ),
     [],
   )
@@ -27,14 +29,13 @@ export default function CashGifts() {
     load()
   }, [load])
 
-  if (state.status === 'loading') return <p className="muted">Loading cash gifts…</p>
-  if (state.status === 'error') return <p role="alert" className="alert">Cash gifts couldn’t be loaded. Refresh to try again.</p>
+  if (state.status === 'loading') return <Loading label="Loading cash gifts" />
+  if (state.status === 'error') return <LoadError title="Cash gifts didn’t load" message={state.message} onRetry={load} />
   if (state.status === 'none') {
     return (
-      <div className="card">
-        <h1>Cash gifts</h1>
-        <p className="muted">Set up your wedding first, then come back to receive cash gifts.</p>
-      </div>
+      <EmptyState card icon="list" title="Set up your wedding first" action={<Link to="/app/setup" className="btn">Set up your wedding</Link>}>
+        Cash gifts need your names, date and venue. Come back here once they’re in.
+      </EmptyState>
     )
   }
 
@@ -68,161 +69,20 @@ export default function CashGifts() {
       </header>
 
       <div className="gifts-grid">
-        <PayoutAccount payout={data.payout} onSaved={load} />
+        <PayoutAccount
+          payout={data.payout}
+          onSaved={load}
+          paths={{ banks: '/wedding/gifts/banks', resolve: '/wedding/gifts/account/resolve', save: '/wedding/gifts/account' }}
+          title="Where gifts go"
+          intro="Gifts are paid into a Nigerian bank account. We check the name on it before saving."
+          passwordHint="To keep gifts safe, we check it’s you. We’ll email everyone in your wedding space about this change."
+        />
         <GiftSwitch data={data} onChange={load} />
       </div>
 
+      <CashGiftSuggestions data={data} onChange={load} />
       <GiftList data={data} />
     </div>
-  )
-}
-
-type Bank = { name: string; code: string }
-type Resolved = { bankName: string; accountName: string }
-
-function PayoutAccount({ payout, onSaved }: { payout: GiftsOverview['payout']; onSaved: () => void }) {
-  const [editing, setEditing] = useState(!payout)
-  const [banks, setBanks] = useState<Bank[] | null>(null)
-  const [bankCode, setBankCode] = useState('')
-  const [accountNumber, setAccountNumber] = useState('')
-  const [resolved, setResolved] = useState<Resolved | null>(null)
-  const [password, setPassword] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!editing || banks) return
-    api.get<{ banks: Bank[] }>('/wedding/gifts/banks').then(
-      ({ banks }) => setBanks([...banks].sort((a, b) => a.name.localeCompare(b.name))),
-      (err) => setError(errorMessage(err)),
-    )
-  }, [editing, banks])
-
-  async function check(e: FormEvent) {
-    e.preventDefault()
-    setBusy(true)
-    setError(null)
-    try {
-      setResolved(await api.post<Resolved>('/wedding/gifts/account/resolve', { bankCode, accountNumber }))
-    } catch (err) {
-      setError(errorMessage(err))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function save(e: FormEvent) {
-    e.preventDefault()
-    setBusy(true)
-    setError(null)
-    try {
-      await api.put('/wedding/gifts/account', { bankCode, accountNumber, password })
-      setEditing(false)
-      setResolved(null)
-      setAccountNumber('')
-      onSaved()
-    } catch (err) {
-      setError(errorMessage(err))
-    } finally {
-      setPassword('')
-      setBusy(false)
-    }
-  }
-
-  function useDifferentAccount() {
-    setResolved(null)
-    setPassword('')
-    setError(null)
-  }
-
-  return (
-    <section className="card" aria-labelledby="payout-title">
-      <h2 id="payout-title">Where gifts go</h2>
-
-      {payout && !editing && (
-        <>
-          {/* Shown like a bank card: only the name, bank and last four digits are ever stored. */}
-          <div className="bank-card" aria-label={`${payout.accountName}, ${payout.bankName}, account ending ${payout.accountLast4}`}>
-            <span className="bank-card-bank">{payout.bankName}</span>
-            <span className="bank-card-number" aria-hidden="true">•••• •••• {payout.accountLast4}</span>
-            <span className="bank-card-name">{payout.accountName}</span>
-          </div>
-          <button type="button" className="btn btn--secondary" onClick={() => setEditing(true)}>Change account</button>
-        </>
-      )}
-
-      {editing && (
-        <>
-          <p className="muted">Gifts are paid into a Nigerian bank account. We check the name on it before saving.</p>
-          {error && <p role="alert" className="alert">{error}</p>}
-          {resolved ? (
-            <form className="resolved" onSubmit={save}>
-              <p className="resolved-name">{resolved.accountName}</p>
-              <p className="muted">
-                {resolved.bankName} · ending {accountNumber.slice(-4)}
-              </p>
-              <p>Is this the right account?</p>
-              <Field label="Your password" hint="To keep gifts safe, we check it’s you. We’ll email everyone in your wedding space about this change.">
-                {(p) => (
-                  <input
-                    {...p}
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                )}
-              </Field>
-              <div className="actions">
-                <button className="btn" disabled={busy}>{busy ? 'Saving…' : 'Yes, save account'}</button>
-                <button type="button" className="btn btn--secondary" onClick={useDifferentAccount} disabled={busy}>
-                  Use a different account
-                </button>
-              </div>
-            </form>
-          ) : (
-            <form onSubmit={check}>
-              <Field label="Bank">
-                {(p) => (
-                  <Select
-                    {...p}
-                    required
-                    value={bankCode}
-                    onChange={setBankCode}
-                    disabled={!banks}
-                    placeholder={banks ? 'Choose your bank' : 'Loading banks…'}
-                    options={(banks ?? []).map((b) => ({ value: b.code, label: b.name }))}
-                  />
-                )}
-              </Field>
-              <Field label="Account number" hint="10 digits (NUBAN).">
-                {(p) => (
-                  <input
-                    {...p}
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="off"
-                    required
-                    pattern="\d{10}"
-                    maxLength={10}
-                    placeholder="0123456789"
-                    value={accountNumber}
-                    onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
-                  />
-                )}
-              </Field>
-              <div className="actions">
-                <button className="btn" disabled={busy}>{busy ? 'Checking…' : 'Check account'}</button>
-                {payout && (
-                  <button type="button" className="btn btn--secondary" onClick={() => setEditing(false)}>Cancel</button>
-                )}
-              </div>
-            </form>
-          )}
-        </>
-      )}
-    </section>
   )
 }
 
@@ -271,6 +131,69 @@ function GiftSwitch({ data, onChange }: { data: GiftsOverview; onChange: () => v
       </p>
       {error && <p role="alert" className="alert">{error}</p>}
       {!data.payout && <p className="hint">Add your account first.</p>}
+    </section>
+  )
+}
+
+function CashGiftSuggestions({ data, onChange }: { data: GiftsOverview; onChange: () => void }) {
+  // Suggestions from this API are whole naira; payment amounts elsewhere are kobo.
+  const [amounts, setAmounts] = useState((data.cashGiftSuggestions ?? [5_000, 10_000]).map(String))
+  const [editing, setEditing] = useState<number | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const parsed = amounts.map((amount) => /^\d+$/.test(amount) ? Number(amount) : NaN)
+  const valid = parsed.length >= 2 && parsed.length <= 4 && parsed.every((amount) => Number.isInteger(amount) && amount >= 1_000 && amount <= 5_000_000) && new Set(parsed).size === parsed.length
+
+  async function save() {
+    setBusy(true)
+    setError(null)
+    setMessage(null)
+    try {
+      await api.patch('/wedding/gifts/suggestions', { suggestions: parsed })
+      setMessage('Guest suggestions saved.')
+      onChange()
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="card" aria-labelledby="suggestions-title">
+      <h2 id="suggestions-title">Suggested cash gift amounts</h2>
+      <p className="muted">Edit the amounts guests will see on your invitation. Guests can still enter another amount.</p>
+      <div className="amount-chips cash-suggestion-chips" aria-label="Suggested cash gift amounts">
+        {amounts.map((amount, index) => (
+          <span className="amount-chip cash-suggestion-chip" key={index}>
+            {editing === index ? (
+              <span className="cash-suggestion-input-wrap">
+                <span aria-hidden="true">₦</span>
+                <input
+                  autoFocus
+                  aria-label={`Suggestion ${index + 1}, whole naira`}
+                  inputMode="numeric"
+                  value={groupDigits(amount)}
+                  onChange={(event) => setAmounts((current) => current.map((v, i) => i === index ? event.target.value.replace(/\D/g, '').slice(0, 12) : v))}
+                  onBlur={() => setEditing(null)}
+                  onKeyDown={(event) => { if (event.key === 'Enter') setEditing(null) }}
+                />
+              </span>
+            ) : (
+              <button type="button" className="cash-suggestion-value" aria-label={`Edit ${formatNaira((Number(amount) || 0) * 100)}`} onClick={() => setEditing(index)}>
+                {amount ? formatNaira((Number(amount) || 0) * 100) : 'Enter amount'}
+              </button>
+            )}
+            {amounts.length > 2 && <button type="button" className="cash-suggestion-remove" aria-label={`Remove suggestion ${index + 1}`} onClick={() => setAmounts((current) => current.filter((_, i) => i !== index))}>×</button>}
+          </span>
+        ))}
+        {amounts.length < 4 && <button type="button" className="amount-chip cash-suggestion-add" onClick={() => { setAmounts((current) => [...current, '']); setEditing(amounts.length) }} aria-label="Add another suggested amount">+</button>}
+      </div>
+      {!valid && <p className="hint">Set 2 to 4 different whole amounts between ₦1,000 and ₦5,000,000.</p>}
+      {error && <p role="alert" className="alert">{error}</p>}
+      {message && <p role="status" className="hint">{message}</p>}
+      <button type="button" className="btn" disabled={!valid || busy} onClick={save}>{busy ? 'Saving…' : 'Save amounts'}</button>
     </section>
   )
 }

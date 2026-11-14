@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, ApiError } from './api.ts'
+import { errorMessage } from './errors.ts'
 import type { Responses } from './types.ts'
 
-type State = { status: 'loading' } | { status: 'error' } | { status: 'none' } | { status: 'ready'; data: Responses }
+type State = { status: 'loading' } | { status: 'error'; message: string } | { status: 'none' } | { status: 'ready'; data: Responses }
 
 /** The couple's replies. 'none' means there's no wedding yet, so there can't be any. */
 export function useResponses() {
@@ -12,7 +13,8 @@ export function useResponses() {
     () =>
       api.get<Responses>('/wedding/rsvps').then(
         (data) => setState({ status: 'ready', data }),
-        (err) => setState({ status: err instanceof ApiError && err.code === 'no_wedding' ? 'none' : 'error' }),
+        (err: unknown) =>
+          setState(err instanceof ApiError && err.code === 'no_wedding' ? { status: 'none' } : { status: 'error', message: errorMessage(err) }),
       ),
     [],
   )

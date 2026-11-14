@@ -1,0 +1,15 @@
+.policy h2 {
+  margin: var(--space-8) 0 var(--space-2);
+}
+
+.policy ul {
+  padding-left: var(--space-6);
+}
+
+.policy li {
+  margin-bottom: var(--space-2);
+}
+
+.policy-status {
+  color: var(--text);
+}

@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
 import ConfirmNames from '../components/ConfirmNames.tsx'
+import { Petals } from '../components/Celebration.tsx'
 import CopyLink from '../components/CopyLink.tsx'
 import UnlockCallout from '../components/UnlockCallout.tsx'
 import Tour, { type TourStep } from '../components/Tour.tsx'
@@ -17,6 +18,8 @@ import { useResponses } from '../lib/useResponses.ts'
 import { useTitle } from '../lib/useTitle.ts'
 import { useWedding } from '../lib/useWedding.ts'
 import { STEPS } from '../setup/steps.ts'
+import { LoadError, Loading } from '../components/States.tsx'
+import { track } from '../lib/analytics.ts'
 
 /** Dashboard overview: a countdown to the day, replies at a glance, and quick ways to share. */
 export default function Dashboard() {
@@ -24,7 +27,7 @@ export default function Dashboard() {
   const { state, refresh } = useAuth()
   // null: decide automatically; true/false: opened from "Show me around", or just closed.
   const [tour, setTour] = useState<boolean | null>(null)
-  const [wedding, setWedding] = useWedding()
+  const [wedding, setWedding, retryWedding] = useWedding()
   const [responses] = useResponses()
   const navigate = useNavigate()
   const location = useLocation()
@@ -37,9 +40,9 @@ export default function Dashboard() {
   }, [location, navigate])
 
   if (state.status !== 'signedIn') return null
-  if (wedding.status === 'loading') return <p className="muted">Loading your wedding…</p>
+  if (wedding.status === 'loading') return <Loading label="Loading your wedding" />
   if (wedding.status === 'error') {
-    return <p role="alert" className="alert">Your wedding couldn’t be loaded. Refresh to try again.</p>
+    return <LoadError title="Your wedding didn’t load" message={wedding.message} onRetry={retryWedding} />
   }
 
   const w = wedding.wedding
@@ -49,19 +52,23 @@ export default function Dashboard() {
   const data = responses.status === 'ready' ? responses.data : null
   const partner = state.couple.partner?.name ?? null
   const tourSeen = Boolean(state.user.tourCompletedAt)
+  // Seen this version of the tour. Someone who saw an older one is shown only what's new, once.
+  const upToDate = state.user.tourVersion >= state.user.currentTourVersion
   // First visit after setup: the tour starts by itself (once replies have loaded, so it can show them).
-  const tourOpen = tour ?? (!tourSeen && responses.status !== 'loading')
+  const tourOpen = tour ?? (!upToDate && responses.status !== 'loading')
+  // "Show me around" always gives the whole tour.
+  const steps = tour || !tourSeen ? tourSteps(partner) : whatsNewSteps
 
   function endTour() {
     setTour(false)
-    if (tourSeen) return
+    if (upToDate) return
     // Best effort: if this fails, the tour simply offers itself again next visit.
     api.post<Session>('/auth/tour').then(refresh, () => {})
   }
 
   return (
     <div className="home">
-      {tourOpen && <Tour steps={tourSteps(partner)} onClose={endTour} />}
+      {tourOpen && <Tour steps={steps} onClose={endTour} />}
       <Hero wedding={w} onChange={setWedding} onTour={() => setTour(true)} />
 
       {w.status === 'published' && link && <Celebration link={link} />}
@@ -110,8 +117,9 @@ const tourSteps = (partner: string | null): TourStep[] => [
   {
     target: '[data-tour="tab-gifts"]',
     title: 'Gifts, if you want them',
-    text: 'Receive cash, sell aso-ebi or share a wishlist. Unlock Gifts once for ₦5,000, then add your bank account and switch on what you want.',
+    text: 'Receive cash, sell aso-ebi or share a wishlist, with gifts from the gift shop too. Unlock Gifts once for ₦5,000, then add your bank account and switch on what you want.',
   },
+  ...planningStops,
   {
     target: '[data-tour="partner"]',
     title: 'Plan together',
@@ -119,6 +127,34 @@ const tourSteps = (partner: string | null): TourStep[] => [
       ? `You and ${partner} share this space, each with your own sign-in.`
       : 'Invite your partner so you can plan together, each with your own sign-in.',
   },
+]
+
+// The marketplace, vendors, planners and budget. Part of the full tour, and shown on their own as
+// "what's new" to anyone who finished the tour before they existed.
+const planningStops: TourStep[] = [
+  {
+    target: '[data-tour="marketplace"]',
+    title: 'Find your vendors',
+    text: 'Planners, venues, caterers, photographers and more, each checked by our team, plus a gift shop for your wishlist.',
+  },
+  {
+    target: '[data-tour="tab-vendors"]',
+    title: 'Book and pay vendors',
+    text: 'Enquire, get a quote and pay in full or in instalments. Add vendors you found elsewhere too, and invite a planner to plan with you.',
+  },
+  {
+    target: '[data-tour="tab-budget"]',
+    title: 'Every cost in one place',
+    text: 'See what each part of the day costs, what’s paid and what’s left, whether you paid in the app or not. Export it to PDF or Excel.',
+  },
+]
+
+const whatsNewSteps: TourStep[] = [
+  {
+    title: 'New: plan the whole day here',
+    text: 'You can now find and book vendors, work with a planner and keep your budget on Alárinà. Here’s where everything is.',
+  },
+  ...planningStops,
 ]
 
 function SetupPrompt({ wedding }: { wedding: Wedding | null }) {
@@ -173,7 +209,9 @@ function Hero({ wedding, onChange, onTour }: { wedding: Wedding; onChange: (w: W
     setError(null)
     setNotReady(false)
     try {
-      onChange((await api.post<{ wedding: Wedding }>(published ? '/wedding/unpublish' : '/wedding/publish')).wedding)
+      const { wedding: updated } = await api.post<{ wedding: Wedding }>(published ? '/wedding/unpublish' : '/wedding/publish')
+      if (!published) track('invite_published', { from: 'dashboard' })
+      onChange(updated)
     } catch (err) {
       if (err instanceof ApiError && err.code === 'not_ready') setNotReady(true)
       else setError(errorMessage(err))
@@ -229,82 +267,6 @@ function Hero({ wedding, onChange, onTour }: { wedding: Wedding; onChange: (w: W
   )
 }
 
-// As far across and down their area as a petal goes, in %, so it never reaches the text.
-const PETAL_MAX_X = 95
-const PETAL_MAX_Y = 80
-
-// Deterministic "random" spread so the petals start scattered and render the same every time.
-const PETALS = Array.from({ length: 22 }, (_, i) => ({
-  x: (i * 37) % PETAL_MAX_X,
-  y: (i * 61) % PETAL_MAX_Y,
-  angle: (i * 47) % 360,
-  size: 8 + ((i * 17) % 9),
-  tone: i % 3,
-}))
-
-const between = (min: number, max: number) => min + Math.random() * (max - min)
-const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
-
-/** Keeps a petal drifting in small random hops until the returned function stops it. */
-function wander(petal: Element, { x, y, angle }: (typeof PETALS)[number]) {
-  const transform = (s: { x: number; y: number; angle: number }) =>
-    `translate(${s.x - x}cqw, ${s.y - y}cqh) rotate(${s.angle}deg)`
-  let from = { x, y, angle }
-  let animation: Animation
-
-  function hop() {
-    const to = {
-      x: clamp(from.x + between(-14, 14), 0, PETAL_MAX_X),
-      y: clamp(from.y + between(-22, 22), 0, PETAL_MAX_Y),
-      angle: from.angle + between(-120, 120),
-    }
-    animation = petal.animate([{ transform: transform(from) }, { transform: transform(to) }], {
-      duration: between(3000, 7000),
-      easing: 'ease-in-out',
-      fill: 'forwards',
-    })
-    animation.onfinish = hop
-    from = to
-  }
-
-  hop()
-  return () => {
-    animation.onfinish = null
-    animation.cancel()
-  }
-}
-
-/** Petals drifting at random for as long as they're on screen; still for anyone who prefers less motion. */
-function Petals() {
-  const ref = useRef<HTMLDivElement>(null)
-  const still = useMediaQuery('(prefers-reduced-motion: reduce)')
-
-  useEffect(() => {
-    if (still || !ref.current) return
-    const stops = Array.from(ref.current.children, (petal, i) => wander(petal, PETALS[i]))
-    return () => stops.forEach((stop) => stop())
-  }, [still])
-
-  return (
-    <div className="petals" aria-hidden="true" ref={ref}>
-      {PETALS.map((p, i) => (
-        <span
-          key={i}
-          className={`petal petal--${p.tone}`}
-          style={
-            {
-              '--x': `${p.x}%`,
-              '--y': `${p.y}%`,
-              '--angle': `${p.angle}deg`,
-              '--size': `${p.size}px`,
-            } as CSSProperties
-          }
-        />
-      ))}
-    </div>
-  )
-}
-
 /** Shown while the invitation is live: petals drift across the panel, and the link is ready to share. */
 function Celebration({ link }: { link: string }) {
   return (
@@ -314,7 +276,7 @@ function Celebration({ link }: { link: string }) {
         <p className="eyebrow">Published</p>
         <h2 id="celebrate-title">Your invitation is live</h2>
         <p className="muted">Send it to your guests. Their replies will appear here as they come in.</p>
-        <CopyLink link={link} label="Invitation link" />
+        <CopyLink link={link} label="Invitation link" event="invite_link_copied" />
         <div className="actions">
           <a className="btn" href={whatsapp(link)} target="_blank" rel="noopener noreferrer">
             Share on WhatsApp<span className="visually-hidden"> (opens in a new tab)</span>
@@ -424,7 +386,7 @@ function ShareCard({ link }: { link: string }) {
     <section className="card" aria-labelledby="share-title">
       <h2 id="share-title">Share</h2>
       <p className="muted">One link for everyone, or use your personal links to track each side.</p>
-      <CopyLink link={link} label="Invitation link" />
+      <CopyLink link={link} label="Invitation link" event="invite_link_copied" />
       <div className="actions">
         <a className="btn btn--secondary" href={whatsapp(link)} target="_blank" rel="noopener noreferrer">
           WhatsApp<span className="visually-hidden"> (opens in a new tab)</span>

@@ -6,19 +6,21 @@ import GiftBasket from '../invite/GiftBasket.tsx'
 import RsvpForm from '../invite/RsvpForm.tsx'
 import '../invite/styles.ts'
 import { api, ApiError } from '../lib/api.ts'
-import { errorMessage } from '../lib/errors.ts'
+import { EmptyState, LoadError } from '../components/States.tsx'
+import { errorMessage, isOutage } from '../lib/errors.ts'
 import { coupleNames, formatDate } from '../lib/format.ts'
 import type { PublicInvitation, Rsvp } from '../lib/types.ts'
 import { useTitle } from '../lib/useTitle.ts'
 
 type Loaded = { rsvp: Rsvp; invitation: PublicInvitation; editExpiresAt: string }
-type State = { status: 'loading' } | { status: 'invalid'; message: string } | ({ status: 'ready' } & Loaded)
+type State = { status: 'loading' } | { status: 'invalid'; message: string } | { status: 'error'; message: string } | ({ status: 'ready' } & Loaded)
 
 /** A guest's private page for changing their reply, themed like the invitation it belongs to. */
 export default function EditRsvp() {
   useTitle('Your RSVP')
   const { token = '' } = useParams()
   const [state, setState] = useState<State>({ status: 'loading' })
+  const [attempt, setAttempt] = useState(0)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const path = `/public/rsvps/${encodeURIComponent(token)}`
@@ -27,21 +29,36 @@ export default function EditRsvp() {
     let cancelled = false
     api.get<Loaded>(path).then(
       (data) => !cancelled && setState({ status: 'ready', ...data }),
-      (err) => !cancelled && setState({ status: 'invalid', message: errorMessage(err) }),
+      (err: unknown) => !cancelled && setState({ status: isOutage(err) ? 'error' : 'invalid', message: errorMessage(err) }),
     )
     return () => {
       cancelled = true
     }
-  }, [path])
+  }, [path, attempt])
 
   if (state.status === 'loading') return <p className="page muted">Opening your RSVP…</p>
   if (state.status === 'invalid') {
     return (
       <main id="main" className="page">
-        <div className="card">
-          <h1>This link doesn’t work</h1>
-          <p className="muted">{state.message}</p>
-        </div>
+        <h1 className="visually-hidden">Your RSVP</h1>
+        <EmptyState card icon="envelope" title="This link doesn’t work">
+          {state.message} You can ask for a new link from the invitation the couple sent you.
+        </EmptyState>
+      </main>
+    )
+  }
+  if (state.status === 'error') {
+    return (
+      <main id="main" className="page">
+        <h1 className="visually-hidden">Your RSVP</h1>
+        <LoadError
+          title="Your RSVP didn’t open"
+          message={state.message}
+          onRetry={() => {
+            setState({ status: 'loading' })
+            setAttempt((n) => n + 1)
+          }}
+        />
       </main>
     )
   }

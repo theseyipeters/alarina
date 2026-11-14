@@ -1,0 +1,142 @@
+/*
+ * The landing finale. Takes its colours from the emerald "live" panel (.celebrate in
+ * Celebration.css) and its petals; the envelope is the HeroInvitation scene.
+ */
+
+.finale {
+  display: grid;
+  gap: var(--space-12);
+  align-items: center;
+  margin: var(--space-8) 0 var(--space-16);
+  padding: var(--space-12) var(--space-6);
+  isolation: isolate;
+}
+
+@media (min-width: 56rem) {
+  .finale {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    padding: var(--space-16) var(--space-12);
+  }
+}
+
+/* Petals drift across the whole panel, behind everything. On phones they get a band of
+   their own above the text, like a garland, so they never sit on the words. */
+.finale .petals {
+  inset: 0;
+  z-index: -1;
+}
+
+@media (max-width: 55.99rem) {
+  .finale {
+    padding-top: 7rem;
+  }
+
+  .finale .petals {
+    inset: 0 0 auto;
+    height: 6rem;
+  }
+}
+
+/* A gold spotlight so the emerald envelope stands off the emerald panel. */
+.finale::before {
+  content: '';
+  position: absolute;
+  top: 10%;
+  right: -10%;
+  z-index: -1;
+  width: 60%;
+  aspect-ratio: 1;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 30%, transparent), transparent);
+  filter: blur(30px);
+  animation: finale-breathe 7s ease-in-out infinite;
+}
+
+.finale-copy {
+  position: relative;
+}
+
+.finale-eyebrow {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.finale h2 {
+  margin-bottom: var(--space-6);
+  font-size: clamp(2.75rem, 7vw, 5rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.finale h2 span {
+  display: inline-block;
+}
+
+.finale-lead {
+  max-width: 30rem;
+  margin: 0 0 var(--space-8);
+  font-size: var(--text-lg);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.finale-cta .btn {
+  min-height: 3.25rem;
+  padding-inline: var(--space-8);
+  font-size: var(--text-lg);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 50%, transparent);
+}
+
+.finale-note {
+  margin: var(--space-4) 0 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.finale-art {
+  display: flex;
+  justify-content: center;
+  filter: drop-shadow(0 30px 40px rgb(0 0 0 / 0.35));
+}
+
+.finale.is-on .finale-eyebrow { animation: finale-rise 600ms ease both; }
+.finale.is-on h2 span { animation: finale-word 800ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.finale.is-on h2 span:nth-child(1) { animation-delay: 120ms; }
+.finale.is-on h2 span:nth-child(2) { animation-delay: 220ms; }
+.finale.is-on h2 span:nth-child(3) { animation-delay: 320ms; }
+.finale.is-on h2 span:nth-child(4) { animation-delay: 420ms; }
+.finale.is-on .finale-lead { animation: finale-rise 700ms ease 600ms both; }
+.finale.is-on .finale-cta { animation: finale-rise 700ms ease 800ms both; }
+.finale.is-on .finale-cta .btn { animation: finale-pulse 2.4s ease-out 1.6s infinite; }
+.finale.is-on .finale-note { animation: finale-rise 700ms ease 950ms both; }
+.finale.is-on .finale-art { animation: finale-art 1s cubic-bezier(0.2, 0.8, 0.2, 1) 200ms both; }
+
+@keyframes finale-rise {
+  from { opacity: 0; transform: translateY(16px); }
+}
+
+@keyframes finale-word {
+  from { opacity: 0; transform: translateY(0.5em) rotate(3deg); filter: blur(6px); }
+}
+
+@keyframes finale-art {
+  from { opacity: 0; transform: translateY(40px) rotate(-4deg) scale(0.92); }
+}
+
+@keyframes finale-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 55%, transparent); }
+  70%, 100% { box-shadow: 0 0 0 18px transparent; }
+}
+
+@keyframes finale-breathe {
+  50% { transform: scale(1.15); opacity: 0.7; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .finale *,
+  .finale::before {
+    animation: none !important;
+  }
+}

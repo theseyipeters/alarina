@@ -5,7 +5,7 @@ const MAX_SIDE = 1000
  * small (phone photos are several megabytes) and are always a type the server accepts.
  * Throws if the browser can't read the file, such as an unsupported format.
  */
-export async function resizeImage(file: File): Promise<Blob> {
+export async function resizeImage(file: Blob): Promise<Blob> {
   const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
   const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height))
   const canvas = document.createElement('canvas')

@@ -13,26 +13,34 @@ import './Design.css'
 import Logo from '../components/Logo.tsx'
 import { STUDIO_QUERY } from '../lib/studio.ts'
 import { useMediaQuery } from '../lib/useMediaQuery.ts'
+import { EmptyState, LoadError, Loading } from '../components/States.tsx'
 
 type Device = 'phone' | 'desktop'
 
 export default function Design() {
   useTitle('Design your invitation')
-  const [state, setWedding] = useWedding()
+  const [state, setWedding, retry] = useWedding()
   const studio = useMediaQuery(STUDIO_QUERY)
   const [device, setDevice] = useState<Device>('phone')
   const [saving, setSaving] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
 
-  if (state.status === 'loading') return <p className="page muted">Loading…</p>
-  if (state.status === 'error' || !state.wedding) {
+  if (state.status === 'loading') return <Loading page />
+  if (state.status === 'error') {
     return (
       <main id="main" className="page">
-        <div className="card">
-          <h1>Set up your wedding first</h1>
-          <p className="muted">Your invitation needs your names, date and venue before you can design it.</p>
-          <Link to="/app/setup" className="btn">Go to setup</Link>
-        </div>
+        <LoadError title="Your invitation didn’t load" message={state.message} onRetry={retry}>
+          <Link to="/app">Back to overview</Link>
+        </LoadError>
+      </main>
+    )
+  }
+  if (!state.wedding) {
+    return (
+      <main id="main" className="page">
+        <EmptyState card icon="list" title="Set up your wedding first" action={<Link to="/app/setup" className="btn">Go to setup</Link>}>
+          Your invitation needs your names, date and venue before you can design it.
+        </EmptyState>
       </main>
     )
   }

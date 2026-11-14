@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
+import AmountInput from '../components/AmountInput.tsx'
 import Field from '../components/Field.tsx'
 import ImageField from '../components/ImageField.tsx'
+import { EmptyState, LoadError, Loading } from '../components/States.tsx'
 import { api, ApiError, imageSrc } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
-import { formatNaira } from '../lib/money.ts'
+import { formatNaira, nairaInput } from '../lib/money.ts'
 import type { WishlistItem, WishlistOverview } from '../lib/types.ts'
 import { useTitle } from '../lib/useTitle.ts'
 import { MAX_WISH_PRICE_NAIRA, MIN_WISH_PRICE_NAIRA } from '../lib/wishlist.ts'
 
-type State = { status: 'loading' } | { status: 'error' } | { status: 'none' } | { status: 'ready'; data: WishlistOverview }
+type State = { status: 'loading' } | { status: 'error'; message: string } | { status: 'none' } | { status: 'ready'; data: WishlistOverview }
 
 /** Wishlist: the couple lists what they'd love with a price; guests pay for all of an item or chip in. */
 export default function Wishlist() {
@@ -20,7 +22,8 @@ export default function Wishlist() {
     () =>
       api.get<WishlistOverview>('/wedding/gifts/wishlist').then(
         (data) => setState({ status: 'ready', data }),
-        (err) => setState({ status: err instanceof ApiError && err.code === 'no_wedding' ? 'none' : 'error' }),
+        (err: unknown) =>
+          setState(err instanceof ApiError && err.code === 'no_wedding' ? { status: 'none' } : { status: 'error', message: errorMessage(err) }),
       ),
     [],
   )
@@ -29,14 +32,13 @@ export default function Wishlist() {
     load()
   }, [load])
 
-  if (state.status === 'loading') return <p className="muted">Loading wishlist…</p>
-  if (state.status === 'error') return <p role="alert" className="alert">Your wishlist couldn’t be loaded. Refresh to try again.</p>
+  if (state.status === 'loading') return <Loading label="Loading wishlist" />
+  if (state.status === 'error') return <LoadError title="Your wishlist didn’t load" message={state.message} onRetry={load} />
   if (state.status === 'none') {
     return (
-      <div className="card">
-        <h1>Wishlist</h1>
-        <p className="muted">Set up your wedding first, then come back to make a wishlist.</p>
-      </div>
+      <EmptyState card icon="list" title="Set up your wedding first" action={<Link to="/app/setup" className="btn">Set up your wedding</Link>}>
+        A wishlist needs your names, date and venue. Come back here once they’re in.
+      </EmptyState>
     )
   }
 
@@ -99,7 +101,10 @@ function Items({ items, onChange }: { items: WishlistItem[]; onChange: () => voi
   return (
     <section className="card" aria-labelledby="wish-items-title">
       <h2 id="wish-items-title">What you’d love</h2>
-      <p className="muted">Add each item with its price. Guests can pay for it in full or chip in towards it.</p>
+      <p className="muted">
+        Add each item with its price. Guests can pay for it in full or chip in towards it. Or pick from the{' '}
+        <Link to="/marketplace?tab=gifts">gift shop</Link>: the shop is paid and delivers it to you.
+      </p>
       {error && <p role="alert" className="alert">{error}</p>}
 
       {items.length > 0 && (
@@ -108,7 +113,7 @@ function Items({ items, onChange }: { items: WishlistItem[]; onChange: () => voi
             editing === item.id ? (
               <li key={item.id}>
                 <ItemForm
-                  initial={{ name: item.name, description: item.description, imageId: item.imageId, price: String(item.price / 100) }}
+                  initial={{ name: item.name, description: item.description, imageId: item.imageId, price: nairaInput(item.price) }}
                   itemId={item.id}
                   onDone={() => {
                     setEditing(null)
@@ -129,12 +134,16 @@ function Items({ items, onChange }: { items: WishlistItem[]; onChange: () => voi
                   </span>
                   <progress className="meter" value={item.funded} max={item.price} aria-label={`${item.name} funded`} />
                   {item.description && <span className="hint">{item.description}</span>}
+                  {item.vendorName && <span className="hint">From {item.vendorName}, who delivers it to you</span>}
                 </span>
                 </span>
                 <span className="item-actions">
-                  <button type="button" className="link-button" onClick={() => setEditing(item.id)}>
-                    Edit<span className="visually-hidden"> {item.name}</span>
-                  </button>
+                  {/* The shop sets a gift-shop item's price and photo. */}
+                  {!item.vendorName && (
+                    <button type="button" className="link-button" onClick={() => setEditing(item.id)}>
+                      Edit<span className="visually-hidden"> {item.name}</span>
+                    </button>
+                  )}
                   <button type="button" className="link-button" onClick={(e) => askRemove(item, e.currentTarget)}>
                     Remove<span className="visually-hidden"> {item.name}</span>
                   </button>
@@ -229,17 +238,9 @@ function ItemForm({ initial, itemId, onDone, onCancel }: FormProps) {
           <input {...p} type="text" required maxLength={80} autoFocus value={draft.name} onChange={(e) => set('name', e.target.value)} />
         )}
       </Field>
-      <Field label="Price in naira" hint={`From ${formatNaira(MIN_WISH_PRICE_NAIRA * 100)}. Guests pay Paystack’s fee on top.`}>
+      <Field label="Price" hint={`From ${formatNaira(MIN_WISH_PRICE_NAIRA * 100)}. Guests pay Paystack’s fee on top.`}>
         {(p) => (
-          <input
-            {...p}
-            type="text"
-            inputMode="numeric"
-            required
-            placeholder="85000"
-            value={draft.price}
-            onChange={(e) => set('price', e.target.value.replace(/\D/g, ''))}
-          />
+          <AmountInput {...p} required placeholder={85000} value={draft.price} onChange={(price) => set('price', price)} />
         )}
       </Field>
       <Field label="Details" optional hint="Brand, size, colour, anything that helps a guest.">

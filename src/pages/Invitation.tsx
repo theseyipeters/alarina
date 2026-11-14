@@ -13,7 +13,8 @@ import { mapLink } from '../invite/maps.ts'
 import RsvpForm from '../invite/RsvpForm.tsx'
 import '../invite/styles.ts'
 import { api, ApiError } from '../lib/api.ts'
-import { errorMessage } from '../lib/errors.ts'
+import { EmptyState, LoadError } from '../components/States.tsx'
+import { errorMessage, isNotFound } from '../lib/errors.ts'
 import { coupleNames, daysUntil, formatDate } from '../lib/format.ts'
 import type { PublicInvitation, Rsvp } from '../lib/types.ts'
 import { useTitle } from '../lib/useTitle.ts'
@@ -21,7 +22,7 @@ import { useTitle } from '../lib/useTitle.ts'
 type State =
   | { status: 'loading' }
   | { status: 'missing' }
-  | { status: 'error' }
+  | { status: 'error'; message: string }
   | { status: 'ready'; invitation: PublicInvitation }
 
 export default function Invitation() {
@@ -29,33 +30,45 @@ export default function Invitation() {
   // A partner's personal link adds ?from=code, so the reply is marked as their side.
   const from = useSearchParams()[0].get('from')
   const [state, setState] = useState<State>({ status: 'loading' })
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     let cancelled = false
     api.get<{ invitation: PublicInvitation }>(`/public/invitations/${encodeURIComponent(slug)}`).then(
       ({ invitation }) => !cancelled && setState({ status: 'ready', invitation }),
-      (err) => !cancelled && setState({ status: err instanceof ApiError && err.status === 404 ? 'missing' : 'error' }),
+      (err: unknown) => !cancelled && setState(isNotFound(err) ? { status: 'missing' } : { status: 'error', message: errorMessage(err) }),
     )
     return () => {
       cancelled = true
     }
-  }, [slug])
+  }, [slug, attempt])
 
   const names = state.status === 'ready' ? coupleNames(...namesInOrder(state.invitation)) : ''
   useTitle(names ? `${names} are getting married` : 'Wedding invitation')
 
   if (state.status === 'loading') return <p className="page muted">Opening the invitation…</p>
-  if (state.status !== 'ready') {
+  if (state.status === 'error') {
     return (
       <main id="main" className="page">
-        <div className="card">
-          <h1>{state.status === 'missing' ? 'Invitation not available' : 'Something went wrong'}</h1>
-          <p className="muted">
-            {state.status === 'missing'
-              ? 'This invitation hasn’t been published, or the link is incorrect. Check with the couple for the right link.'
-              : 'The invitation couldn’t be loaded. Check your connection and refresh the page.'}
-          </p>
-        </div>
+        <h1 className="visually-hidden">Wedding invitation</h1>
+        <LoadError
+          title="The invitation didn’t open"
+          message={state.message}
+          onRetry={() => {
+            setState({ status: 'loading' })
+            setAttempt((n) => n + 1)
+          }}
+        />
+      </main>
+    )
+  }
+  if (state.status === 'missing') {
+    return (
+      <main id="main" className="page">
+        <h1 className="visually-hidden">Wedding invitation</h1>
+        <EmptyState card icon="envelope" title="This invitation isn’t available">
+          It hasn’t been published yet, or the link is incorrect. Ask the couple for the right link.
+        </EmptyState>
       </main>
     )
   }

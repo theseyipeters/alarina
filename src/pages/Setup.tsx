@@ -18,6 +18,8 @@ import EventsEditor from '../setup/EventsEditor.tsx'
 import { FIELD_STEP, REQUIRED, STEP_FIELDS, STEPS, stepIndex, type StepId } from '../setup/steps.ts'
 import { useAutosave, type SaveStatus } from '../setup/useAutosave.ts'
 import Logo from '../components/Logo.tsx'
+import { LoadError, Loading } from '../components/States.tsx'
+import { track } from '../lib/analytics.ts'
 
 // The live preview pulls in the invitation fonts and styles, so it loads only on wide screens.
 const LivePreview = lazy(() => import('../setup/LivePreview.tsx'))
@@ -56,14 +58,16 @@ const EMPTY: WeddingFields = {
 
 export default function Setup() {
   useTitle('Set up your wedding')
-  const [state, setWedding] = useWedding()
+  const [state, setWedding, retry] = useWedding()
   const { state: auth } = useAuth()
 
-  if (state.status === 'loading' || auth.status !== 'signedIn') return <p className="page muted">Loading…</p>
+  if (state.status === 'loading' || auth.status !== 'signedIn') return <Loading page />
   if (state.status === 'error') {
     return (
       <main id="main" className="page">
-        <p role="alert" className="alert">Your wedding details couldn’t be loaded. Refresh the page to try again.</p>
+        <LoadError title="Your wedding details didn’t load" message={state.message} onRetry={retry}>
+          <Link to="/app">Back to overview</Link>
+        </LoadError>
       </main>
     )
   }
@@ -483,6 +487,7 @@ function Review({ values, flush, onEdit }: ReviewProps) {
     try {
       await flush()
       await api.post(publish ? '/wedding/publish' : '/wedding/finish')
+      if (publish) track('invite_published', { from: 'setup' })
       navigate('/app', { replace: true, state: { justFinished: publish ? 'published' : 'draft' } })
     } catch (err) {
       if (err instanceof ApiError && err.code === 'not_ready') {

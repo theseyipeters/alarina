@@ -2,7 +2,6 @@ import { useState, type FormEvent } from 'react'
 import { Link, useLocation } from 'react-router'
 import AuthLayout from '../components/AuthLayout.tsx'
 import Field from '../components/Field.tsx'
-import Logo from '../components/Logo.tsx'
 import { api } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
 import { useTitle } from '../lib/useTitle.ts'
@@ -35,7 +34,6 @@ export default function ForgotPassword() {
 
   return (
     <AuthLayout>
-      <Link to="/" className="brand"><Logo /></Link>
       <div className="card">
         {sentTo ? (
           <>

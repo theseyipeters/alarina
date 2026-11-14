@@ -7,6 +7,7 @@ import { formatNaira } from '../lib/money.ts'
 import { refreshGiftsAccess, useGiftsAccess, type GiftsAccess } from '../lib/useGiftsAccess.ts'
 import { useTitle } from '../lib/useTitle.ts'
 import './Gifts.css'
+import { LoadError, Loading } from '../components/States.tsx'
 
 const KINDS = [
   { to: '/app/gifts', label: 'Cash gifts', end: true },
@@ -22,7 +23,7 @@ export default function Gifts() {
   useTitle('Gifts')
   const [params, setParams] = useSearchParams()
   const reference = params.get('reference')
-  const { access, failed } = useGiftsAccess()
+  const { access, failed, retry } = useGiftsAccess()
   const [message, setMessage] = useState<string | null>(null)
 
   // Back from Paystack: confirm the payment with the server, then open Gifts or say what happened.
@@ -54,8 +55,8 @@ export default function Gifts() {
     }
   }, [reference, setParams])
 
-  if (failed) return <p role="alert" className="alert">Gifts couldn’t be loaded. Refresh to try again.</p>
-  if (!access) return <p className="muted">{reference ? 'Confirming your payment…' : 'Loading gifts…'}</p>
+  if (failed && !access) return <LoadError title="Gifts didn’t load" message={failed} onRetry={retry} />
+  if (!access) return reference ? <p className="muted">Confirming your payment…</p> : <Loading label="Loading gifts" />
 
   const content = (
     <div className="gifts-shell">
@@ -71,7 +72,7 @@ export default function Gifts() {
           </NavLink>
         ))}
       </nav>
-      <Suspense fallback={<p className="muted">Loading…</p>}>
+      <Suspense fallback={<Loading />}>
         <Outlet />
       </Suspense>
     </div>

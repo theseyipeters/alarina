@@ -1,5 +1,6 @@
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import { api } from './api.ts'
+import { errorMessage } from './errors.ts'
 
 export type GiftsAccess = {
   unlocked: boolean
@@ -26,19 +27,28 @@ const subscribe = (notify: () => void) => {
 
 /**
  * Whether Gifts has been unlocked. `access` stays null until this visit has asked the server, so
- * a previous sign-in's answer is never shown; `failed` means the server couldn't be asked.
+ * a previous sign-in's answer is never shown; `failed` says why the server couldn't be asked.
  */
 export function useGiftsAccess() {
   const shared = useSyncExternalStore(subscribe, () => current)
   const [asked, setAsked] = useState(false)
-  const [failed, setFailed] = useState(false)
+  const [failed, setFailed] = useState<string | null>(null)
+
+  const ask = useCallback(
+    () =>
+      refreshGiftsAccess().then(
+        () => {
+          setAsked(true)
+          setFailed(null)
+        },
+        (err: unknown) => setFailed(errorMessage(err)),
+      ),
+    [],
+  )
 
   useEffect(() => {
-    refreshGiftsAccess().then(
-      () => setAsked(true),
-      () => setFailed(true),
-    )
-  }, [])
+    void ask()
+  }, [ask])
 
-  return { access: asked ? shared : null, failed }
+  return { access: asked ? shared : null, failed, retry: ask }
 }

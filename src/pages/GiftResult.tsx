@@ -5,6 +5,7 @@ import { namesInOrder } from '../invite/order.ts'
 import GiftBasket from '../invite/GiftBasket.tsx'
 import '../invite/styles.ts'
 import { api } from '../lib/api.ts'
+import { LoadError } from '../components/States.tsx'
 import { errorMessage } from '../lib/errors.ts'
 import { coupleNames } from '../lib/format.ts'
 import { quantityLabel } from '../lib/asoEbi.ts'
@@ -57,10 +58,15 @@ export default function GiftResult() {
   if (state.status === 'error') {
     return (
       <main id="main" className="page">
-        <div className="card">
-          <h1>We couldn’t confirm this gift</h1>
-          <p className="muted">{state.message}</p>
-        </div>
+        <h1 className="visually-hidden">Your gift</h1>
+        <LoadError
+          title="We couldn’t confirm this gift"
+          message={`${state.message} If you paid, nothing is lost: this page only checks the payment.`}
+          onRetry={() => {
+            setState({ status: 'loading' })
+            setAttempt((n) => n + 1)
+          }}
+        />
       </main>
     )
   }
