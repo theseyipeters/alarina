@@ -98,6 +98,7 @@ export type PublicInvitation = InvitationContent & {
   rsvpOpen: boolean
   rsvpClosedReason: 'deadline' | 'past' | null
   giftsEnabled: boolean
+  cashGiftSuggestions: number[]
   /** Items guests can buy; empty when the couple isn't offering aso-ebi. */
   asoEbi: AsoEbiItem[]
   /** The couple's wishlist; empty when they aren't sharing one. `funded` is kobo paid so far. */
@@ -180,6 +181,7 @@ export type GiftsOverview = {
   configured: boolean
   feesConfirmed: boolean
   enabled: boolean
+  cashGiftSuggestions: number[]
   payout: { bankName: string; accountName: string; accountLast4: string } | null
   totals: { received: number; count: number; pending: number }
   contributions: {

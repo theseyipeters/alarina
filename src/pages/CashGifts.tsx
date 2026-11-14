@@ -4,7 +4,7 @@ import PayoutAccount from '../components/PayoutAccount.tsx'
 import { EmptyState, LoadError, Loading } from '../components/States.tsx'
 import { api, ApiError } from '../lib/api.ts'
 import { errorMessage } from '../lib/errors.ts'
-import { formatNaira } from '../lib/money.ts'
+import { formatNaira, groupDigits } from '../lib/money.ts'
 import type { GiftsOverview } from '../lib/types.ts'
 import { useTitle } from '../lib/useTitle.ts'
 
@@ -80,6 +80,7 @@ export default function CashGifts() {
         <GiftSwitch data={data} onChange={load} />
       </div>
 
+      <CashGiftSuggestions data={data} onChange={load} />
       <GiftList data={data} />
     </div>
   )
@@ -130,6 +131,69 @@ function GiftSwitch({ data, onChange }: { data: GiftsOverview; onChange: () => v
       </p>
       {error && <p role="alert" className="alert">{error}</p>}
       {!data.payout && <p className="hint">Add your account first.</p>}
+    </section>
+  )
+}
+
+function CashGiftSuggestions({ data, onChange }: { data: GiftsOverview; onChange: () => void }) {
+  // Suggestions from this API are whole naira; payment amounts elsewhere are kobo.
+  const [amounts, setAmounts] = useState((data.cashGiftSuggestions ?? [5_000, 10_000]).map(String))
+  const [editing, setEditing] = useState<number | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const parsed = amounts.map((amount) => /^\d+$/.test(amount) ? Number(amount) : NaN)
+  const valid = parsed.length >= 2 && parsed.length <= 4 && parsed.every((amount) => Number.isInteger(amount) && amount >= 1_000 && amount <= 5_000_000) && new Set(parsed).size === parsed.length
+
+  async function save() {
+    setBusy(true)
+    setError(null)
+    setMessage(null)
+    try {
+      await api.patch('/wedding/gifts/suggestions', { suggestions: parsed })
+      setMessage('Guest suggestions saved.')
+      onChange()
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="card" aria-labelledby="suggestions-title">
+      <h2 id="suggestions-title">Suggested cash gift amounts</h2>
+      <p className="muted">Edit the amounts guests will see on your invitation. Guests can still enter another amount.</p>
+      <div className="amount-chips cash-suggestion-chips" aria-label="Suggested cash gift amounts">
+        {amounts.map((amount, index) => (
+          <span className="amount-chip cash-suggestion-chip" key={index}>
+            {editing === index ? (
+              <span className="cash-suggestion-input-wrap">
+                <span aria-hidden="true">₦</span>
+                <input
+                  autoFocus
+                  aria-label={`Suggestion ${index + 1}, whole naira`}
+                  inputMode="numeric"
+                  value={groupDigits(amount)}
+                  onChange={(event) => setAmounts((current) => current.map((v, i) => i === index ? event.target.value.replace(/\D/g, '').slice(0, 12) : v))}
+                  onBlur={() => setEditing(null)}
+                  onKeyDown={(event) => { if (event.key === 'Enter') setEditing(null) }}
+                />
+              </span>
+            ) : (
+              <button type="button" className="cash-suggestion-value" aria-label={`Edit ${formatNaira((Number(amount) || 0) * 100)}`} onClick={() => setEditing(index)}>
+                {amount ? formatNaira((Number(amount) || 0) * 100) : 'Enter amount'}
+              </button>
+            )}
+            {amounts.length > 2 && <button type="button" className="cash-suggestion-remove" aria-label={`Remove suggestion ${index + 1}`} onClick={() => setAmounts((current) => current.filter((_, i) => i !== index))}>×</button>}
+          </span>
+        ))}
+        {amounts.length < 4 && <button type="button" className="amount-chip cash-suggestion-add" onClick={() => { setAmounts((current) => [...current, '']); setEditing(amounts.length) }} aria-label="Add another suggested amount">+</button>}
+      </div>
+      {!valid && <p className="hint">Set 2 to 4 different whole amounts between ₦1,000 and ₦5,000,000.</p>}
+      {error && <p role="alert" className="alert">{error}</p>}
+      {message && <p role="status" className="hint">{message}</p>}
+      <button type="button" className="btn" disabled={!valid || busy} onClick={save}>{busy ? 'Saving…' : 'Save amounts'}</button>
     </section>
   )
 }
