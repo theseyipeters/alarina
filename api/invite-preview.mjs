@@ -1,18 +1,8 @@
-import type { IncomingMessage, ServerResponse } from 'node:http'
 import sharp from 'sharp'
 
-type Invitation = {
-  partnerOneName?: string | null
-  partnerTwoName?: string | null
-  date?: string | null
-  venueName?: string | null
-  venueAddress?: string | null
-  palette?: string
-  template?: string
-  look?: { colors?: { page?: string; card?: string; text?: string; accent?: string } }
-}
+/** @typedef {{ partnerOneName?: string | null, partnerTwoName?: string | null, date?: string | null, venueName?: string | null, venueAddress?: string | null, palette?: string, template?: string, look?: { colors?: { page?: string, card?: string, text?: string, accent?: string } } }} Invitation */
 
-const palettes: Record<string, [string, string, string, string]> = {
+const palettes = {
   ivory: ['#f4f0e6', '#fffdf7', '#292720', '#9a7240'], sage: ['#e8eee5', '#fbfcf8', '#283329', '#617b5a'],
   blush: ['#f4e7e5', '#fffaf8', '#392d2d', '#ae6f75'], terracotta: ['#efe2d9', '#fffaf5', '#382d27', '#a3543a'],
   champagne: ['#f1eadc', '#fffdf7', '#352e25', '#a18453'], lavender: ['#ece8f3', '#fcfaff', '#302b39', '#78658f'],
@@ -21,22 +11,22 @@ const palettes: Record<string, [string, string, string, string]> = {
   indigo: ['#e6eaf1', '#fafbfe', '#252d3c', '#526c9e'], wine: ['#f0e4e6', '#fffafb', '#38282c', '#98606b'],
 }
 
-const esc = (value: string) => value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
-const dateLabel = (date?: string | null) => {
+const esc = (value) => value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+const dateLabel = (date) => {
   if (!date) return 'SAVE THE DATE'
   const parsed = new Date(`${date}T12:00:00Z`)
   if (Number.isNaN(parsed.getTime())) return 'SAVE THE DATE'
   return new Intl.DateTimeFormat('en-NG', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(parsed).toUpperCase()
 }
 
-const fontFor = (template?: string) => {
+const fontFor = (template) => {
   if (template === 'poster') return 'Arial, sans-serif'
   if (template === 'garden') return 'Georgia, serif'
   if (template === 'modern') return 'Arial, sans-serif'
   return 'Georgia, serif'
 }
 
-function invitationArtwork(invitation: Invitation, page: string, card: string, ink: string, accent: string) {
+function invitationArtwork(invitation, page, card, ink, accent) {
   const one = esc(invitation.partnerOneName?.trim() || 'Your day')
   const two = esc(invitation.partnerTwoName?.trim() || '')
   const venueParts = invitation.venueAddress?.split(',') ?? []
@@ -66,7 +56,7 @@ function invitationArtwork(invitation: Invitation, page: string, card: string, i
   </svg>`
 }
 
-export default async function handler(request: IncomingMessage, response: ServerResponse) {
+export default async function handler(request, response) {
   const forwardedHost = request.headers['x-forwarded-host']
   const hostHeader = Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost
   const host = hostHeader || request.headers.host || 'alarina.ng'
@@ -88,7 +78,7 @@ export default async function handler(request: IncomingMessage, response: Server
     return
   }
 
-  let invitationResponse: globalThis.Response
+  let invitationResponse
   try {
     invitationResponse = await fetch(`${apiOrigin.replace(/\/$/, '')}/api/public/invitations/${encodeURIComponent(slug)}`, {
       headers: { accept: 'application/json' },
@@ -105,7 +95,7 @@ export default async function handler(request: IncomingMessage, response: Server
     response.end(invitationResponse.status === 404 ? 'Invitation not found' : 'Invitation preview is temporarily unavailable')
     return
   }
-  const payload = await invitationResponse.json() as { invitation?: Invitation }
+  const payload = await invitationResponse.json()
   const invitation = payload.invitation
   if (!invitation) {
     response.statusCode = 404
@@ -128,7 +118,7 @@ export default async function handler(request: IncomingMessage, response: Server
   const accent = invitation.look?.colors?.accent ?? fallbackColors[3]
 
   if (url.searchParams.has('image')) {
-    let png: Buffer
+    let png
     try {
       png = await sharp(Buffer.from(invitationArtwork(invitation, page, card, ink, accent))).png().toBuffer()
     } catch {
