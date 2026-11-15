@@ -7,7 +7,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(facebookexternalhit|Facebot|WhatsApp|Twitterbot|TelegramBot|Slackbot|Discordbot|LinkedInBot|Pinterest|Googlebot|Applebot|iMessageBot|SkypeUriPreview)"
+          "value": ".*(facebookexternalhit|Facebot|WhatsApp|Twitterbot|TelegramBot|Slackbot|Discordbot|LinkedInBot|Pinterest|Googlebot|Applebot|iMessageBot|SkypeUriPreview|meta-externalagent).*"
         }
       ],
       "destination": "/api/invite-preview?slug=:slug"
