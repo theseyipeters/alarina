@@ -1,6 +1,11 @@
 import sharp from 'sharp'
+import opentype from 'opentype.js'
+import { readFile } from 'node:fs/promises'
 
 /** @typedef {{ partnerOneName?: string | null, partnerTwoName?: string | null, date?: string | null, venueName?: string | null, venueAddress?: string | null, palette?: string, template?: string, look?: { colors?: { page?: string, card?: string, text?: string, accent?: string } } }} Invitation */
+
+let fontPromise
+const getInvitationFont = () => fontPromise ??= readFile(new URL('../node_modules/@fontsource/noto-serif-display/files/noto-serif-display-latin-400-normal.woff', import.meta.url)).then((font) => opentype.parse(font))
 
 const palettes = {
   ivory: ['#f4f0e6', '#fffdf7', '#292720', '#9a7240'], sage: ['#e8eee5', '#fbfcf8', '#283329', '#617b5a'],
@@ -19,20 +24,29 @@ const dateLabel = (date) => {
   return new Intl.DateTimeFormat('en-NG', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(parsed).toUpperCase()
 }
 
-const fontFor = (template) => {
-  if (template === 'poster') return 'Arial, sans-serif'
-  if (template === 'garden') return 'Georgia, serif'
-  if (template === 'modern') return 'Arial, sans-serif'
-  return 'Georgia, serif'
+function svgText(font, text, centerX, baselineY, fontSize, fill, maxWidth) {
+  let cursor = 0
+  let previousGlyph = null
+  const paths = []
+  for (const character of text) {
+    const glyph = font.charToGlyph(character)
+    if (previousGlyph) cursor += font.getKerningValue(previousGlyph, glyph) * fontSize / font.unitsPerEm
+    paths.push(`<path d="${font.getPath(character, cursor, baselineY, fontSize).toPathData(2)}"/>`)
+    cursor += glyph.advanceWidth * fontSize / font.unitsPerEm
+    previousGlyph = glyph
+  }
+  const width = Math.max(1, cursor)
+  const scale = Math.min(1, maxWidth / width)
+  const offsetX = centerX - (width * scale) / 2
+  return `<g fill="${fill}" transform="translate(${offsetX} 0) scale(${scale} 1)">${paths.join('')}</g>`
 }
 
-function invitationArtwork(invitation, page, card, ink, accent) {
-  const one = esc(invitation.partnerOneName?.trim() || 'Your day')
-  const two = esc(invitation.partnerTwoName?.trim() || '')
+function invitationArtwork(invitation, page, card, ink, accent, font) {
+  const one = invitation.partnerOneName?.trim() || 'Your day'
+  const two = invitation.partnerTwoName?.trim() || ''
   const venueParts = invitation.venueAddress?.split(',') ?? []
-  const venue = esc(invitation.venueName?.trim() || venueParts[venueParts.length - 1]?.trim() || '')
-  const date = esc(dateLabel(invitation.date))
-  const font = fontFor(invitation.template)
+  const venue = invitation.venueName?.trim() || venueParts[venueParts.length - 1]?.trim() || ''
+  const date = dateLabel(invitation.date)
   const framed = ['classic', 'deco', 'minimal'].includes(invitation.template ?? '')
   const frame = framed
     ? `<rect x="128" y="88" width="944" height="454" rx="${invitation.template === 'deco' ? '0' : '3'}" fill="none" stroke="${accent}" stroke-width="2"/><rect x="140" y="100" width="920" height="430" fill="none" stroke="${accent}" stroke-width="1" opacity=".45"/>`
@@ -46,13 +60,13 @@ function invitationArtwork(invitation, page, card, ink, accent) {
     <rect width="1200" height="630" fill="${page}"/>
     <rect x="110" y="70" width="980" height="490" rx="${invitation.template === 'deco' ? '0' : '8'}" fill="${card}" stroke="${accent}" stroke-width="${framed ? '0' : '1.5'}"/>
     ${poster}${frame}
-    <text x="600" y="178" text-anchor="middle" fill="${accent}" font-family="Arial, sans-serif" font-size="17" letter-spacing="6">TOGETHER WITH THEIR FAMILIES</text>
-    <text x="600" y="282" text-anchor="middle" fill="${ink}" font-family="${font}" font-size="${namesSize}" textLength="${Math.min(850, Math.max(240, one.length * namesSize * .54))}" lengthAdjust="spacingAndGlyphs">${one}</text>
-    <text x="600" y="335" text-anchor="middle" fill="${accent}" font-family="${font}" font-size="38">&amp;</text>
-    <text x="600" y="395" text-anchor="middle" fill="${ink}" font-family="${font}" font-size="${namesSize}" textLength="${Math.min(850, Math.max(240, two.length * namesSize * .54))}" lengthAdjust="spacingAndGlyphs">${two}</text>
+    ${svgText(font, 'TOGETHER WITH THEIR FAMILIES', 600, 178, 17, accent, 850)}
+    ${svgText(font, one, 600, 282, namesSize, ink, 850)}
+    ${svgText(font, '&', 600, 335, 38, accent, 80)}
+    ${svgText(font, two, 600, 395, namesSize, ink, 850)}
     <line x1="530" y1="426" x2="670" y2="426" stroke="${accent}" stroke-width="1.5"/>
-    <text x="600" y="464" text-anchor="middle" fill="${accent}" font-family="Arial, sans-serif" font-size="20" letter-spacing="4">${date}</text>
-    ${venue ? `<text x="600" y="500" text-anchor="middle" fill="${ink}" font-family="${font}" font-size="20">${venue}</text>` : ''}
+    ${svgText(font, date, 600, 464, 20, accent, 850)}
+    ${venue ? svgText(font, venue, 600, 500, 20, ink, 850) : ''}
   </svg>`
 }
 
@@ -120,7 +134,8 @@ export default async function handler(request, response) {
   if (url.searchParams.has('image')) {
     let png
     try {
-      png = await sharp(Buffer.from(invitationArtwork(invitation, page, card, ink, accent))).png().toBuffer()
+      const font = await getInvitationFont()
+      png = await sharp(Buffer.from(invitationArtwork(invitation, page, card, ink, accent, font))).png().toBuffer()
     } catch {
       response.statusCode = 503
       response.setHeader('cache-control', 'no-store')
